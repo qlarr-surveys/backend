@@ -1,0 +1,21 @@
+### get all surveys
+GET {{host}}/survey
+Accept: application/json
+
+### create a new survey and copy the id of the fresh created survey into a variable to use it for the next request
+POST {{host}}/survey
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Customer Satisfaction Survey",
+  "baseLang": "de",
+  "usage": "mixed",
+  "quota": 1000,
+  "navigationMode": "page_by_page"
+}
+> {%
+    client.global.set("userId", response.body.id);
+    client.global.set("token", response.body.auth.token);
+%}
+

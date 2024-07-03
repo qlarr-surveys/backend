@@ -1,0 +1,11 @@
+plugins {
+    // Apply the java-library plugin to add support for Java Library
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+
+dependencies {
+    implementation 'org.graalvm.js:js:22.3.1'
+    implementation 'org.graalvm.js:js-scriptengine:22.3.1'
+}

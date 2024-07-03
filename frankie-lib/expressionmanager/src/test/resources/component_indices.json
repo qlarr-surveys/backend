@@ -1,0 +1,1327 @@
+[
+  {
+    "children": [
+      "G1",
+      "Gfood",
+      "Gservice",
+      "Gvenue",
+      "G5"
+    ],
+    "code": "Survey",
+    "dependencies": [],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": null,
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4"
+    ],
+    "code": "G1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Survey",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q1Afirst_name",
+      "Q1Alast_name",
+      "Q1Aemail",
+      "Q1Agender",
+      "Q1Abirthday"
+    ],
+    "code": "Q1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "G1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1Afirst_name",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1Alast_name",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1Aemail",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 2,
+    "parent": "Q1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q1AgenderAmale",
+      "Q1AgenderAfemale"
+    ],
+    "code": "Q1Agender",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 3,
+    "parent": "Q1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1AgenderAmale",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q1Agender",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1AgenderAfemale",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q1Agender",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q1Abirthday",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 4,
+    "parent": "Q1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q2A1",
+      "Q2A2",
+      "Q2A3"
+    ],
+    "code": "Q2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "G1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q2A1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q2A2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q2A3",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 2,
+    "parent": "Q2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q3Afood",
+      "Q3Aservice",
+      "Q3Avenue",
+      "Q3Aother"
+    ],
+    "code": "Q3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 2,
+    "parent": "G1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q3Afood",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q3",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q3Aservice",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q3",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q3Avenue",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q3",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q3AotherAtext"
+    ],
+    "code": "Q3Aother",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 3,
+    "parent": "Q3",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q3AotherAtext",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q3Aother",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q4Ac1",
+      "Q4Ac2",
+      "Q4Ac3",
+      "Q4Afood",
+      "Q4Aservice",
+      "Q4Avenue"
+    ],
+    "code": "Q4",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 3,
+    "parent": "G1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Ac1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Ac2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Ac3",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 2,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Afood",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 3,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Aservice",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 4,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q4Avenue",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 5,
+    "minIndex": 5,
+    "parent": "Q4",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q5"
+    ],
+    "code": "Gfood",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 1,
+    "parent": "Survey",
+    "prioritisedSiblings": [
+      "Gfood",
+      "Gservice",
+      "Gvenue"
+    ]
+  },
+  {
+    "children": [
+      "Q5Ac1",
+      "Q5Ac2",
+      "Q5A1",
+      "Q5A2"
+    ],
+    "code": "Q5",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Gfood",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5Ac1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5Ac2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q5A1A1",
+      "Q5A1A2",
+      "Q5A1A3"
+    ],
+    "code": "Q5A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 2,
+    "parent": "Q5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5A1A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q5A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5A1A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q5A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5A1A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q5A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q5A2A1",
+      "Q5A2A2"
+    ],
+    "code": "Q5A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 2,
+    "parent": "Q5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5A2A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 0,
+    "parent": "Q5A2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q5A2A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 0,
+    "parent": "Q5A2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q6"
+    ],
+    "code": "Gservice",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 1,
+    "parent": "Survey",
+    "prioritisedSiblings": [
+      "Gfood",
+      "Gservice",
+      "Gvenue"
+    ]
+  },
+  {
+    "children": [
+      "Q6Ac1",
+      "Q6Ac2",
+      "Q6A1",
+      "Q6A2"
+    ],
+    "code": "Q6",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Gservice",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6Ac1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q6",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6Ac2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q6",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q6A1A1",
+      "Q6A1A2",
+      "Q6A1A3"
+    ],
+    "code": "Q6A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 2,
+    "parent": "Q6",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A1A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A1A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A1A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A1",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q6A2A1",
+      "Q6A2A2",
+      "Q6A2A3"
+    ],
+    "code": "Q6A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 2,
+    "parent": "Q6",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A2A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A2A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q6A2A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 0,
+    "parent": "Q6A2",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q7"
+    ],
+    "code": "Gvenue",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 1,
+    "parent": "Survey",
+    "prioritisedSiblings": [
+      "Gfood",
+      "Gservice",
+      "Gvenue"
+    ]
+  },
+  {
+    "children": [
+      "Q7Ac1",
+      "Q7Ac2",
+      "Q7A1",
+      "Q7A2",
+      "Q7A3",
+      "Q7A4"
+    ],
+    "code": "Q7",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Gvenue",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7Ac1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7Ac2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 5,
+    "minIndex": 2,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 5,
+    "minIndex": 2,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 5,
+    "minIndex": 2,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q7A4",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 5,
+    "minIndex": 2,
+    "parent": "Q7",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q8",
+      "Q9",
+      "Q10",
+      "Q11"
+    ],
+    "code": "G5",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 4,
+    "parent": "Survey",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q8A1",
+      "Q8A2",
+      "Q8A3",
+      "Q8A4",
+      "Q8A5"
+    ],
+    "code": "Q8",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "G5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q8A1",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 0,
+    "parent": "Q8",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q8A2",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 0,
+    "parent": "Q8",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q8A3",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 0,
+    "parent": "Q8",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q8A4",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 0,
+    "parent": "Q8",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q8A5",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 0,
+    "parent": "Q8",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q9A1",
+      "Q9A2",
+      "Q9A3",
+      "Q9A4",
+      "Q9Aother"
+    ],
+    "code": "Q9",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 1,
+    "minIndex": 1,
+    "parent": "G5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q9A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q9",
+    "prioritisedSiblings": [
+      "Q9A1",
+      "Q9A2",
+      "Q9A3",
+      "Q9A4"
+    ]
+  },
+  {
+    "children": [],
+    "code": "Q9A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q9",
+    "prioritisedSiblings": [
+      "Q9A1",
+      "Q9A2",
+      "Q9A3",
+      "Q9A4"
+    ]
+  },
+  {
+    "children": [],
+    "code": "Q9A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q9",
+    "prioritisedSiblings": [
+      "Q9A1",
+      "Q9A2",
+      "Q9A3",
+      "Q9A4"
+    ]
+  },
+  {
+    "children": [],
+    "code": "Q9A4",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q9",
+    "prioritisedSiblings": [
+      "Q9A1",
+      "Q9A2",
+      "Q9A3",
+      "Q9A4"
+    ]
+  },
+  {
+    "children": [
+      "Q9AotherAtext"
+    ],
+    "code": "Q9Aother",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 4,
+    "minIndex": 4,
+    "parent": "Q9",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q9AotherAtext",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 0,
+    "minIndex": 0,
+    "parent": "Q9Aother",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q10A1",
+      "Q10A2",
+      "Q10A3",
+      "Q10A4"
+    ],
+    "code": "Q10",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 2,
+    "minIndex": 2,
+    "parent": "G5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q10A1",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q10",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q10A2",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q10",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q10A3",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q10",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q10A4",
+    "dependencies": [
+      "value",
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q10",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [
+      "Q11A1",
+      "Q11A2",
+      "Q11A3",
+      "Q11A4"
+    ],
+    "code": "Q11",
+    "dependencies": [
+      "relevance",
+      "validity",
+      "order",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 3,
+    "parent": "G5",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q11A1",
+    "dependencies": [
+      "value",
+      "order",
+      "relevance",
+      "validity",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q11",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q11A2",
+    "dependencies": [
+      "value",
+      "order",
+      "relevance",
+      "validity",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q11",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q11A3",
+    "dependencies": [
+      "value",
+      "order",
+      "relevance",
+      "validity",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q11",
+    "prioritisedSiblings": []
+  },
+  {
+    "children": [],
+    "code": "Q11A4",
+    "dependencies": [
+      "value",
+      "order",
+      "relevance",
+      "validity",
+      "priority"
+    ],
+    "maxIndex": 3,
+    "minIndex": 0,
+    "parent": "Q11",
+    "prioritisedSiblings": []
+  }
+]

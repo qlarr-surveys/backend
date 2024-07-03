@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/frankie_test
+    username: frankie_user
+    password: frankie_pass
+mail:
+  mock: true

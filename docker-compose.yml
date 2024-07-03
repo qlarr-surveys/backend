@@ -1,0 +1,53 @@
+version: '3.1'
+
+networks:
+  docker-local_net:
+    driver: bridge
+
+services:
+
+  local-postgres:
+    container_name: 'local-postgres'
+    image: postgres:15.1
+    networks:
+      - docker-local_net
+    environment:
+      - POSTGRES_USER=frankie
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=frankiedb
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - $HOME/data/local-postgres-data:/var/lib/postgresql/data
+
+  postgres_admin:
+    container_name: postgres_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: frankie@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - $HOME/data/postgres-admin-data:/var/lib/postgresql/data
+      - $HOME/data/postgres-admin-bkp:/var/lib/postgresql/bkp
+    ports:
+      - "5050:80"
+    networks:
+      - docker-local_net
+    restart: unless-stopped
+
+  app:
+    container_name: 'frankie-backend'
+    image: openjdk:17
+    ports:
+      - "8080:8080"
+    networks:
+      - docker-local_net
+    volumes:
+      - "./frankie-backend-0.0.1-SNAPSHOT.jar:/app/app.jar"
+    command: [ "java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar" ]
+    depends_on:
+      - local-postgres
+    restart: unless-stopped

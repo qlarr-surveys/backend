@@ -1,0 +1,3424 @@
+{
+  "code": "Survey",
+  "content": {
+    "label": {
+      "ar": "نموذج استبيان",
+      "de": "Musterfragebogen",
+      "en": "Sample Survey"
+    }
+  },
+  "groups": [
+    {
+      "code": "G1",
+      "content": {
+        "description": {
+          "ar": "جميع أنواع الأسئلة النصية",
+          "de": "Alle möglichen Textfragen",
+          "en": "All sort of text questions"
+        },
+        "label": {
+          "ar": "أسئلة نصية",
+          "de": "Textfragen",
+          "en": "Text Questions"
+        }
+      },
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q1.in_current_navigation || Q1.validity) && (!Q2.in_current_navigation || Q2.validity) && (!Q3.in_current_navigation || Q3.validity) && (!Q4.in_current_navigation || Q4.validity)"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "0"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "0"
+        }
+      ],
+      "open": false,
+      "qualifiedCode": "G1",
+      "questions": [
+        {
+          "code": "Q1",
+          "content": {
+            "description": {
+              "ar": "أسئلة نصية قصيرة عامة ، يمكننا استخدامها لطلب الأسماء ، أو المدينة ، وما إلى ذلك.",
+              "de": "Allgemeine Kurztextfragen, wir können sie verwenden, um nach Namen, oder Stadt usw. zu fragen.",
+              "en": "General purpose short text questions, we can use it to ask for name, or city...etc."
+            },
+            "hint": {
+              "ar": "الأسم الكامل",
+              "de": "Vollständiger Name",
+              "en": "Full name"
+            },
+            "label": {
+              "ar": "سؤال نص قصير",
+              "de": "Kurztext Frage",
+              "en": "<p>Short text Question<\/p>"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q1.value)"
+            },
+            {
+              "code": "validation_min_char_length",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q1.value) && Q1.value.length < 2"
+            },
+            {
+              "code": "validation_max_char_length",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q1.value) && Q1.value.length > 30"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "(!Q1.validation_required && !Q1.validation_min_char_length && !Q1.validation_max_char_length && !Q1.validation_pattern)"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "validation_pattern",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q1.value) && !RegExp(\"^[A-Za-z][-\\.A-Za-z ]+$\").test(Q1.value)"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "maxChars": 30,
+          "qualifiedCode": "Q1",
+          "showHint": true,
+          "type": "text",
+          "validation": {
+            "validation_max_char_length": {
+              "bounds": [
+                1,
+                1.7976931348623157E308
+              ],
+              "content": {},
+              "isActive": true,
+              "max_length": 30
+            },
+            "validation_min_char_length": {
+              "bounds": [
+                1,
+                1.7976931348623157E308
+              ],
+              "content": {
+                "ar": "ما نوع الاسم الأول الأقل من حرفين؟",
+                "de": "Welche Art von Vorname hat weniger als 2 Zeichen?",
+                "en": "What kind of First Name has less than 2 chars?"
+              },
+              "isActive": true,
+              "min_length": 2
+            },
+            "validation_pattern": {
+              "content": {
+                "ar": "الرجاء استخدام الأحرف والواصلات والفواصل العليا فقط",
+                "de": "Bitte verwenden Sie nur Buchstaben, Bindestrich und Apostroph",
+                "en": "Please use only characters, dash and apostrophe"
+              },
+              "isActive": true,
+              "isCustomErrorActive": true,
+              "pattern": "^[A-Za-z][-\\.A-Za-z ]+$"
+            },
+            "validation_required": {
+              "content": {},
+              "isActive": true
+            }
+          }
+        },
+        {
+          "allowDecimal": true,
+          "code": "Q2",
+          "content": {
+            "description": {
+              "ar": "للعمر والوزن والمسافات والقيم العددية الأخرى",
+              "de": "Für Alter, Gewicht, Entfernungen und andere Zahlenwerte",
+              "en": "For age, weight, distances and other numerical values"
+            },
+            "hint": {
+              "ar": "وزن",
+              "de": "Gewicht",
+              "en": "Weight"
+            },
+            "label": {
+              "ar": "سؤال رقم",
+              "de": "Nummernfrage",
+              "en": "Number Questions"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "Double"
+              },
+              "text": ""
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q2.value)"
+            },
+            {
+              "code": "validation_between",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q2.value) && (Q2.value < 25 || Q2.value > 180)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "(!Q2.validation_required && !Q2.validation_between)"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            }
+          ],
+          "maxChars": 4,
+          "qualifiedCode": "Q2",
+          "showHint": true,
+          "type": "number",
+          "validation": {
+            "validation_between": {
+              "content": {},
+              "isActive": true,
+              "lower_limit": 25,
+              "upper_limit": 180
+            },
+            "validation_not_between": {
+              "content": {},
+              "isActive": false,
+              "lower_limit": 55,
+              "upper_limit": 60
+            },
+            "validation_required": {
+              "content": {},
+              "isActive": true
+            }
+          }
+        },
+        {
+          "code": "Q3",
+          "content": {
+            "description": {
+              "en": "<p>This description should not show<\/p>"
+            },
+            "hint": {
+              "ar": "البريد الإلكتروني",
+              "de": "Email",
+              "en": "Email"
+            },
+            "label": {
+              "ar": "سؤال البريد الإلكتروني",
+              "de": "Email Frage",
+              "en": "Email Question, with limited Text Field Size of 20"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q3.value)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "(!Q3.validation_required && !Q3.validation_max_char_length && !Q3.validation_pattern_email)"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            },
+            {
+              "code": "validation_max_char_length",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q3.value) && Q3.value.length > 25"
+            },
+            {
+              "code": "validation_pattern_email",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q3.value) &&  !/^\\w+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$/.test(Q3.value)"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            }
+          ],
+          "maxChars": 20,
+          "qualifiedCode": "Q3",
+          "type": "email",
+          "validation": {
+            "validation_max_char_length": {
+              "bounds": [
+                1,
+                1.7976931348623157E308
+              ],
+              "content": {},
+              "isActive": true,
+              "max_length": 25
+            },
+            "validation_pattern_email": {
+              "content": {},
+              "isActive": true
+            },
+            "validation_required": {
+              "content": {},
+              "isActive": true
+            }
+          }
+        },
+        {
+          "code": "Q4",
+          "content": {
+            "description": {
+              "ar": "لنصوص أطول",
+              "de": "für längere Texte",
+              "en": "for longer text"
+            },
+            "hint": {
+              "ar": "حدثنا قليلا عن نفسك",
+              "de": "Erzählen Sie uns ein wenig über sich",
+              "en": "Tell us a little bit about yourself"
+            },
+            "label": {
+              "ar": "أسئلة القسم",
+              "de": "Absatzfragen",
+              "en": "Paragraph Questions"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q4.value)"
+            },
+            {
+              "code": "validation_max_word_count",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q4.value) &&  FrankieScripts.wordCount(Q4.value) > 500"
+            },
+            {
+              "code": "validation_min_word_count",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isNotVoid(Q4.value) &&  FrankieScripts.wordCount(Q4.value) < 10"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "(!Q4.validation_required && !Q4.validation_max_word_count && !Q4.validation_min_word_count)"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "3"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "3"
+            }
+          ],
+          "qualifiedCode": "Q4",
+          "showWordCount": true,
+          "type": "paragraph",
+          "validation": {
+            "validation_contains": {
+              "contains": "",
+              "content": {},
+              "isActive": false
+            },
+            "validation_max_word_count": {
+              "bounds": [
+                1,
+                1.7976931348623157E308
+              ],
+              "content": {},
+              "isActive": true,
+              "max_count": 500
+            },
+            "validation_min_word_count": {
+              "bounds": [
+                1,
+                1.7976931348623157E308
+              ],
+              "content": {},
+              "isActive": true,
+              "min_count": 10
+            },
+            "validation_not_contains": {
+              "content": {},
+              "isActive": true,
+              "not_contains": "koko"
+            },
+            "validation_required": {
+              "content": {},
+              "isActive": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "code": "G2",
+      "content": {
+        "label": {
+          "ar": "أسئلة الاختيار",
+          "de": "Auswahlfragen",
+          "en": "Choice Questions"
+        }
+      },
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q13.in_current_navigation || Q13.validity) && (!Q14.in_current_navigation || Q14.validity) && (!Q15.in_current_navigation || Q15.validity) && (!Q16.in_current_navigation || Q16.validity)"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "1"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "1"
+        }
+      ],
+      "open": false,
+      "qualifiedCode": "G2",
+      "questions": [
+        {
+          "answers": [
+            {
+              "code": "A1",
+              "content": {
+                "label": {
+                  "en": "Option 1"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                }
+              ],
+              "qualifiedCode": "Q13A1"
+            },
+            {
+              "code": "A2",
+              "content": {
+                "label": {
+                  "en": "Option 2"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                }
+              ],
+              "qualifiedCode": "Q13A2"
+            },
+            {
+              "code": "A3",
+              "content": {
+                "label": {
+                  "en": "Option 3"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                }
+              ],
+              "qualifiedCode": "Q13A3"
+            },
+            {
+              "answers": [
+                {
+                  "code": "Atext",
+                  "instructionList": [
+                    {
+                      "code": "value",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "String"
+                      },
+                      "text": ""
+                    },
+                    {
+                      "code": "conditional_relevance",
+                      "isActive": true,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "Q13.value === 'Aother'"
+                    },
+                    {
+                      "code": "label",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "String"
+                      },
+                      "text": ""
+                    },
+                    {
+                      "code": "relevance",
+                      "isActive": true,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "Q13AotherAtext.conditional_relevance"
+                    },
+                    {
+                      "code": "validity",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "true"
+                    },
+                    {
+                      "code": "in_current_navigation",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "true"
+                    },
+                    {
+                      "code": "priority",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Int"
+                      },
+                      "text": "0"
+                    },
+                    {
+                      "code": "order",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Int"
+                      },
+                      "text": "0"
+                    }
+                  ],
+                  "qualifiedCode": "Q13AotherAtext",
+                  "type": "other_text"
+                }
+              ],
+              "code": "Aother",
+              "content": {
+                "label": {
+                  "en": "Other"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                }
+              ],
+              "qualifiedCode": "Q13Aother",
+              "type": "other"
+            }
+          ],
+          "code": "Q13",
+          "content": {
+            "description": {
+              "en": "Single Choice Question Description"
+            },
+            "hint": {
+              "en": "Single Choice Question"
+            },
+            "label": {
+              "en": "Single Choice Question"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "masked_value",
+              "isActive": true,
+              "returnType": {
+                "name": "String"
+              },
+              "text": "Q13.value ? {A1: Q13A1.label,A2: Q13A2.label,A3: Q13A3.label,Aother: Q13AotherAtext.value}[Q13.value] : ''"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q13.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q13.value)"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "qualifiedCode": "Q13",
+          "type": "scq",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        },
+        {
+          "answers": [
+            {
+              "code": "Ac1",
+              "content": {
+                "label": {
+                  "en": "Col 1"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                }
+              ],
+              "qualifiedCode": "Q14Ac1",
+              "type": "column"
+            },
+            {
+              "code": "Ac2",
+              "content": {
+                "label": {
+                  "en": "Col 2"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                }
+              ],
+              "qualifiedCode": "Q14Ac2",
+              "type": "column"
+            },
+            {
+              "code": "Ac3",
+              "content": {
+                "label": {
+                  "en": "Col 3"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                }
+              ],
+              "qualifiedCode": "Q14Ac3",
+              "type": "column"
+            },
+            {
+              "code": "A1",
+              "content": {
+                "label": {
+                  "en": "Row 1"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "masked_value",
+                  "isActive": true,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": "Q14A1.value ? {Ac1: Q14Ac1.label,Ac2: Q14Ac2.label,Ac3: Q14Ac3.label}[Q14A1.value] : ''"
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                }
+              ],
+              "qualifiedCode": "Q14A1",
+              "type": "row"
+            },
+            {
+              "code": "A2",
+              "content": {
+                "label": {
+                  "en": "Row 2"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "masked_value",
+                  "isActive": true,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": "Q14A2.value ? {Ac1: Q14Ac1.label,Ac2: Q14Ac2.label,Ac3: Q14Ac3.label}[Q14A2.value] : ''"
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "4"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "4"
+                }
+              ],
+              "qualifiedCode": "Q14A2",
+              "type": "row"
+            },
+            {
+              "code": "A3",
+              "content": {
+                "label": {
+                  "en": "Row 3"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "masked_value",
+                  "isActive": true,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": "Q14A3.value ? {Ac1: Q14Ac1.label,Ac2: Q14Ac2.label,Ac3: Q14Ac3.label}[Q14A3.value] : ''"
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "5"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "5"
+                }
+              ],
+              "qualifiedCode": "Q14A3",
+              "type": "row"
+            }
+          ],
+          "code": "Q14",
+          "content": {
+            "description": {
+              "en": "Single Choice Question Array Description"
+            },
+            "hint": {
+              "en": "Single Choice Question Array"
+            },
+            "label": {
+              "en": "Single Choice Question Array"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q14.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "[Q14A1.value,Q14A2.value,Q14A3.value].filter(Boolean).length  < 3"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            }
+          ],
+          "qualifiedCode": "Q14",
+          "type": "scq_array",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        },
+        {
+          "answers": [
+            {
+              "code": "A1",
+              "content": {
+                "label": {
+                  "en": "Option 1"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                }
+              ],
+              "qualifiedCode": "Q15A1"
+            },
+            {
+              "code": "A2",
+              "content": {
+                "label": {
+                  "en": "Option 2"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                }
+              ],
+              "qualifiedCode": "Q15A2"
+            },
+            {
+              "code": "A3",
+              "content": {
+                "label": {
+                  "en": "Option 3"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                }
+              ],
+              "qualifiedCode": "Q15A3"
+            },
+            {
+              "code": "A4",
+              "content": {
+                "label": {
+                  "en": "Option4"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "3"
+                }
+              ],
+              "qualifiedCode": "Q15A4"
+            },
+            {
+              "answers": [
+                {
+                  "code": "Atext",
+                  "instructionList": [
+                    {
+                      "code": "value",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "String"
+                      },
+                      "text": ""
+                    },
+                    {
+                      "code": "conditional_relevance",
+                      "isActive": true,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "Q15Aother.value === true"
+                    },
+                    {
+                      "code": "label",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "String"
+                      },
+                      "text": ""
+                    },
+                    {
+                      "code": "relevance",
+                      "isActive": true,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "Q15AotherAtext.conditional_relevance"
+                    },
+                    {
+                      "code": "validity",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "true"
+                    },
+                    {
+                      "code": "in_current_navigation",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Boolean"
+                      },
+                      "text": "true"
+                    },
+                    {
+                      "code": "priority",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Int"
+                      },
+                      "text": "0"
+                    },
+                    {
+                      "code": "order",
+                      "isActive": false,
+                      "returnType": {
+                        "name": "Int"
+                      },
+                      "text": "0"
+                    }
+                  ],
+                  "qualifiedCode": "Q15AotherAtext",
+                  "type": "other_text"
+                }
+              ],
+              "code": "Aother",
+              "content": {
+                "label": {
+                  "en": "Other"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "4"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "4"
+                }
+              ],
+              "qualifiedCode": "Q15Aother",
+              "type": "other"
+            }
+          ],
+          "code": "Q15",
+          "content": {
+            "description": {
+              "en": "Multiple Choice Question Description"
+            },
+            "hint": {
+              "en": "Multiple Choice Question"
+            },
+            "label": {
+              "en": "Multiple Choice Question"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "masked_value",
+              "isActive": true,
+              "returnType": {
+                "name": "String"
+              },
+              "text": "FrankieScripts.listStrings([{ value:Q15A1.value, label:Q15A1.label }, { value:Q15A2.value, label:Q15A2.label }, { value:Q15A3.value, label:Q15A3.label }, { value:Q15A4.value, label:Q15A4.label }, { value:Q15Aother.value, label:Q15AotherAtext.value }].filter(function(elem){return elem.value}).map(function(elem){return elem.label}), Survey.lang)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q15.validation_min_option_count"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            },
+            {
+              "code": "validation_min_option_count",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "[Q15A1.value,Q15A2.value,Q15A3.value,Q15A4.value,Q15Aother.value].filter(Boolean).length < 1"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            }
+          ],
+          "qualifiedCode": "Q15",
+          "type": "mcq",
+          "validation": {
+            "validation_min_option_count": {
+              "isActive": true,
+              "min_count": 1
+            }
+          }
+        },
+        {
+          "code": "Q16",
+          "content": {
+            "description": {
+              "en": "NPS Question Description"
+            },
+            "higher_bound_hint": {
+              "en": "Most Likely"
+            },
+            "label": {
+              "en": "NPS Question"
+            },
+            "lower_bound_hint": {
+              "en": "Least Likely"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": ""
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q16.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "3"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q16.value)"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "3"
+            }
+          ],
+          "qualifiedCode": "Q16",
+          "type": "nps",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "code": "G3",
+      "content": {
+        "description": {
+          "ar": "أنواع الأسئلة الأخرى",
+          "de": "andere Fragetypen",
+          "en": "Other Question types"
+        },
+        "label": {
+          "ar": "آخر",
+          "de": "Sonstiges",
+          "en": "<p>Date/Time<\/p>"
+        }
+      },
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q17.in_current_navigation || Q17.validity) && (!Q18.in_current_navigation || Q18.validity) && (!Q19.in_current_navigation || Q19.validity)"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "2"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "2"
+        }
+      ],
+      "open": false,
+      "qualifiedCode": "G3",
+      "questions": [
+        {
+          "code": "Q17",
+          "content": {
+            "description": {
+              "en": "Date Description"
+            },
+            "hint": {},
+            "label": {
+              "en": "Date"
+            }
+          },
+          "dateFormat": "YYYY/MM/DD",
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "Date"
+              },
+              "text": ""
+            },
+            {
+              "code": "masked_value",
+              "isActive": true,
+              "returnType": {
+                "name": "String"
+              },
+              "text": "FrankieScripts.formatSqlDate(Q17.value, \"YYYY/MM/DD\")"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q17.value)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q17.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "maxDate": "",
+          "minDate": "",
+          "qualifiedCode": "Q17",
+          "type": "date",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        },
+        {
+          "code": "Q18",
+          "content": {
+            "description": {
+              "en": "Date time Description"
+            },
+            "hint": {},
+            "label": {
+              "en": "Date time"
+            }
+          },
+          "dateFormat": "YYYY/MM/DD",
+          "fullDayFormat": false,
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "Date"
+              },
+              "text": ""
+            },
+            {
+              "code": "masked_value",
+              "isActive": true,
+              "returnType": {
+                "name": "String"
+              },
+              "text": "FrankieScripts.formatSqlDate(Q18.value, \"YYYY/MM/DD\") + \" \" + FrankieScripts.formatTime(Q18.value, false)"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q18.value)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q18.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            }
+          ],
+          "maxDate": "",
+          "minDate": "",
+          "qualifiedCode": "Q18",
+          "type": "date_time",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        },
+        {
+          "code": "Q19",
+          "content": {
+            "description": {
+              "en": "Time Description"
+            },
+            "hint": {},
+            "label": {
+              "en": "Time"
+            }
+          },
+          "fullDayFormat": false,
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "Date"
+              },
+              "text": ""
+            },
+            {
+              "code": "masked_value",
+              "isActive": true,
+              "returnType": {
+                "name": "String"
+              },
+              "text": "FrankieScripts.formatTime(Q19.value, false)"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q19.value)"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q19.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "2"
+            }
+          ],
+          "qualifiedCode": "Q19",
+          "type": "time",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "code": "G5",
+      "content": {
+        "description": {
+          "en": "G5 Description"
+        },
+        "label": {
+          "en": "<p>File Based<\/p>"
+        }
+      },
+      "groupType": "GROUP",
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q20.in_current_navigation || Q20.validity) && (!Q21.in_current_navigation || Q21.validity)"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "3"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "3"
+        }
+      ],
+      "qualifiedCode": "G5",
+      "questions": [
+        {
+          "code": "Q20",
+          "content": {
+            "description": {
+              "en": "File Upload Description"
+            },
+            "hint": {
+              "en": "File Upload"
+            },
+            "label": {
+              "en": "File Upload"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "File"
+              },
+              "text": ""
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q20.value) || !Q20.value.size || !Q20.value.stored_filename"
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q20.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "qualifiedCode": "Q20",
+          "type": "file_upload",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        },
+        {
+          "code": "Q21",
+          "content": {
+            "description": {
+              "en": "Signature Description"
+            },
+            "label": {
+              "en": "Signature"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "value",
+              "isActive": false,
+              "returnType": {
+                "name": "File"
+              },
+              "text": ""
+            },
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "!Q21.validation_required"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            },
+            {
+              "code": "validation_required",
+              "isActive": true,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "FrankieScripts.isVoid(Q21.value) || !Q21.value.size || !Q21.value.stored_filename"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "1"
+            }
+          ],
+          "qualifiedCode": "Q21",
+          "type": "signature",
+          "validation": {
+            "validation_required": {
+              "isActive": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "code": "G6",
+      "content": {
+        "description": {
+          "en": "G6 Description"
+        },
+        "label": {
+          "en": "<p>Other<\/p>"
+        }
+      },
+      "groupType": "GROUP",
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q22.in_current_navigation || Q22.validity)"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "4"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "4"
+        }
+      ],
+      "qualifiedCode": "G6",
+      "questions": [
+        {
+          "answers": [
+            {
+              "code": "A1",
+              "content": {
+                "label": {
+                  "en": "Option 1"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "0"
+                }
+              ],
+              "qualifiedCode": "Q22A1"
+            },
+            {
+              "code": "A2",
+              "content": {
+                "label": {
+                  "en": "Option 2"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "1"
+                }
+              ],
+              "qualifiedCode": "Q22A2"
+            },
+            {
+              "code": "A3",
+              "content": {
+                "label": {
+                  "en": "Option 3"
+                }
+              },
+              "instructionList": [
+                {
+                  "code": "value",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "label",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "String"
+                  },
+                  "text": ""
+                },
+                {
+                  "code": "relevance",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "validity",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "in_current_navigation",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Boolean"
+                  },
+                  "text": "true"
+                },
+                {
+                  "code": "priority",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                },
+                {
+                  "code": "order",
+                  "isActive": false,
+                  "returnType": {
+                    "name": "Int"
+                  },
+                  "text": "2"
+                }
+              ],
+              "qualifiedCode": "Q22A3"
+            }
+          ],
+          "code": "Q22",
+          "content": {
+            "description": {
+              "en": "Ranking Question Description"
+            },
+            "label": {
+              "en": "Ranking Question"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "qualifiedCode": "Q22",
+          "type": "ranking"
+        }
+      ]
+    },
+    {
+      "code": "G7",
+      "content": {
+        "description": {
+          "en": "G7 Description"
+        },
+        "label": {
+          "en": "<p>Info<\/p>"
+        }
+      },
+      "groupType": "GROUP",
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": true,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "(!Q23.in_current_navigation || Q23.validity)"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "5"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "5"
+        }
+      ],
+      "qualifiedCode": "G7",
+      "questions": [
+        {
+          "code": "Q23",
+          "content": {
+            "description": {
+              "en": "To just show some infor"
+            },
+            "label": {
+              "en": "Text Display"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "qualifiedCode": "Q23",
+          "type": "text_display"
+        }
+      ]
+    },
+    {
+      "code": "G4",
+      "content": {
+        "description": {
+          "en": "<p>You can thank the user for filling in the survey... you can also redirect to another url, or repeat the survey<\/p>"
+        },
+        "label": {
+          "en": "End Group"
+        }
+      },
+      "groupType": "END",
+      "instructionList": [
+        {
+          "code": "label",
+          "isActive": false,
+          "returnType": {
+            "name": "String"
+          },
+          "text": ""
+        },
+        {
+          "code": "relevance",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "validity",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "in_current_navigation",
+          "isActive": false,
+          "returnType": {
+            "name": "Boolean"
+          },
+          "text": "true"
+        },
+        {
+          "code": "priority",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "6"
+        },
+        {
+          "code": "order",
+          "isActive": false,
+          "returnType": {
+            "name": "Int"
+          },
+          "text": "6"
+        }
+      ],
+      "qualifiedCode": "G4",
+      "questions": [
+        {
+          "code": "Q12",
+          "content": {
+            "description": {
+              "en": "<p>To just show some info<\/p>"
+            },
+            "label": {
+              "en": "<p>Thanks a lot for taking the time to fill out our survey<\/p>"
+            }
+          },
+          "instructionList": [
+            {
+              "code": "label",
+              "isActive": false,
+              "returnType": {
+                "name": "String"
+              },
+              "text": ""
+            },
+            {
+              "code": "relevance",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "validity",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "in_current_navigation",
+              "isActive": false,
+              "returnType": {
+                "name": "Boolean"
+              },
+              "text": "true"
+            },
+            {
+              "code": "priority",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            },
+            {
+              "code": "order",
+              "isActive": false,
+              "returnType": {
+                "name": "Int"
+              },
+              "text": "0"
+            }
+          ],
+          "qualifiedCode": "Q12",
+          "type": "display"
+        }
+      ]
+    }
+  ],
+  "instructionList": [
+    {
+      "code": "lang",
+      "isActive": false,
+      "returnType": {
+        "name": "String"
+      },
+      "text": "en"
+    },
+    {
+      "code": "relevance_map",
+      "isActive": true,
+      "returnType": {
+        "name": "Map"
+      },
+      "text": "{G1: G1.relevance,Q1: Q1.relevance,Q2: Q2.relevance,Q3: Q3.relevance,Q4: Q4.relevance,G2: G2.relevance,Q13: Q13.relevance,Q14: Q14.relevance,Q15: Q15.relevance,Q16: Q16.relevance,G3: G3.relevance,Q17: Q17.relevance,Q18: Q18.relevance,Q19: Q19.relevance,G5: G5.relevance,Q20: Q20.relevance,Q21: Q21.relevance,G6: G6.relevance,Q22: Q22.relevance,G7: G7.relevance,Q23: Q23.relevance,G4: G4.relevance,Q12: Q12.relevance}"
+    },
+    {
+      "code": "has_previous",
+      "isActive": true,
+      "returnType": {
+        "name": "Boolean"
+      },
+      "text": "(function(){if(!Survey.before_navigation||!Survey.relevance_map){return false;}for(var i=0;i<Survey.before_navigation.length;i++){if(Survey.relevance_map[Survey.before_navigation[i]]){return true}}return false;})()"
+    },
+    {
+      "code": "has_next",
+      "isActive": true,
+      "returnType": {
+        "name": "Boolean"
+      },
+      "text": "(function(){if(!Survey.after_navigation||!Survey.relevance_map){return false;}for(var i=0;i<Survey.after_navigation.length;i++){if(Survey.relevance_map[Survey.after_navigation[i]]){return true}}return false;})()"
+    },
+    {
+      "code": "before_navigation",
+      "isActive": false,
+      "returnType": {
+        "name": "List"
+      },
+      "text": "[]"
+    },
+    {
+      "code": "after_navigation",
+      "isActive": false,
+      "returnType": {
+        "name": "List"
+      },
+      "text": "[]"
+    },
+    {
+      "code": "validity",
+      "isActive": true,
+      "returnType": {
+        "name": "Boolean"
+      },
+      "text": "(!G1.in_current_navigation || G1.validity) && (!G2.in_current_navigation || G2.validity) && (!G3.in_current_navigation || G3.validity) && (!G5.in_current_navigation || G5.validity) && (!G6.in_current_navigation || G6.validity) && (!G7.in_current_navigation || G7.validity) && (!G4.in_current_navigation || G4.validity)"
+    },
+    {
+      "code": "validity_map",
+      "isActive": true,
+      "returnType": {
+        "name": "Map"
+      },
+      "text": "{G1: G1.validity,Q1: Q1.validity,Q2: Q2.validity,Q3: Q3.validity,Q4: Q4.validity,G2: G2.validity,Q13: Q13.validity,Q14: Q14.validity,Q15: Q15.validity,Q16: Q16.validity,G3: G3.validity,Q17: Q17.validity,Q18: Q18.validity,Q19: Q19.validity,G5: G5.validity,Q20: Q20.validity,Q21: Q21.validity,G6: G6.validity,Q22: Q22.validity,G7: G7.validity,Q23: Q23.validity,G4: G4.validity,Q12: Q12.validity}"
+    }
+  ],
+  "qualifiedCode": "Survey",
+  "theme": {
+    "bgColor": "#cfd8dc",
+    "primaryColor": "#3f51b5",
+    "textStyles": {
+      "group": {
+        "font": "Google Sans",
+        "size": 26
+      },
+      "question": {
+        "font": "Google Sans",
+        "size": 18
+      },
+      "text": {
+        "font": "Google Sans",
+        "size": 14
+      }
+    }
+  }
+}
