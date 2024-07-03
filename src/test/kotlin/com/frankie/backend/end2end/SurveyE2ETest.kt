@@ -15,10 +15,8 @@ class SurveyE2ETest : E2ETestBase() {
 
     @Test
     fun create_survey_expect_succeed() {
-        val adminEmail = "email" + UUID.randomUUID() + "@koko.com"
-        val adminPassword = "password"
-        val domain = UUID.randomUUID().toString().lowercase().take(12)
-        createTenant(adminEmail, adminPassword, domain)
+        val adminEmail = "admin@admin.admin"
+        val adminPassword = "admin"
         val authToken = login(adminEmail, adminPassword)
 
         val surveyCreateRequest = SurveyCreateRequest(

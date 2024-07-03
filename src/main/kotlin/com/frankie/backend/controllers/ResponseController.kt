@@ -22,8 +22,7 @@ import java.util.*
 
 @RestController
 class ResponseController(
-        private val responseService: ResponseService,
-        private val userUtils: UserUtils,
+        private val responseService: ResponseService
 ) {
 
     @PostMapping("/survey/{surveyId}/response/attach/{responseId}/{questionId}")

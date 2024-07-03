@@ -13,6 +13,5 @@ data class NavigateRequest(
     val responseId: UUID,
     val lang: String? = null,
     val navigationDirection: NavigationDirection,
-    val events: List<ResponseEvent> = listOf(),
     val values: Map<String, Any> = mapOf()
 )

@@ -11,7 +11,6 @@ import com.frankie.backend.exceptions.SurveyIsClosedException
 import com.frankie.backend.helpers.S3Helper
 import com.frankie.backend.mappers.SurveyMapper
 import com.frankie.backend.mappers.VersionMapper
-import com.frankie.backend.multitenancy.service.GlobalSurveyService
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.repositories.ResponseRepository
 import com.frankie.backend.persistence.repositories.SurveyRepository
@@ -44,9 +43,6 @@ class SurveyServiceTest {
     private lateinit var designService: DesignService
 
     @MockK
-    private lateinit var permissionService: PermissionService
-
-    @MockK
     private lateinit var responseRepository: ResponseRepository
 
     @MockK
@@ -55,8 +51,6 @@ class SurveyServiceTest {
     @MockK
     private lateinit var surveyRepository: SurveyRepository
 
-    @MockK
-    private lateinit var globalSurveyService: GlobalSurveyService
 
     @InjectMockKs
     private lateinit var surveyService: SurveyService
@@ -67,34 +61,14 @@ class SurveyServiceTest {
         MockKAnnotations.init(this)
     }
 
-
-    @Test
-    fun `cannot view survey without permission`() {
-        val surveyID = UUID.randomUUID()
-        val userID = UUID.randomUUID()
-        every { userUtils.currentUserId() } returns userID
-        every { permissionService.hasPermission(surveyID) } returns false
-        assertThrows(AuthorizationException::class.java) { surveyService.getSurveyById(surveyID) }
-    }
-
     @Test
     fun `can otherwise view survey with permission`() {
         val surveyID = UUID.randomUUID()
         val userID = UUID.randomUUID()
         val survey = buildSurvey(surveyID)
         every { userUtils.currentUserId() } returns userID
-        every { permissionService.hasPermission(surveyID) } returns true
         every { surveyRepository.findByIdOrNull(surveyID) } returns survey
         Assertions.assertEquals(surveyMapper.mapEntityToDto(survey), surveyService.getSurveyById(surveyID))
-    }
-
-    @Test
-    fun `cannot edit survey without permission`() {
-        val surveyID = UUID.randomUUID()
-        val userID = UUID.randomUUID()
-        every { userUtils.currentUserId() } returns userID
-        every { permissionService.hasPermission(surveyID) } returns false
-        assertThrows(AuthorizationException::class.java) { surveyService.edit(surveyID, editRequest()) }
     }
 
     @Test
@@ -103,7 +77,6 @@ class SurveyServiceTest {
         val userID = UUID.randomUUID()
         val survey = buildSurvey(surveyID, Status.CLOSED)
         every { userUtils.currentUserId() } returns userID
-        every { permissionService.hasPermission(surveyID) } returns true
         every { surveyRepository.findByIdOrNull(surveyID) } returns survey
         assertThrows(SurveyIsClosedException::class.java) { surveyService.edit(surveyID, editRequest()) }
     }
@@ -118,19 +91,9 @@ class SurveyServiceTest {
         every { userUtils.currentUserId() } returns userID
         every { surveyRepository.findByIdOrNull(surveyID) } returns survey
         every { surveyRepository.save(capture(surveyToSave)) } returns modifiedSurvey
-        every { permissionService.hasPermission(surveyID) } returns true
         surveyService.edit(surveyID, editRequest())
         Assertions.assertEquals(surveyID, surveyToSave.captured.id)
         Assertions.assertEquals(NEW_NAME, surveyToSave.captured.name)
-    }
-
-    @Test
-    fun `cannot delete survey without permission`() {
-        val surveyID = UUID.randomUUID()
-        val userID = UUID.randomUUID()
-        every { userUtils.currentUserId() } returns userID
-        every { permissionService.hasPermission(surveyID) } returns false
-        assertThrows(AuthorizationException::class.java) { surveyService.delete(surveyID) }
     }
 
     @Test
@@ -140,7 +103,6 @@ class SurveyServiceTest {
         val survey = buildSurvey(surveyID, Status.ACTIVE)
         every { userUtils.currentUserId() } returns userID
         every { surveyRepository.findByIdOrNull(surveyID) } returns survey
-        every { permissionService.hasPermission(surveyID) } returns true
         assertThrows(SurveyIsActiveException::class.java) { surveyService.delete(surveyID) }
     }
 
@@ -154,10 +116,7 @@ class SurveyServiceTest {
         justRun { surveyRepository.delete(survey) }
         justRun { versionRepository.deleteBySurveyId(surveyID) }
         justRun { responseRepository.deleteBySurveyId(surveyID) }
-        justRun { permissionService.deleteSurvey(surveyID) }
         justRun { s3Helper.deleteSurveyFiles(surveyID) }
-        justRun { globalSurveyService.removeSurvey(surveyID) }
-        every { permissionService.hasPermission(surveyID) } returns true
         surveyService.delete(surveyID)
         verify(exactly = 1) { surveyRepository.delete(survey) }
     }
@@ -172,11 +131,6 @@ class SurveyServiceTest {
             status = status,
             usage = Usage.MIXED,
             quota = -1,
-            publicWithinOrg = true,
-            saveIp = true,
-            saveTimings = true,
-            backgroundAudio = true,
-            recordGps = true,
             canLockSurvey = true,
             startDate = null,
             endDate = null,
