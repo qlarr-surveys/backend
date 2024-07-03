@@ -73,8 +73,6 @@ class RunSurveyE2ETest : E2ETestBase() {
         assert(runSurveyDto.navigationIndex is NavigationIndex.Group)
         Assertions.assertNotEquals(runSurveyDto.navigationIndex, navSurveyDto.navigationIndex)
 
-        val responseId = runSurveyDto.responseId
-
         webTestClient.get()
                 .uri("/survey/${surveyDTO.id}/response/all")
                 .header(HEADER_STRING, TOKEN_PREFIX + authToken)
