@@ -1,5 +1,6 @@
 package com.frankie.backend.common
 
+import com.frankie.backend.api.user.Roles
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
@@ -11,6 +12,11 @@ import java.util.*
 @Component
 class UserUtils {
     fun currentUserId(): UUID = UUID.fromString(SecurityContextHolder.getContext().authentication.principal as String)
+
+    fun isSuperAdmin() = SecurityContextHolder.getContext().authentication.authorities
+            .any { it.authority == Roles.SUPER_ADMIN.name.lowercase() }
+
+
     fun currentAuthToken(): String = SecurityContextHolder.getContext().authentication.credentials as String
 }
 
