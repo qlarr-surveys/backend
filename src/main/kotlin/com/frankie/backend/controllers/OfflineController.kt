@@ -26,14 +26,6 @@ class OfflineController(
         return ResponseEntity(designService.offlineDesignDiff(surveyId, publishInfo), HttpStatus.OK)
     }
 
-    @PostMapping("/guest/survey/{surveyId}/offline/design")
-    fun offlineDesignDiffForGuest(
-            @PathVariable surveyId: UUID,
-            @RequestBody publishInfo: PublishInfo
-    ): ResponseEntity<DesignDiffDto> {
-        return ResponseEntity(designService.offlineDesignDiff(surveyId, publishInfo), HttpStatus.OK)
-    }
-
     @GetMapping("/survey/offline")
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
     fun surveysForOffline(

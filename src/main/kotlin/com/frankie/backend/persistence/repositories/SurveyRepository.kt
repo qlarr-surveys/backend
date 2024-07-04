@@ -1,7 +1,6 @@
 package com.frankie.backend.persistence.repositories
 
 import com.frankie.backend.api.survey.Status
-import com.frankie.backend.persistence.entities.OfflineGuestSurveyResponseCount
 import com.frankie.backend.persistence.entities.OfflineSurveyResponseCount
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.entities.SurveyResponseCount

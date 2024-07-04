@@ -54,24 +54,6 @@ class RunSurveyController(
         )
     }
 
-    @PostMapping("/guest/survey/{surveyId}/preview/start")
-    fun startPreviewForGuest(
-            request: HttpServletRequest,
-            @RequestParam mode: String?,
-            @PathVariable surveyId: UUID,
-            @RequestBody startRequest: StartRequest
-    ): ResponseEntity<RunSurveyDto> {
-        return ResponseEntity(
-                navigationService.start(
-                        getClientIp(request),
-                        surveyId,
-                        startRequest,
-                        true,
-                        mode.toSurveyMode(SurveyMode.ONLINE)
-                ), HttpStatus.OK
-        )
-    }
-
     @PostMapping("/survey/{surveyId}/run/navigate")
     fun navigate(
             request: HttpServletRequest,
@@ -106,24 +88,6 @@ class RunSurveyController(
         )
     }
 
-    @PostMapping("/guest/survey/{surveyId}/preview/navigate")
-    fun navigatePreviewForGuest(
-            request: HttpServletRequest,
-            @RequestParam mode: String?,
-            @PathVariable surveyId: UUID,
-            @RequestBody navigateRequest: NavigateRequest
-    ): ResponseEntity<RunSurveyDto> {
-        return ResponseEntity(
-                navigationService.navigate(
-                        surveyId,
-                        navigateRequest,
-                        true,
-                        mode.toSurveyMode(SurveyMode.ONLINE)
-                ),
-                HttpStatus.OK
-        )
-    }
-
     @GetMapping("/survey/{surveyId}/run/runtime.js")
     fun runtimeJs(request: HttpServletRequest, @PathVariable surveyId: UUID): ResponseEntity<String> {
         return ResponseEntity(navigationService.runtimeJs(surveyId), HttpStatus.OK)
@@ -131,11 +95,6 @@ class RunSurveyController(
 
     @GetMapping("/survey/{surveyId}/preview/runtime.js")
     fun runtimeJsPreview(request: HttpServletRequest, @PathVariable surveyId: UUID): ResponseEntity<String> {
-        return ResponseEntity(navigationService.runtimeJs(surveyId, true), HttpStatus.OK)
-    }
-
-    @GetMapping("/guest/survey/{surveyId}/preview/runtime.js")
-    fun runtimeJsPreviewForGuest(request: HttpServletRequest, @PathVariable surveyId: UUID): ResponseEntity<String> {
         return ResponseEntity(navigationService.runtimeJs(surveyId, true), HttpStatus.OK)
     }
 }

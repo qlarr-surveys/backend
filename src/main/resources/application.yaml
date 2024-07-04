@@ -62,8 +62,6 @@ jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
   host: frankie.app:3000
-#  This belongs to askoura@gmail.com
-guestSurveysTenant: fb667f6f-f61c-4180-9603-da5ffa8a2457
 ---
 spring:
   config:
@@ -85,6 +83,4 @@ frontend:
   host: stg.console.qlarr.com
 auth:
   googleClientId: ${GOOGLE_CLIENT_ID}
-#  This belongs to askoura@qlarr.com
-guestSurveysTenant: 7bed8c5f-9b68-494c-8f4c-35f8d2360108
 ---

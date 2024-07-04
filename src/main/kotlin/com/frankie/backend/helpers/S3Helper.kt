@@ -21,8 +21,6 @@ class S3Helper(
         private val amazonS3: AmazonS3,
         private val transferManager: TransferManager,
         private val awsProperties: AwsProperties,
-        @Value("\${guestSurveysTenant}")
-        private val guestSurveysTenant: String
 ) {
 
 
@@ -163,38 +161,6 @@ class S3Helper(
         }
     }
 
-    fun cloneGuestResources(
-            sourceSurveyId: UUID,
-            destinationSurveyId: UUID
-    ) {
-        val sourceFolderPath =
-                String.format("%s/%s/%s", guestSurveysTenant, sourceSurveyId.toString(), SurveyFolder.RESOURCES.path)
-        val destinationFolderPath =
-                String.format("%s/%s/%s", testTenantID, destinationSurveyId.toString(), SurveyFolder.RESOURCES.path)
-        // List all objects in the source folder
-        var objectListing: ObjectListing = amazonS3.listObjects(awsProperties.bucketName, sourceFolderPath)
-
-        // Copy all objects in the source folder to the destination folder
-        while (true) {
-            for (objectSummary: S3ObjectSummary in objectListing.objectSummaries) {
-                val sourceObjectKey = objectSummary.key
-                val destinationObjectKey = sourceObjectKey.replace(sourceFolderPath, destinationFolderPath)
-                amazonS3.copyObject(
-                        awsProperties.bucketName,
-                        sourceObjectKey,
-                        awsProperties.bucketName,
-                        destinationObjectKey
-                )
-            }
-
-            if (objectListing.isTruncated) {
-                objectListing = amazonS3.listNextBatchOfObjects(objectListing)
-            } else {
-                break
-            }
-        }
-    }
-
     fun copyDesign(
             sourceSurveyId: UUID,
             destinationSurveyId: UUID,
@@ -212,25 +178,6 @@ class S3Helper(
                 "$destinationFolderPath/$newFileName"
         )
     }
-
-    fun copyClonedDesign(
-            sourceSurveyId: UUID,
-            destinationSurveyId: UUID,
-            sourceFileName: String,
-            newFileName: String
-    ) {
-        val sourceFolderPath =
-                String.format("%s/%s/%s", guestSurveysTenant, sourceSurveyId.toString(), SurveyFolder.DESIGN.path)
-        val destinationFolderPath =
-                String.format("%s/%s/%s", testTenantID, destinationSurveyId.toString(), SurveyFolder.DESIGN.path)
-        amazonS3.copyObject(
-                awsProperties.bucketName,
-                "$sourceFolderPath/$sourceFileName",
-                awsProperties.bucketName,
-                "$destinationFolderPath/$newFileName"
-        )
-    }
-
 
     fun deleteSurveyFiles(
             surveyId: UUID,

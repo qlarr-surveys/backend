@@ -62,8 +62,3 @@ interface OfflineSurveyResponseCount {
     val latestVersion: VersionEntity
     val userResponseCount: Long
 }
-
-interface OfflineGuestSurveyResponseCount {
-    val survey: SurveyEntity
-    val latestVersion: VersionEntity
-}

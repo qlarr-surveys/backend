@@ -47,18 +47,6 @@ class ResponseController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PostMapping("/guest/survey/{surveyId}/response/preview/attach/{responseId}/{questionId}")
-    fun uploadResponsePreviewFileForGuest(
-            request: HttpServletRequest,
-            @PathVariable surveyId: UUID,
-            @PathVariable responseId: UUID,
-            @PathVariable questionId: String,
-            @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<ResponseUploadFile> {
-        val result = responseService.uploadResponseFile(request.serverName,  surveyId, responseId, questionId, true, file)
-        return ResponseEntity(result, HttpStatus.OK)
-    }
-
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin, surveyor'})")
     @PostMapping("/survey/{surveyId}/offline/response/upload/{fileName}")
     fun uploadOfflineResponseFile(

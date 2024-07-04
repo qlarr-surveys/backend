@@ -2,7 +2,6 @@ package com.frankie.backend.mappers
 
 import com.frankie.backend.api.survey.*
 import com.frankie.backend.common.nowUtc
-import com.frankie.backend.persistence.entities.OfflineGuestSurveyResponseCount
 import com.frankie.backend.persistence.entities.OfflineSurveyResponseCount
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.entities.SurveyResponseCount
@@ -76,27 +75,6 @@ class SurveyMapper(
                 endDate = surveyResponseCount.survey.endDate,
                 responsesCount = surveyResponseCount.responseCount.toInt(),
                 completeResponseCount = surveyResponseCount.completeResponseCount.toInt(),
-                latestVersion = versionMapper.toDto(
-                        surveyResponseCount.latestVersion,
-                        surveyStatus = surveyResponseCount.survey.status
-                )
-        )
-    }
-
-    fun mapEntityToOfflineResponse(surveyResponseCount: OfflineGuestSurveyResponseCount): OfflineSurveyDto {
-        return OfflineSurveyDto(
-                id = surveyResponseCount.survey.id!!,
-                creationDate = surveyResponseCount.survey.creationDate!!,
-                lastModified = surveyResponseCount.survey.lastModified!!,
-                name = surveyResponseCount.survey.name,
-                status = surveyResponseCount.survey.status,
-                usage = surveyResponseCount.survey.usage,
-                surveyQuota = surveyResponseCount.survey.quota,
-                userResponsesCount = 0,
-                startDate = surveyResponseCount.survey.startDate,
-                endDate = surveyResponseCount.survey.endDate,
-                responsesCount = 0,
-                completeResponseCount = 0,
                 latestVersion = versionMapper.toDto(
                         surveyResponseCount.latestVersion,
                         surveyStatus = surveyResponseCount.survey.status
