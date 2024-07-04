@@ -1,7 +1,6 @@
 package com.frankie.backend.api.runsurvey
 
 import com.frankie.expressionmanager.model.NavigationDirection
-import com.frankie.expressionmanager.model.ResponseEvent
 import java.util.*
 
 data class StartRequest(
