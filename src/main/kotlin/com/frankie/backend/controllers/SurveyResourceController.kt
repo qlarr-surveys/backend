@@ -1,7 +1,6 @@
 package com.frankie.backend.controllers
 
 import com.frankie.backend.api.survey.FileInfo
-import com.frankie.backend.exceptions.AuthorizationException
 import com.frankie.backend.services.SurveyResourceService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.io.InputStreamResource

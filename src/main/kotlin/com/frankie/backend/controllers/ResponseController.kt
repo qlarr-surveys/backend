@@ -6,10 +6,8 @@ import com.frankie.backend.api.response.ResponsesDto
 import com.frankie.backend.api.response.UploadResponseRequestData
 import com.frankie.backend.api.survey.OfflineSurveyDto
 import com.frankie.backend.api.user.*
-import com.frankie.backend.common.UserUtils
 import com.frankie.backend.exceptions.UnrecognizedZoneException
 import com.frankie.backend.services.ResponseService
-import com.frankie.expressionmanager.model.ResponseEvent
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus

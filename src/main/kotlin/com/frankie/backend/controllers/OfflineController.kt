@@ -3,7 +3,6 @@ package com.frankie.backend.controllers
 import com.frankie.backend.api.offline.DesignDiffDto
 import com.frankie.backend.api.offline.PublishInfo
 import com.frankie.backend.api.survey.OfflineSurveyDto
-import com.frankie.backend.common.UserUtils
 import com.frankie.backend.services.DesignService
 import com.frankie.backend.services.SurveyService
 import org.springframework.http.HttpStatus
