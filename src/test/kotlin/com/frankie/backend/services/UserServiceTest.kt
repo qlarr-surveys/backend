@@ -79,7 +79,6 @@ class UserServiceTest {
         val expectedUser = user.copy(firstName = newName)
         every { encoder.encode(any()) } returns ""
         every { userUtils.currentUserId() } returns userId
-        every { userUtils.isSuperAdmin() } returns false
         every { userRepository.findByIdAndDeletedIsFalse(userId) } returns user
         every { userRepository.save(expectedUser) } returns expectedUser
 
@@ -104,7 +103,6 @@ class UserServiceTest {
         val expectedUser = user.copy(firstName = newName)
         every { encoder.encode(any()) } returns ""
         every { userUtils.currentUserId() } returns UUID.randomUUID()
-        every { userUtils.isSuperAdmin() } returns true
         every { userRepository.findByIdAndDeletedIsFalse(userId) } returns user
         every { userRepository.save(expectedUser) } returns expectedUser
         every { userMapper.mapToDto(expectedUser) } returns UserDTO(
@@ -133,7 +131,6 @@ class UserServiceTest {
         val expectedUser = user.copy(roles = newRoles)
         every { encoder.encode(any()) } returns ""
         every { userUtils.currentUserId() } returns UUID.randomUUID()
-        every { userUtils.isSuperAdmin() } returns true
         every { userRepository.findByIdAndDeletedIsFalse(userId) } returns user
         every { userRepository.save(expectedUser) } returns expectedUser
 
@@ -156,7 +153,6 @@ class UserServiceTest {
         val userId = UUID.randomUUID()
         val user = generateSurveyor(userId)
         every { userUtils.currentUserId() } returns userId
-        every { userUtils.isSuperAdmin() } returns true
         every { userRepository.findByIdAndDeletedIsFalse(userId) } returns user
         assertThrows(EditOwnUserException::class.java) {
             userService.update(userId, EditUserRequest(roles = setOf(Roles.SURVEY_ADMIN)))
@@ -168,7 +164,6 @@ class UserServiceTest {
         val userId = UUID.randomUUID()
         val user = generateSurveyor(userId)
         every { userUtils.currentUserId() } returns UUID.randomUUID()
-        every { userUtils.isSuperAdmin() } returns true
         every { userRepository.findByIdAndDeletedIsFalse(userId) } returns user
         assertThrows(EmptyRolesException::class.java) {
             userService.update(userId, EditUserRequest(roles = emptySet()))

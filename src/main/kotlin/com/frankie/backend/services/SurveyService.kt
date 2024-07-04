@@ -105,9 +105,6 @@ class SurveyService(
     }
 
     fun surveysForOffline(): List<OfflineSurveyDto> {
-        if (!userUtils.canDoOffline()) {
-            throw AuthorizationException()
-        }
         return surveyRepository.findAllOfflineSurveysByUserId()
                 .map(surveyMapper::mapEntityToOfflineResponse)
 
@@ -116,9 +113,6 @@ class SurveyService(
 
 
     fun getOfflineSurvey(surveyId: UUID): OfflineSurveyDto {
-        if (!userUtils.canDoOffline()) {
-            throw AuthorizationException()
-        }
         return surveyRepository.getOfflineSurvey(surveyId).let {
             surveyMapper.mapEntityToOfflineResponse(it)
         }
