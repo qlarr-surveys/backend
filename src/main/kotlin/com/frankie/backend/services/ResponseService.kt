@@ -5,7 +5,6 @@ import com.frankie.backend.api.response.ResponseDto
 import com.frankie.backend.api.response.ResponseUploadFile
 import com.frankie.backend.api.response.ResponsesDto
 import com.frankie.backend.api.response.UploadResponseRequestData
-import com.frankie.backend.api.survey.OfflineSurveyDto
 import com.frankie.backend.api.survey.Status
 import com.frankie.backend.common.SurveyFolder
 import com.frankie.backend.common.stripHtmlTags
@@ -97,7 +96,7 @@ class ResponseService(
             surveyId: UUID,
             responseId: UUID,
             uploadResponseRequestData: UploadResponseRequestData
-    ): OfflineSurveyDto {
+    ) {
         val survey = designService.getProcessedSurveyByVersion(surveyId, uploadResponseRequestData.versionId)
         if (survey.survey.status != Status.ACTIVE) {
             throw SurveyIsNotActiveException()
@@ -145,7 +144,6 @@ class ResponseService(
                 values = uploadResponseRequestData.values
         )
         responseRepository.save(responseEntity)
-        return surveyService.getOfflineSurvey(surveyId)
     }
 
 

@@ -4,6 +4,7 @@ import com.frankie.backend.api.offline.DesignDiffDto
 import com.frankie.backend.api.offline.PublishInfo
 import com.frankie.backend.api.survey.OfflineSurveyDto
 import com.frankie.backend.services.DesignService
+import com.frankie.backend.services.SurveyDashboardService
 import com.frankie.backend.services.SurveyService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -13,7 +14,7 @@ import java.util.*
 
 @RestController
 class OfflineController(
-        private val surveyService: SurveyService,
+        private val surveyDashboardService: SurveyDashboardService,
         private val designService: DesignService
 ) {
 
@@ -30,7 +31,7 @@ class OfflineController(
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
     fun surveysForOffline(
     ): ResponseEntity<List<OfflineSurveyDto>> {
-        return ResponseEntity(surveyService.surveysForOffline(), HttpStatus.OK)
+        return ResponseEntity(surveyDashboardService.surveysForOffline(), HttpStatus.OK)
     }
 
 }

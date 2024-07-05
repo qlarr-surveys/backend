@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.Headers
 import com.frankie.backend.api.response.ResponseUploadFile
 import com.frankie.backend.api.response.ResponsesDto
 import com.frankie.backend.api.response.UploadResponseRequestData
-import com.frankie.backend.api.survey.OfflineSurveyDto
 import com.frankie.backend.api.user.*
 import com.frankie.backend.exceptions.UnrecognizedZoneException
 import com.frankie.backend.services.ResponseService
@@ -77,9 +76,9 @@ class ResponseController(
             @PathVariable surveyId: UUID,
             @PathVariable responseId: UUID,
             @RequestBody uploadSurveyRequestData: UploadResponseRequestData
-    ): ResponseEntity<OfflineSurveyDto> {
-        val result = responseService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
-        return ResponseEntity(result, HttpStatus.OK)
+    ): ResponseEntity<Any> {
+        responseService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
+        return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 
     @GetMapping("/survey/{surveyId}/response/attach/{filename}")
