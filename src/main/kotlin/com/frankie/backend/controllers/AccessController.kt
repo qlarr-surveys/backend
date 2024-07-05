@@ -12,9 +12,6 @@ import org.springframework.web.bind.annotation.RestController
 class AccessController(
         private val userService: UserService,
 ) {
-    init {
-        println("What's going on?")
-    }
 
     @PostMapping("/user/login")
     fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<LoggedInUserResponse> {

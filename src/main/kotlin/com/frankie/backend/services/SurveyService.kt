@@ -113,7 +113,7 @@ class SurveyService(
 
 
     fun getOfflineSurvey(surveyId: UUID): OfflineSurveyDto {
-        return surveyRepository.getOfflineSurvey(surveyId).let {
+        return surveyRepository.getOfflineSurvey(surveyId, userUtils.currentUserId()).let {
             surveyMapper.mapEntityToOfflineResponse(it)
         }
     }
