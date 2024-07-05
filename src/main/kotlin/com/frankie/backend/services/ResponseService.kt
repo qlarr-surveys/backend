@@ -1,12 +1,10 @@
 package com.frankie.backend.services
 
 import com.amazonaws.services.s3.Headers
-import com.frankie.backend.api.response.ResponseDto
-import com.frankie.backend.api.response.ResponseUploadFile
-import com.frankie.backend.api.response.ResponsesDto
-import com.frankie.backend.api.response.UploadResponseRequestData
+import com.frankie.backend.api.response.*
 import com.frankie.backend.api.survey.Status
 import com.frankie.backend.common.SurveyFolder
+import com.frankie.backend.common.UserUtils
 import com.frankie.backend.common.stripHtmlTags
 import com.frankie.backend.exceptions.*
 import com.frankie.backend.expressionmanager.SurveyProcessor
@@ -43,6 +41,7 @@ class ResponseService(
         private val responseRepository: ResponseRepository,
         private val surveyService: SurveyService,
         private val helper: S3Helper,
+        private val userUtils: UserUtils,
         private val designService: DesignService,
         private val responseMapper: ResponseMapper,
 ) {
@@ -96,7 +95,7 @@ class ResponseService(
             surveyId: UUID,
             responseId: UUID,
             uploadResponseRequestData: UploadResponseRequestData
-    ) {
+    ): ResponseCountDto {
         val survey = designService.getProcessedSurveyByVersion(surveyId, uploadResponseRequestData.versionId)
         if (survey.survey.status != Status.ACTIVE) {
             throw SurveyIsNotActiveException()
@@ -144,6 +143,15 @@ class ResponseService(
                 values = uploadResponseRequestData.values
         )
         responseRepository.save(responseEntity)
+        return responseRepository.responseCount(
+                userId = userUtils.currentUserId(),
+                surveyId = surveyId
+        ).let {
+            ResponseCountDto(
+                    completeResponseCount = it.completeResponseCount.toInt(),
+                    userResponsesCount = it.userResponseCount.toInt()
+            )
+        }
     }
 
 

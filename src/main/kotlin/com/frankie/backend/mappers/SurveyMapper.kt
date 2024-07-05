@@ -73,7 +73,6 @@ class SurveyMapper(
                 userResponsesCount = surveyResponseCount.userResponseCount.toInt(),
                 startDate = surveyResponseCount.survey.startDate,
                 endDate = surveyResponseCount.survey.endDate,
-                responsesCount = surveyResponseCount.responseCount.toInt(),
                 completeResponseCount = surveyResponseCount.completeResponseCount.toInt(),
                 latestVersion = versionMapper.toDto(
                         surveyResponseCount.latestVersion,

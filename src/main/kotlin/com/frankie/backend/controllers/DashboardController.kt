@@ -1,11 +1,8 @@
 package com.frankie.backend.controllers
 
-import com.frankie.backend.api.offline.DesignDiffDto
-import com.frankie.backend.api.offline.PublishInfo
 import com.frankie.backend.api.survey.OfflineSurveyDto
-import com.frankie.backend.services.DesignService
+import com.frankie.backend.api.survey.SurveysDto
 import com.frankie.backend.services.SurveyDashboardService
-import com.frankie.backend.services.SurveyService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -13,18 +10,22 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-class OfflineController(
+class DashboardController(
         private val surveyDashboardService: SurveyDashboardService,
-        private val designService: DesignService
 ) {
 
-    @PostMapping("/survey/{surveyId}/offline/design")
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
-    fun offlineDesignDiff(
-            @PathVariable surveyId: UUID,
-            @RequestBody publishInfo: PublishInfo
-    ): ResponseEntity<DesignDiffDto> {
-        return ResponseEntity(designService.offlineDesignDiff(surveyId, publishInfo), HttpStatus.OK)
+
+    @GetMapping("/survey/all")
+    fun getAll(
+            @RequestParam page: Int?,
+            @RequestParam("per_page") perPage: Int?,
+            @RequestParam("sort_by") sortBy: String?,
+            @RequestParam status: String?
+    ): ResponseEntity<SurveysDto> {
+        val surveyDTOList = surveyDashboardService.getAllSurveys(
+                page, perPage, sortBy, status
+        )
+        return ResponseEntity(surveyDTOList, HttpStatus.OK)
     }
 
     @GetMapping("/survey/offline")

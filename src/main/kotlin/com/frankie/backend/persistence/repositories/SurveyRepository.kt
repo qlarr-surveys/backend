@@ -58,7 +58,7 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
 
 
     @Query(
-            "SELECT s as survey, COUNT(r) as responseCount, v as latestVersion, " +
+            "SELECT s as survey, v as latestVersion, " +
                     "COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount, " +
                     "COUNT(case when r.surveyor = :userId then 1 else null end) as userResponseCount " +
                     "FROM SurveyEntity s " +

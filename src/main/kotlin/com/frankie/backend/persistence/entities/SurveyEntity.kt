@@ -57,8 +57,12 @@ interface SurveyResponseCount {
 
 interface OfflineSurveyResponseCount {
     val survey: SurveyEntity
-    val responseCount: Long
     val completeResponseCount: Long
     val latestVersion: VersionEntity
+    val userResponseCount: Long
+}
+
+interface ResponseCount {
+    val completeResponseCount: Long
     val userResponseCount: Long
 }

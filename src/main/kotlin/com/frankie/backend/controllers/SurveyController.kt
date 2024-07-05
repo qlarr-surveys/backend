@@ -12,21 +12,9 @@ import java.util.*
 @RestController
 class SurveyController(
         private val surveyService: SurveyService,
-        private val surveyDashboardService: SurveyDashboardService,
 ) {
 
-    @GetMapping("/survey/all")
-    fun getAll(
-            @RequestParam page: Int?,
-            @RequestParam("per_page") perPage: Int?,
-            @RequestParam("sort_by") sortBy: String?,
-            @RequestParam status: String?
-    ): ResponseEntity<SurveysDto> {
-        val surveyDTOList = surveyDashboardService.getAllSurveys(
-                page, perPage, sortBy, status
-        )
-        return ResponseEntity(surveyDTOList, HttpStatus.OK)
-    }
+
 
     @PostMapping("/survey/create")
     @PreAuthorize("hasAnyAuthority({'super_admin', 'survey_admin'})")

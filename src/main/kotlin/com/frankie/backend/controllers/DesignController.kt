@@ -2,6 +2,8 @@ package com.frankie.backend.controllers
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.frankie.backend.api.design.DesignDto
+import com.frankie.backend.api.offline.DesignDiffDto
+import com.frankie.backend.api.offline.PublishInfo
 import com.frankie.backend.api.version.VersionDto
 import com.frankie.backend.services.DesignService
 import org.springframework.http.HttpStatus
@@ -14,6 +16,15 @@ import java.util.*
 class DesignController(
         private val designService: DesignService
 ) {
+
+    @PostMapping("/survey/{surveyId}/offline/design")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    fun offlineDesignDiff(
+            @PathVariable surveyId: UUID,
+            @RequestBody publishInfo: PublishInfo
+    ): ResponseEntity<DesignDiffDto> {
+        return ResponseEntity(designService.offlineDesignDiff(surveyId, publishInfo), HttpStatus.OK)
+    }
 
     @PostMapping("/survey/{surveyId}/design")
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")

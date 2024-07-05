@@ -47,7 +47,6 @@ data class OfflineSurveyDto(
     val status: Status,
     val usage: Usage,
     val surveyQuota: Int,
-    val responsesCount: Int,
     val userResponsesCount: Int,
     val completeResponseCount: Int,
     val latestVersion: VersionDto

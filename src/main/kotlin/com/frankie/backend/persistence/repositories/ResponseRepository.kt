@@ -1,5 +1,6 @@
 package com.frankie.backend.persistence.repositories
 
+import com.frankie.backend.persistence.entities.ResponseCount
 import com.frankie.backend.persistence.entities.SurveyResponseEntity
 import com.frankie.backend.services.ResponseWithSurveyorName
 import jakarta.transaction.Transactional
@@ -12,51 +13,60 @@ import java.util.*
 
 interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
 
+
     @Query(
-        "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.surveyor = :surveyor " +
-                "ORDER BY r.startDate ASC"
+            "SELECT COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount, " +
+                    "COUNT(case when r.surveyor = :userId then 1 else null end) as userResponseCount " +
+                    "FROM SurveyResponseEntity r " +
+                    "WHERE  r.surveyId = :surveyId"
+    )
+    fun responseCount(userId: UUID, surveyId: UUID): ResponseCount
+
+    @Query(
+            "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
+                    "FROM SurveyResponseEntity r " +
+                    "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
+                    "WHERE r.surveyId = :surveyId AND r.surveyor = :surveyor " +
+                    "ORDER BY r.startDate ASC"
     )
     fun findAllBySurveyIdAndSurveyor(surveyId: UUID, surveyor: UUID, pageable: Pageable): Page<ResponseWithSurveyorName>
 
     @Query(
-        "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.preview = false " +
-                "ORDER BY r.startDate ASC"
+            "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
+                    "FROM SurveyResponseEntity r " +
+                    "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
+                    "WHERE r.surveyId = :surveyId AND r.preview = false " +
+                    "ORDER BY r.startDate ASC"
     )
     fun findAllBySurveyId(surveyId: UUID, pageable: Pageable): Page<ResponseWithSurveyorName>
 
     @Query(
-        "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.submitDate IS NOT NULL AND r.preview = false " +
-                "ORDER BY r.startDate ASC"
+            "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
+                    "FROM SurveyResponseEntity r " +
+                    "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
+                    "WHERE r.surveyId = :surveyId AND r.submitDate IS NOT NULL AND r.preview = false " +
+                    "ORDER BY r.startDate ASC"
     )
     fun findAllBySurveyIdAndSubmitDateIsNotNull(
-        surveyId: UUID,
-        pageable: Pageable
+            surveyId: UUID,
+            pageable: Pageable
     ): Page<ResponseWithSurveyorName>
 
     @Query(
-        "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.submitDate IS NULL AND r.preview = false"
+            "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
+                    "FROM SurveyResponseEntity r " +
+                    "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
+                    "WHERE r.surveyId = :surveyId AND r.submitDate IS NULL AND r.preview = false"
     )
     fun findAllBySurveyIdAndSubmitDateIsNull(
-        surveyId: UUID,
-        pageable: Pageable
+            surveyId: UUID,
+            pageable: Pageable
     ): Page<ResponseWithSurveyorName>
 
     @Query(
-        "SELECT COUNT(*)" +
-                " FROM responses" +
-                " WHERE survey_id = :surveyId and submit_date IS NOT NULL AND preview = false", nativeQuery = true
+            "SELECT COUNT(*)" +
+                    " FROM responses" +
+                    " WHERE survey_id = :surveyId and submit_date IS NOT NULL AND preview = false", nativeQuery = true
     )
     fun completedSurveyCount(surveyId: UUID): Int
 
