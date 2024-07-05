@@ -4,7 +4,7 @@ import com.frankie.backend.api.response.ResponseCountDto
 import com.frankie.backend.api.response.ResponseUploadFile
 import com.frankie.backend.api.response.UploadResponseRequestData
 import com.frankie.backend.api.user.*
-import com.frankie.backend.services.ResponseService
+import com.frankie.backend.services.ResponseOpsService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
@@ -16,7 +16,7 @@ import java.util.*
 
 @RestController
 class ResponseOpsController(
-        private val responseService: ResponseService
+        private val responseOpsService: ResponseOpsService
 ) {
 
     @PostMapping("/survey/{surveyId}/response/attach/{responseId}/{questionId}")
@@ -27,7 +27,7 @@ class ResponseOpsController(
             @PathVariable questionId: String,
             @RequestParam("file") file: MultipartFile
     ): ResponseEntity<ResponseUploadFile> {
-        val result = responseService.uploadResponseFile(request.serverName, surveyId, responseId, questionId, false, file)
+        val result = responseOpsService.uploadResponseFile(request.serverName, surveyId, responseId, questionId, false, file)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -39,7 +39,7 @@ class ResponseOpsController(
             @PathVariable questionId: String,
             @RequestParam("file") file: MultipartFile
     ): ResponseEntity<ResponseUploadFile> {
-        val result = responseService.uploadResponseFile(request.serverName, surveyId, responseId, questionId, true, file)
+        val result = responseOpsService.uploadResponseFile(request.serverName, surveyId, responseId, questionId, true, file)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -51,7 +51,7 @@ class ResponseOpsController(
             @PathVariable surveyId: UUID,
             @RequestPart file: MultipartFile
     ): ResponseEntity<ResponseUploadFile> {
-        val result = responseService.uploadOfflineResponseFile(surveyId, fileName, file)
+        val result = responseOpsService.uploadOfflineResponseFile(surveyId, fileName, file)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -62,7 +62,7 @@ class ResponseOpsController(
             @PathVariable surveyId: UUID,
             @PathVariable filename: String
     ): ResponseEntity<Boolean> {
-        val result = responseService.isOfflineFileAlreadyUploaded(surveyId, filename)
+        val result = responseOpsService.isOfflineFileAlreadyUploaded(surveyId, filename)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -74,7 +74,7 @@ class ResponseOpsController(
             @PathVariable responseId: UUID,
             @RequestBody uploadSurveyRequestData: UploadResponseRequestData
     ): ResponseEntity<ResponseCountDto> {
-        responseService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
+        responseOpsService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 
@@ -84,7 +84,7 @@ class ResponseOpsController(
             @PathVariable surveyId: UUID,
             @PathVariable filename: UUID
     ): ResponseEntity<InputStreamResource> {
-        return responseService.downloadFile(request.serverName, surveyId, filename)
+        return responseOpsService.downloadFile(request.serverName, surveyId, filename)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
@@ -93,7 +93,7 @@ class ResponseOpsController(
             @PathVariable surveyId: UUID,
             @PathVariable responseId: UUID
     ): ResponseEntity<Any> {
-        responseService.deleteResponse(surveyId, responseId)
+        responseOpsService.deleteResponse(surveyId, responseId)
         return ResponseEntity(HttpStatus.NO_CONTENT)
     }
 }
