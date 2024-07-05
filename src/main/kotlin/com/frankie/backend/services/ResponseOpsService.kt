@@ -173,10 +173,5 @@ class ResponseOpsService(
                 }
         responseRepository.delete(response)
     }
-
-    companion object {
-        const val PER_PAGE = 10
-        const val PAGE = 1
-    }
-
+    
 }
