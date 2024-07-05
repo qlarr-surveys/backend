@@ -105,7 +105,7 @@ class SurveyService(
     }
 
     fun surveysForOffline(): List<OfflineSurveyDto> {
-        return surveyRepository.findAllOfflineSurveysByUserId()
+        return surveyRepository.findAllOfflineSurveysByUserId(userUtils.currentUserId())
                 .map(surveyMapper::mapEntityToOfflineResponse)
 
     }

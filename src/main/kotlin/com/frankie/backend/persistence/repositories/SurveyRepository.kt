@@ -67,7 +67,7 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
                     "WHERE (s.status = 'ACTIVE' AND (s.usage = 'OFFLINE' OR s.usage = 'MIXED')) " +
                     "GROUP BY s.id, v.surveyId, v.version "
     )
-    fun findAllOfflineSurveysByUserId(): List<OfflineSurveyResponseCount>
+    fun findAllOfflineSurveysByUserId(userId: UUID): List<OfflineSurveyResponseCount>
 
     @Query(
             "SELECT s as survey, COUNT(r) as responseCount," +
