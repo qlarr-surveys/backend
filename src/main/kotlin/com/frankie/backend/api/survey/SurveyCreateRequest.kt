@@ -8,11 +8,7 @@ import java.time.LocalDateTime
 
 data class SurveyCreateRequest(
     val name: String,
-    val usage: Usage = Usage.MIXED,
-    @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
-    val startDate: LocalDateTime? = null,
-    @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
-    val endDate: LocalDateTime? = null,
+    val usage: Usage = Usage.MIXED
 )
 
 data class EditSurveyRequest(

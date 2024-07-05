@@ -18,8 +18,8 @@ class SurveyMapper(
                 status = Status.DRAFT,
                 usage = surveyCreateRequest.usage,
                 quota = UNLIMITED_QUOTA,
-                startDate = surveyCreateRequest.startDate,
-                endDate = surveyCreateRequest.endDate,
+                startDate = null,
+                endDate = null,
                 canLockSurvey = true,
                 creationDate = nowUtc(),
                 lastModified = nowUtc()
