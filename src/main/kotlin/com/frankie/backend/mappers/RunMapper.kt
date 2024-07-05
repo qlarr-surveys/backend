@@ -22,7 +22,5 @@ class RunMapper {
         navigationIndex = navigationJsonOutput.navigationIndex,
         responseId,
         lang,
-        additionalLang,
-        false
-    )
+        additionalLang)
 }
