@@ -1,7 +1,6 @@
 package com.frankie.backend.controllers
 
 import com.frankie.backend.api.survey.*
-import com.frankie.backend.services.SurveyDashboardService
 import com.frankie.backend.services.SurveyService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

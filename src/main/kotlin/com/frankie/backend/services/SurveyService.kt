@@ -69,7 +69,7 @@ class SurveyService(
         return surveyMapper.mapEntityToDto(surveyEntity)
     }
 
-    fun getSurveyById(surveyId: UUID, bypassPermission: Boolean = false): SurveyDTO {
+    fun getSurveyById(surveyId: UUID): SurveyDTO {
         return surveyRepository.findByIdOrNull(surveyId)?.let {
             surveyMapper.mapEntityToDto(it)
         } ?: throw SurveyNotFoundException()

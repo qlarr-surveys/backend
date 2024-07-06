@@ -40,7 +40,7 @@ class ResponseOpsService(
             isPreview: Boolean,
             file: MultipartFile
     ): ResponseUploadFile {
-        val survey = surveyService.getSurveyById(surveyId, bypassPermission = true)
+        val survey = surveyService.getSurveyById(surveyId)
         if (!isPreview && !survey.isActive()) {
             throw SurveyIsNotActiveException()
         }
