@@ -9,9 +9,3 @@ data class LoginRequest(
 ) {
     fun email() = email.trim().lowercase()
 }
-
-
-data class GoogleSignIn(
-    val credential: String,
-    val clientId: String
-)

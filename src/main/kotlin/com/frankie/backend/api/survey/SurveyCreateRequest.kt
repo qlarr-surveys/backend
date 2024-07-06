@@ -19,16 +19,8 @@ data class EditSurveyRequest(
     val endDate: LocalDateTime? = null,
     val additionalLanguages: List<SurveyLang>? = null,
     val usage: Usage? = null,
-
-    val backgroundAudio: Boolean? = null,
-    val recordGps: Boolean? = null,
     val canLockSurvey: Boolean? = null,
-
     val quota: Int? = null,
-    val publicWithinOrg: Boolean? = null,
-
-    val saveIp: Boolean? = null,
-    val saveTimings: Boolean? = null,
 )
 
 data class CloneRequest(val name: String)
