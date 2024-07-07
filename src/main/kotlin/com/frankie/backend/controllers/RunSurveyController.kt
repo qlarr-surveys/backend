@@ -4,7 +4,6 @@ import com.frankie.backend.api.runsurvey.NavigateRequest
 import com.frankie.backend.api.runsurvey.RunSurveyDto
 import com.frankie.backend.api.runsurvey.StartRequest
 import com.frankie.backend.api.user.*
-import com.frankie.backend.common.getClientIp
 import com.frankie.backend.services.RunSurveyService
 import com.frankie.expressionmanager.model.SurveyMode
 import jakarta.servlet.http.HttpServletRequest
@@ -26,7 +25,6 @@ class RunSurveyController(
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
                 navigationService.start(
-                        getClientIp(request),
                         surveyId,
                         startRequest,
                         false,
@@ -45,7 +43,6 @@ class RunSurveyController(
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
                 navigationService.start(
-                        getClientIp(request),
                         surveyId,
                         startRequest,
                         true,
