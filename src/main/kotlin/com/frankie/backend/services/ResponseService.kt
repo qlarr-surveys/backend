@@ -245,7 +245,7 @@ class ResponseService(
         const val PER_PAGE = 10
         const val PAGE = 1
 
-        val ADDITIONAL_COL_NAMES = listOf("id", "preview", "version", "ip", "start_date", "submit_date", "Lang")
+        val ADDITIONAL_COL_NAMES = listOf("id", "preview", "version", "start_date", "submit_date", "Lang")
     }
 
 }
