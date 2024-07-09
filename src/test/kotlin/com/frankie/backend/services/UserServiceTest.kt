@@ -58,9 +58,6 @@ class UserServiceTest {
     @MockK
     private lateinit var emailChangesRepository: EmailChangesRepository
 
-    @MockK
-    private lateinit var userRegistrationService: UserRegistrationService
-
     @InjectMockKs
     private lateinit var userService: UserService
 
@@ -87,7 +84,6 @@ class UserServiceTest {
                 firstName = expectedUser.firstName,
                 lastName = expectedUser.lastName,
                 email = expectedUser.email,
-                isConfirmed = false,
                 roles = setOf(Roles.SUPER_ADMIN)
         )
         val newUser = userService.editProfile(EditProfileRequest(firstName = newName))
@@ -110,7 +106,6 @@ class UserServiceTest {
                 firstName = expectedUser.firstName,
                 lastName = expectedUser.lastName,
                 email = expectedUser.email,
-                isConfirmed = false,
                 roles = setOf(Roles.SUPER_ADMIN)
         )
         val newUser = userService.update(userId, EditUserRequest(firstName = newName))
@@ -139,7 +134,6 @@ class UserServiceTest {
                 firstName = expectedUser.firstName,
                 lastName = expectedUser.lastName,
                 email = expectedUser.email,
-                isConfirmed = false,
                 roles = expectedUser.roles
         )
         val newUser = userService.update(userId, EditUserRequest(roles = newRoles))
@@ -196,7 +190,7 @@ class UserServiceTest {
                 generateSurveyor(userId, nowUtc().minusSeconds(RECENT_LOGIN_SPAN / 1000L + 1))
         every { userRepository.findByEmailAndDeletedIsFalse(any()) } returns user
         every { userRepository.save(capture(savedUser)) } returns user.copy(password = "nePAss")
-        every { userMapper.mapToUserResponse(any(),any(),any()) } returns LoggedInUserResponse(
+        every { userMapper.mapToUserResponse(any(), any(), any()) } returns LoggedInUserResponse(
                 id = UUID.randomUUID(),
                 firstName = "",
                 lastName = "",
@@ -243,7 +237,6 @@ class UserServiceTest {
                 password = "password",
                 roles = setOf(Roles.SURVEYOR),
                 lastLogin = lastLogin,
-                isConfirmed = true
         )
     }
 

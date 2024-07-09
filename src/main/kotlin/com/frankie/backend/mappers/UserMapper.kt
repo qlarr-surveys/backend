@@ -34,7 +34,6 @@ class UserMapper(private val encoder: PasswordEncoder) {
                 lastName = userEntity.lastName,
                 email = userEntity.email,
                 roles = userEntity.roles,
-                isConfirmed = userEntity.isConfirmed,
         )
     }
 
@@ -47,7 +46,6 @@ class UserMapper(private val encoder: PasswordEncoder) {
                 email = createRequest.email(),
                 password = password,
                 roles = createRequest.roles,
-                isConfirmed = false
         )
     }
 

@@ -257,7 +257,6 @@ class UserControllerIntegrationTest : IntegrationTestBase() {
             "firstName-" + UUID.randomUUID(),
             "lastName-" + UUID.randomUUID(),
             "email-" + UUID.randomUUID(),
-            true,
             setOf(),
             )
 

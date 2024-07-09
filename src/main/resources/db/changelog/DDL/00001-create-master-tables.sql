@@ -17,7 +17,6 @@ CREATE TABLE users
     password VARCHAR(255)   NOT NULL,
     deleted    BOOLEAN        NOT NULL,
     roles      VARCHAR(255)[] NOT NULL,
-    is_confirmed BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMP
 );
 

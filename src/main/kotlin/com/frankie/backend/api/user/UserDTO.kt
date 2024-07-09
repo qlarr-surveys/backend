@@ -8,6 +8,5 @@ data class UserDTO(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val isConfirmed: Boolean,
     val roles: Set<Roles>,
 )
