@@ -31,5 +31,8 @@ data class UserEntity(
     val roles: Set<Roles>,
 
     @Column(name = "last_login", nullable = true)
-    val lastLogin: LocalDateTime? = null
+    val lastLogin: LocalDateTime? = null,
+
+    @Column(name = "is_confirmed", nullable = false)
+    val isConfirmed: Boolean,
 )

@@ -37,7 +37,17 @@ class UserE2ETest : E2ETestBase() {
             .expectBody(UserDTO::class.java)
             .consumeWith(System.out::println)
             .returnResult()
-
+        val userReg = userRegistrationRepository.findByEmail(email = userEmail)
+        webTestClient.post()
+                .uri("/user/confirm_new_user")
+                .bodyValue(ConfirmUserRequest(token = userReg[0].id!!, newPassword = "fjhgfjhgf"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk
+                .expectBody(LoggedInUserResponse::class.java)
+                .consumeWith(System.out::println)
+                .returnResult()
+        
         val userEntity = userRepository.findByEmailAndDeletedIsFalse(userEmail)
 
         assertThat(userEntity!!.email).isEqualTo(userEmail)

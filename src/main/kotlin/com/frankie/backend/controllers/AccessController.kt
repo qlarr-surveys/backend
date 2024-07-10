@@ -36,4 +36,9 @@ class AccessController(
         val loggedInUserResponse = userService.resetPassword(resetPasswordRequest)
         return ResponseEntity(loggedInUserResponse, HttpStatus.OK)
     }
+    @PostMapping("/user/confirm_new_user")
+    fun confirmNewUser(@RequestBody confirmUserRequest: ConfirmUserRequest): ResponseEntity<LoggedInUserResponse> {
+        val loggedInUserResponse = userService.confirmUser(confirmUserRequest)
+        return ResponseEntity(loggedInUserResponse, HttpStatus.OK)
+    }
 }
