@@ -2,12 +2,6 @@
 -- preconditions onFail:HALT onError:HALT
 -- changeset master:1
 
-CREATE TABLE user_registration
-(
-    id          UUID            NOT NULL PRIMARY KEY,
-    email       VARCHAR(255)    NOT NULL
-);
-
 CREATE TABLE users
 (
     id         UUID           NOT NULL PRIMARY KEY,

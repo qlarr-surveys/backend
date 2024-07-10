@@ -27,6 +27,7 @@ auth:
 jwt:
   activeExpirationMs: 3600000
   resetExpirationMs: 3600000
+  resetExpirationForNewUsersMs: 2592000000
   refreshExpirationMs: 31536000000
   secret: ${JWT_SECRET}
 mail:
@@ -62,25 +63,3 @@ jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
   host: frankie.app:3000
----
-spring:
-  config:
-    activate:
-      on-profile: staging
-  datasource:
-    driver-class-name: com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver
-    url: jdbc-secretsmanager:postgresql://qlarr-stg.cy0f33fng7df.eu-central-1.rds.amazonaws.com:5432/qlarrdb
-    username: staging/qlarr-backend/rds
-mail:
-  password: ${EMAIL_PASSWORD}
-  email: ${EMAIL_MAIL}
-aws:
-  s3:
-    bucketName: 148174262075-qlarr-backend-stg
-jwt:
-  secret: ${JWT_SECRET}
-frontend:
-  host: stg.console.qlarr.com
-auth:
-  googleClientId: ${GOOGLE_CLIENT_ID}
----

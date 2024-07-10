@@ -7,7 +7,6 @@ import com.frankie.backend.mappers.UserMapper
 import com.frankie.backend.persistence.entities.EmailChangesEntity
 import com.frankie.backend.persistence.entities.RefreshTokenEntity
 import com.frankie.backend.persistence.entities.UserEntity
-import com.frankie.backend.persistence.entities.UserRegistrationEntity
 import com.frankie.backend.persistence.repositories.EmailChangesRepository
 import com.frankie.backend.persistence.repositories.RefreshTokenRepository
 import com.frankie.backend.persistence.repositories.UserRepository
@@ -29,7 +28,6 @@ import java.util.*
 @Service
 class UserService(
         private val emailChangesRepository: EmailChangesRepository,
-        private val userRegistrationService: UserRegistrationService,
         private val userMapper: UserMapper,
         private val userRepository: UserRepository,
         private val jwtService: JwtService,
@@ -171,14 +169,6 @@ class UserService(
     }
 
 
-    fun sendNewUserConfirmation(email: String, token: UUID) {
-        emailService.sendEmail(
-                to = email,
-                body = " To confirm your invitation... Follow this link: http://$frontendDomain/confirm-new-user/$token",
-                subject = "Your invitation to join Qlarr"
-        )
-    }
-
     @Transactional
     // It is fine to mix master and tenant because user is logged in
     fun create(createRequest: CreateRequest): UserDTO {
@@ -193,7 +183,6 @@ class UserService(
         if (!createRequest.lastName.isValidName()) {
             throw InvalidLastName()
         }
-        val registrationID = userRegistrationService.addUserRegistration(email)
         val userEntity = userMapper.mapToEntity(createRequest)
         if (userEntity.roles.isEmpty()) {
             throw EmptyRolesException()
@@ -204,7 +193,7 @@ class UserService(
             // we assume here that at least only the email constraint could be violated
             throw DuplicateEmailException()
         }
-        sendNewUserConfirmation(savedEntity.email, registrationID)
+        sendNewUserConfirmation(savedEntity)
         return userMapper.mapToDto(userEntity)
     }
 
@@ -243,37 +232,27 @@ class UserService(
         val newUserEntity = userEntity.copy(
                 password = encoder.encode(
                         resetPasswordRequest.newPassword
-                )
+                ), isConfirmed = true
         )
         return loggedUserResponse(newUserEntity, true)
     }
 
-
-    fun confirmUser(confirmUserRequest: ConfirmUserRequest): LoggedInUserResponse {
-        val registration = userRegistrationService.getUserRegistration(confirmUserRequest.token)
-                ?: throw WrongResetTokenException()
-        return completeRegistration(confirmUserRequest.newPassword, registration)
-    }
-
-    @Transactional
-    // It is fine to mix master and tenant because tenantContext is set
-    fun completeRegistration(newPassword: String, registration: UserRegistrationEntity): LoggedInUserResponse {
-        val userEntity = userRepository.findByEmailAndDeletedIsFalse(email = registration.email)
-                ?: throw WrongResetTokenException()
-        val newUserEntity = userEntity.copy(
-                isConfirmed = true,
-                password = encoder.encode(newPassword)
-        )
-        userRegistrationService.deleteUserRegistration(registration.id!!)
-        return loggedUserResponse(newUserEntity, true)
-    }
 
     fun sendPasswordResetEmail(userEntity: UserEntity) {
-        val resetToken = jwtService.generatePasswordResetToken(userEntity)
+        val resetToken = jwtService.generatePasswordResetToken(userEntity, newUser = false)
         emailService.sendEmail(
                 to = userEntity.email,
                 body = " To reset your password... Follow this link: http://$frontendDomain/reset-password?token=$resetToken",
                 subject = "Your Password Reset Token"
+        )
+    }
+
+    fun sendNewUserConfirmation(userEntity: UserEntity) {
+        val resetToken = jwtService.generatePasswordResetToken(userEntity, newUser = true)
+        emailService.sendEmail(
+                to = userEntity.email,
+                body = " You have been invited... Follow this link: http://$frontendDomain/reset-password?token=$resetToken",
+                subject = "Invitation to join Qlarr.com"
         )
     }
 

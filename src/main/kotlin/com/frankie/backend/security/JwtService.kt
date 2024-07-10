@@ -49,8 +49,9 @@ class JwtService(private val props: JwtProperties) {
     fun getResetPasswordDetails(token: String): JwtResetPasswordData {
         return extractAllClaims(token).let {
             JwtResetPasswordData(
-                it.subject,
-                it[RESET_PASSWORD] as Boolean,
+                    it.subject,
+                    it[RESET_PASSWORD] as Boolean,
+                    it[NEW_USER] as Boolean,
             )
         }
     }
@@ -82,19 +83,23 @@ class JwtService(private val props: JwtProperties) {
         val token = setClaimsAndBuildToken(claims, tokenExpiration, user.email)
         val refreshToken = UUID.randomUUID()
         return AccessToken(
-            sessionId = sessionId,
-            token = token,
-            refreshToken = refreshToken,
-            refreshTokenExpiry = refreshTokenExpiration
+                sessionId = sessionId,
+                token = token,
+                refreshToken = refreshToken,
+                refreshTokenExpiry = refreshTokenExpiration
         )
     }
 
-    fun generatePasswordResetToken(user: UserEntity): String {
-        val tokenExpiration = Date(System.currentTimeMillis() + props.resetExpiration)
+    fun generatePasswordResetToken(user: UserEntity, newUser: Boolean): String {
+        val tokenExpiration = Date(System.currentTimeMillis() + if (newUser) {
+            props.resetExpirationForNewUsersMs
+        } else {
+            props.resetExpiration
+        })
         return setClaimsAndBuildToken(
-            buildResetTokenClaims(),
-            tokenExpiration,
-            user.email
+                buildResetTokenClaims(newUser),
+                tokenExpiration,
+                user.email
         )
     }
 
@@ -118,29 +123,30 @@ class JwtService(private val props: JwtProperties) {
         return claims
     }
 
-    private fun buildResetTokenClaims(): MutableMap<String, Any> {
+    private fun buildResetTokenClaims(newUser: Boolean): MutableMap<String, Any> {
         val claims: MutableMap<String, Any> = hashMapOf()
         claims[RESET_PASSWORD] = true
+        claims[NEW_USER] = newUser
         return claims
     }
 
     private fun setClaimsAndBuildToken(claims: MutableMap<String, Any>, expiration: Date, email: String): String {
         return Jwts.builder()
-            .setClaims(claims)
-            .setExpiration(expiration)
-            .setIssuedAt(Date(System.currentTimeMillis()))
-            .setSubject(email)
-            .signWith(generateKey(), SignatureAlgorithm.HS256)
-            .compact()
+                .setClaims(claims)
+                .setExpiration(expiration)
+                .setIssuedAt(Date(System.currentTimeMillis()))
+                .setSubject(email)
+                .signWith(generateKey(), SignatureAlgorithm.HS256)
+                .compact()
     }
 
     private fun extractAllClaims(token: String): Claims {
         return Jwts
-            .parserBuilder()
-            .setSigningKey(generateKey())
-            .build()
-            .parseClaimsJws(token)
-            .body
+                .parserBuilder()
+                .setSigningKey(generateKey())
+                .build()
+                .parseClaimsJws(token)
+                .body
     }
 
     private fun generateKey(): Key {
@@ -149,19 +155,21 @@ class JwtService(private val props: JwtProperties) {
 
     companion object {
         private const val RESET_PASSWORD = "reset_password"
+        private const val NEW_USER = "new_user"
         private const val USER_ID = "user_id"
         private const val AUTHORITIES = "authorities"
         private const val SESSION_ID = "session_id"
     }
 
     data class JwtUserDetails(
-        val userId: String,
-        val sessionId: UUID?,
-        val authorities: List<GrantedAuthority>,
+            val userId: String,
+            val sessionId: UUID?,
+            val authorities: List<GrantedAuthority>,
     )
 
     data class JwtResetPasswordData(
-        val email: String,
-        val resetPassword: Boolean,
+            val email: String,
+            val resetPassword: Boolean,
+            val newUser: Boolean,
     )
 }

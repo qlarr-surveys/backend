@@ -2,7 +2,6 @@ package com.frankie.backend.end2end
 
 import com.frankie.backend.api.user.LoggedInUserResponse
 import com.frankie.backend.api.user.LoginRequest
-import com.frankie.backend.persistence.repositories.UserRegistrationRepository
 import com.frankie.backend.persistence.repositories.UserRepository
 import com.frankie.backend.services.UserService
 import org.junit.jupiter.api.BeforeAll
@@ -27,9 +26,6 @@ class E2ETestBase {
 
     @Autowired
     lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var userRegistrationRepository: UserRegistrationRepository
 
     @Autowired
     lateinit var userService: UserService

@@ -58,9 +58,6 @@ class UserServiceTest {
     @MockK
     private lateinit var emailChangesRepository: EmailChangesRepository
 
-    @MockK
-    private lateinit var userRegistrationService: UserRegistrationService
-
     @InjectMockKs
     private lateinit var userService: UserService
 
@@ -185,13 +182,14 @@ class UserServiceTest {
         every { encoder.encode(any()) } returns ""
         every { jwtService.getResetPasswordDetails(any()) } returns JwtService.JwtResetPasswordData(
                 "",
-                true
+                true,
+                newUser = false
         )
         every { jwtService.generateAccessToken(any()) } returns AccessToken(
                 UUID.randomUUID(), "", UUID.randomUUID(),
                 LocalDateTime.now()
         )
-        every { jwtService.generatePasswordResetToken(any()) } returns "resert_token"
+        every { jwtService.generatePasswordResetToken(any(), any()) } returns "resert_token"
         val user =
                 generateSurveyor(userId, nowUtc().minusSeconds(RECENT_LOGIN_SPAN / 1000L + 1))
         every { userRepository.findByEmailAndDeletedIsFalse(any()) } returns user
@@ -205,7 +203,7 @@ class UserServiceTest {
                 email = "",
                 roles = setOf()
         )
-        val authToken = jwtService.generatePasswordResetToken(user)
+        val authToken = jwtService.generatePasswordResetToken(user, false)
         userService.resetPassword(ResetPasswordRequest(authToken, "nePAss"))
         Assertions.assertNotEquals(user.password, savedUser.captured.password)
     }
