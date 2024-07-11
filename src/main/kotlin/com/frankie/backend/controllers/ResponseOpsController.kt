@@ -74,8 +74,8 @@ class ResponseOpsController(
             @PathVariable responseId: UUID,
             @RequestBody uploadSurveyRequestData: UploadResponseRequestData
     ): ResponseEntity<ResponseCountDto> {
-        responseOpsService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
-        return ResponseEntity(HttpStatus.NO_CONTENT)
+        val count = responseOpsService.uploadOfflineSurveyResponse(surveyId, responseId, uploadSurveyRequestData)
+        return ResponseEntity(count, HttpStatus.OK)
     }
 
     @GetMapping("/survey/{surveyId}/response/attach/{filename}")
