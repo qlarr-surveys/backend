@@ -63,3 +63,29 @@ jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
   host: frankie.app:3000
+#  This belongs to askoura@gmail.com
+guestSurveysTenant: fb667f6f-f61c-4180-9603-da5ffa8a2457
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://local-postgres:5432/frankiedb
+    username: frankie
+    password: password
+mail:
+  password: owzrmumizhrggtul
+  email: askoura@gmail.com
+aws:
+  accessId: AKIASE767Z45RDFNMOZD
+  secretKey: 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
+  s3:
+    bucketName: frankie-testing
+jwt:
+  secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
+frontend:
+  host: frankie.app:3000
+#  This belongs to askoura@gmail.com
+guestSurveysTenant: fb667f6f-f61c-4180-9603-da5ffa8a2457
+
