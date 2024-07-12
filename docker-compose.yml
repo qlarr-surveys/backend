@@ -40,14 +40,13 @@ services:
 
   app:
     container_name: 'frankie-backend'
-    image: openjdk:17
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     networks:
       - docker-local_net
-    volumes:
-      - "./frankie-backend-0.0.1-SNAPSHOT.jar:/app/app.jar"
-    command: [ "java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar" ]
     depends_on:
       - local-postgres
     restart: unless-stopped

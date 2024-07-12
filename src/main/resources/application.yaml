@@ -29,7 +29,7 @@ jwt:
   resetExpirationMs: 3600000
   resetExpirationForNewUsersMs: 2592000000
   refreshExpirationMs: 31536000000
-  secret: ${JWT_SECRET}
+  secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 mail:
   host: smtp.gmail.com
   port: 465
