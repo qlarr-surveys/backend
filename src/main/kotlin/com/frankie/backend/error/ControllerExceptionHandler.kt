@@ -284,7 +284,7 @@ class ControllerExceptionHandler {
         exception.printStackTrace()
         return ResponseEntity(
                 ErrorMessage(
-                        "Invalid input, survey end date must always be before start date",
+                        "Survey Quota Exceeded",
                         exception.javaClass.simpleName
                 ),
                 HttpStatus.NOT_FOUND

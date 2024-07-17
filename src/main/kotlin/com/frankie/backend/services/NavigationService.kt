@@ -101,7 +101,7 @@ class NavigationService(
                 throw SurveyExpiredException()
             }
         }
-        if (survey.quota >= 1 && survey.quota >= completeSurveyCount) {
+        if (survey.quota in 1..completeSurveyCount) {
             throw SurveyQuotaExceeded()
         }
     }
