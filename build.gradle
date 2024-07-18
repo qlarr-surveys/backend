@@ -43,10 +43,7 @@ dependencies {
     implementation 'org.liquibase:liquibase-core'
     implementation 'com.github.blagerweij:liquibase-sessionlock:1.6.2'
     implementation 'org.postgresql:postgresql:42.5.4'
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.5'
-    // https://mvnrepository.com/artifact/com.amazonaws.secretsmanager/aws-secretsmanager-jdbc
-    implementation 'com.amazonaws.secretsmanager:aws-secretsmanager-jdbc:1.0.12'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-csv
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'commons-io:commons-io:2.16.1'

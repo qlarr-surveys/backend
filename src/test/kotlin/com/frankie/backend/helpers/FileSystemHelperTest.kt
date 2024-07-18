@@ -30,7 +30,7 @@ class FileSystemHelperTest {
         val surveyId = UUID.randomUUID()
         val fileName = "test.png"
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, mock, fileName)
+        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, mock, "", fileName)
 
         assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue()
     }
@@ -57,7 +57,7 @@ class FileSystemHelperTest {
         val resources = fileSystemHelper.listSurveyResources(surveyId)
 
         assertThat(resources).hasSize(1)
-            .extracting(FileInfo::name).containsOnly(tuple(fileName))
+                .extracting(FileInfo::name).containsOnly(tuple(fileName))
     }
 
     @Test
@@ -82,7 +82,7 @@ class FileSystemHelperTest {
         val resources = fileSystemHelper.filerSurveyResources(surveyId, files = listOf(fileName))
 
         assertThat(resources).hasSize(1)
-            .extracting(FileInfo::name).containsOnly(tuple(fileName))
+                .extracting(FileInfo::name).containsOnly(tuple(fileName))
     }
 
     @Test
@@ -115,7 +115,7 @@ class FileSystemHelperTest {
         val resources = fileSystemHelper.listSurveyResources(destinationSurveyId)
 
         assertThat(resources).hasSize(2)
-            .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(fileName1), tuple(fileName2))
+                .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(fileName1), tuple(fileName2))
     }
 
     @Test
@@ -134,7 +134,7 @@ class FileSystemHelperTest {
         val resources = fileSystemHelper.filerSurveyFiles(destinationSurveyId, SurveyFolder.DESIGN)
 
         assertThat(resources).hasSize(1)
-            .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(newFileName))
+                .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(newFileName))
     }
 
     @Test
@@ -164,7 +164,7 @@ class FileSystemHelperTest {
 
         val inputStream = fileSystemHelper.download(surveyId, SurveyFolder.RESOURCES, filename)
 
-        val fileContent = inputStream.use { stream -> String(stream.readAllBytes()) }
+        val fileContent = inputStream.inputStream.use { stream -> String(stream.readAllBytes()) }
 
         assertThat(fileContent).isEqualTo(text)
     }

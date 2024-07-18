@@ -1,7 +1,5 @@
 package com.frankie.backend.error
 
-import com.amazonaws.AmazonServiceException
-import com.amazonaws.SdkClientException
 import com.frankie.backend.exceptions.*
 import com.frankie.expressionmanager.usecase.SurveyDesignWithErrorException
 import io.jsonwebtoken.JwtException
@@ -27,30 +25,6 @@ class ControllerExceptionHandler {
         return ResponseEntity(
                 ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
                 HttpStatus.UNAUTHORIZED
-        )
-    }
-
-    @ExceptionHandler
-    fun handleException(exception: SdkClientException): ResponseEntity<ErrorMessage> {
-        exception.printStackTrace()
-        return ResponseEntity(
-                ErrorMessage(
-                        "SDK Client connection error/unable to parse the response from service",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.INTERNAL_SERVER_ERROR
-        )
-    }
-
-    @ExceptionHandler
-    fun handleException(exception: AmazonServiceException): ResponseEntity<ErrorMessage> {
-        exception.printStackTrace()
-        return ResponseEntity(
-                ErrorMessage(
-                        "Error response returned by an Amazon web service, the service was not able to process the request",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.INTERNAL_SERVER_ERROR
         )
     }
 

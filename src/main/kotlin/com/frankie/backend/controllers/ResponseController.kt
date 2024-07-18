@@ -1,10 +1,10 @@
 package com.frankie.backend.controllers
 
-import com.amazonaws.services.s3.Headers
 import com.frankie.backend.api.response.ResponsesDto
 import com.frankie.backend.api.user.*
 import com.frankie.backend.exceptions.UnrecognizedZoneException
 import com.frankie.backend.services.ResponseService
+import org.apache.http.protocol.HTTP.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -59,7 +59,7 @@ class ResponseController(
         else
             responseService.exportTextResponses(surveyId, complete, clientZoneId)
         return ResponseEntity.ok()
-                .header(Headers.CONTENT_TYPE, "text/csv")
+                .header(CONTENT_TYPE, "text/csv")
                 .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.csv\"")
                 .body(result)
     }
