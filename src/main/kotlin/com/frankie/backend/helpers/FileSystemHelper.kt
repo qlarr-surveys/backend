@@ -3,6 +3,7 @@ package com.frankie.backend.helpers
 import com.frankie.backend.api.survey.FileInfo
 import com.frankie.backend.common.SurveyFolder
 import com.frankie.backend.exceptions.ResourceNotFoundException
+import com.frankie.backend.properties.FileSystemProperties
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
@@ -16,10 +17,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-private const val testTenantID = "63927513-d9e5-48fe-a07b-e7b5ab284947"
-
 @Component
-class FileSystemHelper(private val workingDir: String) {
+class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
 
     fun upload(
         surveyId: UUID,
@@ -58,16 +57,7 @@ class FileSystemHelper(private val workingDir: String) {
     }
 
     fun listSurveyResources(surveyId: UUID): List<FileInfo> {
-        val surveyPath = buildFolderPath(surveyId, SurveyFolder.RESOURCES)
-        val surveyFolder = File(surveyPath)
-
-        return surveyFolder.listFiles()?.asIterable()?.map { file ->
-            FileInfo(
-                file.name,
-                file.length(),
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
-            )
-        } ?: throw ResourceNotFoundException()
+        return filerSurveyResources(surveyId)
     }
 
     fun filerSurveyResources(
@@ -75,15 +65,24 @@ class FileSystemHelper(private val workingDir: String) {
         files: List<String>? = null,
         dateFrom: LocalDateTime? = null
     ): List<FileInfo> {
-        val surveyPath = buildFolderPath(surveyId, SurveyFolder.RESOURCES)
-        val surveyFolder = File(surveyPath)
+        return filerSurveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
+    }
 
-        return surveyFolder.listFiles()?.asIterable()
+    fun filerSurveyFiles(
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        files: List<String>? = null,
+        dateFrom: LocalDateTime? = null
+    ): List<FileInfo> {
+        val surveyPath = buildFolderPath(surveyId, surveyFolder)
+        val surveyDir = File(surveyPath)
+
+        return surveyDir.listFiles()?.asIterable()
             ?.filter { file ->
                 dateFrom?.isBefore(
                     LocalDateTime.ofInstant(
                         Instant.ofEpochMilli(file.lastModified()),
-                        ZoneId.systemDefault()
+                        ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
                     )
                 ) ?: true && files?.contains(file.name) ?: true
             }?.map { file ->
@@ -127,7 +126,8 @@ class FileSystemHelper(private val workingDir: String) {
         surveyId: UUID,
     ) {
         val surveyPath = buildFolderPath(surveyId)
-        deleteFolder(surveyPath)
+        
+        FileUtils.deleteDirectory(File(surveyPath))
     }
 
     fun download(
@@ -163,12 +163,6 @@ class FileSystemHelper(private val workingDir: String) {
         FileUtils.delete(File(path))
     }
 
-    private fun deleteFolder(
-        path: String
-    ) {
-        FileUtils.deleteDirectory(File(path))
-    }
-
     private fun saveToFile(byteStream: InputStream, path: String) {
         val p = Paths.get(path)
 
@@ -181,8 +175,7 @@ class FileSystemHelper(private val workingDir: String) {
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =
         String.format(
-            "$workingDir/%s/%s/%s/%s",
-            testTenantID,
+            "${fileSystemProperties.rootFolder}/%s/%s/%s",
             surveyId.toString(),
             surveyFolder.path,
             filename
@@ -190,16 +183,14 @@ class FileSystemHelper(private val workingDir: String) {
 
     private fun buildFolderPath(surveyId: UUID, surveyFolder: SurveyFolder) =
         String.format(
-            "$workingDir/%s/%s/%s",
-            testTenantID,
+            "${fileSystemProperties.rootFolder}/%s/%s",
             surveyId.toString(),
             surveyFolder.path,
         )
 
     private fun buildFolderPath(surveyId: UUID) =
         String.format(
-            "$workingDir/%s/%s/%s",
-            testTenantID,
+            "${fileSystemProperties.rootFolder}/%s",
             surveyId.toString()
         )
 

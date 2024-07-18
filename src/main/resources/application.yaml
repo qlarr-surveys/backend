@@ -59,6 +59,8 @@ aws:
   secretKey: YPtBnWUA+XA0pqZotIFK8e2PMxeIPoNBuNaBRBYK
   s3:
     bucketName: frankie-testing
+fileSystem:
+  rootFolder: src/main/resources/root
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
