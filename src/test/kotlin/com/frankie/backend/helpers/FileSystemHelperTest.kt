@@ -154,7 +154,7 @@ class FileSystemHelperTest {
     }
 
     @Test
-    fun deleteSurveyFiles_should_deleteAllSurveyFiles1() {
+    fun download_should_fetchFileInputStreamFromFileSystem() {
         val surveyId = UUID.randomUUID()
         val filename = "test1.txt"
         val text = "TEST123"
