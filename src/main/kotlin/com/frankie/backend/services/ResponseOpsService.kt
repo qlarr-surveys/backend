@@ -1,17 +1,17 @@
 package com.frankie.backend.services
 
-import com.amazonaws.services.s3.Headers
 import com.frankie.backend.api.response.*
 import com.frankie.backend.api.survey.Status
 import com.frankie.backend.common.SurveyFolder
 import com.frankie.backend.common.UserUtils
 import com.frankie.backend.exceptions.*
 import com.frankie.backend.expressionmanager.SurveyProcessor
-import com.frankie.backend.helpers.S3Helper
+import com.frankie.backend.helpers.FileSystemHelper
 import com.frankie.backend.persistence.entities.SurveyResponseEntity
 import com.frankie.backend.persistence.repositories.ResponseRepository
 import com.frankie.expressionmanager.model.*
 import com.frankie.expressionmanager.usecase.SurveyDesignWithErrorException
+import org.apache.http.protocol.HTTP.CONTENT_TYPE
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 class ResponseOpsService(
         private val responseRepository: ResponseRepository,
         private val surveyService: SurveyService,
-        private val helper: S3Helper,
+        private val helper: FileSystemHelper,
         private val userUtils: UserUtils,
         private val designService: DesignService,
 ) {
@@ -75,7 +75,7 @@ class ResponseOpsService(
             surveyId: UUID,
             filename: String
     ): Boolean {
-        return helper.doesFileExists(surveyId, filename)
+        return helper.doesFileExists(surveyId, SurveyFolder.RESPONSES, filename)
     }
 
     fun uploadOfflineSurveyResponse(
@@ -150,10 +150,10 @@ class ResponseOpsService(
         val file = helper.download(surveyId, SurveyFolder.RESPONSES, filename.toString())
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .header(Headers.CONTENT_TYPE, file.objectMetadata.userMetadata["content-Type"]!!)
+                .header(CONTENT_TYPE, file.objectMetadata["content-type"]!!)
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .eTag(file.objectMetadata.eTag) // lastModified is also ava
-                .body(InputStreamResource(file.stream))
+                .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
+                .body(InputStreamResource(file.inputStream))
     }
 
 
@@ -173,5 +173,5 @@ class ResponseOpsService(
                 }
         responseRepository.delete(response)
     }
-    
+
 }

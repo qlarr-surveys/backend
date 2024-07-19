@@ -5,10 +5,9 @@ import com.frankie.backend.api.survey.Status
 import com.frankie.backend.api.survey.Usage
 import com.frankie.backend.common.UserUtils
 import com.frankie.backend.common.nowUtc
-import com.frankie.backend.exceptions.AuthorizationException
 import com.frankie.backend.exceptions.SurveyIsActiveException
 import com.frankie.backend.exceptions.SurveyIsClosedException
-import com.frankie.backend.helpers.S3Helper
+import com.frankie.backend.helpers.FileSystemHelper
 import com.frankie.backend.mappers.SurveyMapper
 import com.frankie.backend.mappers.VersionMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
@@ -46,7 +45,7 @@ class SurveyServiceTest {
     private lateinit var responseRepository: ResponseRepository
 
     @MockK
-    private lateinit var s3Helper: S3Helper
+    private lateinit var fileSystemHelper: FileSystemHelper
 
     @MockK
     private lateinit var surveyRepository: SurveyRepository
@@ -116,7 +115,7 @@ class SurveyServiceTest {
         justRun { surveyRepository.delete(survey) }
         justRun { versionRepository.deleteBySurveyId(surveyID) }
         justRun { responseRepository.deleteBySurveyId(surveyID) }
-        justRun { s3Helper.deleteSurveyFiles(surveyID) }
+        justRun { fileSystemHelper.deleteSurveyFiles(surveyID) }
         surveyService.delete(surveyID)
         verify(exactly = 1) { surveyRepository.delete(survey) }
     }

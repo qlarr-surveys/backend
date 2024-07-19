@@ -7,7 +7,7 @@ import com.frankie.backend.api.survey.SurveyDTO
 import com.frankie.backend.common.isValidName
 import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.*
-import com.frankie.backend.helpers.S3Helper
+import com.frankie.backend.helpers.FileSystemHelper
 import com.frankie.backend.mappers.SurveyMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.entities.VersionEntity
@@ -28,7 +28,7 @@ class SurveyService(
         private val versionRepository: VersionRepository,
         private val responsesRepository: ResponseRepository,
         private val designService: DesignService,
-        private val s3Helper: S3Helper,
+        private val fileSystemHelper: FileSystemHelper,
 
         ) {
     @Transactional(rollbackFor = [DuplicateSurveyException::class])
@@ -119,7 +119,7 @@ class SurveyService(
             responsesRepository.deleteBySurveyId(surveyId)
             versionRepository.deleteBySurveyId(surveyId)
             surveyRepository.delete(it)
-            s3Helper.deleteSurveyFiles(surveyId)
+            fileSystemHelper.deleteSurveyFiles(surveyId)
         } ?: throw SurveyNotFoundException()
     }
 
@@ -137,7 +137,7 @@ class SurveyService(
         } catch (e: DataIntegrityViolationException) {
             throw DuplicateSurveyException()
         }
-        s3Helper.cloneResources(surveyId, cloned.id!!)
+        fileSystemHelper.cloneResources(surveyId, cloned.id!!)
         copyDesign(surveyId, cloned.id)
         return surveyMapper.mapEntityToDto(cloned)
     }
@@ -155,7 +155,7 @@ class SurveyService(
                         lastModified = nowUtc()
                 )
         )
-        s3Helper.copyDesign(source, destination, latestVersion.version.toString(), "1")
+        fileSystemHelper.copyDesign(source, destination, latestVersion.version.toString(), "1")
 
     }
 
