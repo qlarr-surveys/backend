@@ -54,11 +54,6 @@ spring:
 mail:
   password: owzrmumizhrggtul
   email: askoura@gmail.com
-aws:
-  accessId: AKIASE767Z45RDFNMOZD
-  secretKey: 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
-  s3:
-    bucketName: frankie-testing
 fileSystem:
   rootFolder: src/main/resources/root
 jwt:
@@ -79,11 +74,6 @@ spring:
 mail:
   password: owzrmumizhrggtul
   email: askoura@gmail.com
-aws:
-  accessId: AKIASE767Z45RDFNMOZD
-  secretKey: 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
-  s3:
-    bucketName: frankie-testing
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
