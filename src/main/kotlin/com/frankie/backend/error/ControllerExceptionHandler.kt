@@ -352,15 +352,6 @@ class ControllerExceptionHandler {
     }
 
     @ExceptionHandler
-    fun handleException(exception: GoogleAuthError): ResponseEntity<ErrorMessage> {
-        exception.printStackTrace()
-        return ResponseEntity(
-                ErrorMessage("Could not process google credentials", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
-        )
-    }
-
-    @ExceptionHandler
     fun handleException(exception: SurveyDesignWithErrorException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(

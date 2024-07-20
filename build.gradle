@@ -60,8 +60,6 @@ dependencies {
     implementation 'org.json:json:20230227'
     implementation "org.graalvm.js:js:22.3.1"
     implementation "org.graalvm.js:js-scriptengine:22.3.1"
-    implementation 'com.google.api-client:google-api-client:2.2.0'
-
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {

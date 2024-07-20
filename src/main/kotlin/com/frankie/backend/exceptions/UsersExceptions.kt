@@ -21,8 +21,6 @@ class WrongCredentialsException : Throwable()
 
 class SignupNotAllowed : Throwable()
 
-class GoogleAuthError : Throwable()
-
 class AuthorizationException : Throwable()
 
 class DuplicateEmailException : Throwable()

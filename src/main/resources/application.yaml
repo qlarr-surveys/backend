@@ -22,14 +22,11 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     date-time-format: yyyy-MM-dd HH:mm:ss
-auth:
-  googleClientId: 464768435207-uhlij21kj0kn0tetqqj4292iedfeiogf.apps.googleusercontent.com
 jwt:
   activeExpirationMs: 3600000
   resetExpirationMs: 3600000
   resetExpirationForNewUsersMs: 2592000000
   refreshExpirationMs: 31536000000
-  secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 mail:
   host: smtp.gmail.com
   port: 465
@@ -38,8 +35,6 @@ mail:
   mock: false
 env:
   test: false
-  s3:
-    bucketName: frankie-testing
 frontend:
   host: frankie.app:3000
 ---
