@@ -60,8 +60,6 @@ jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
   host: frankie.app:3000
-#  This belongs to askoura@gmail.com
-guestSurveysTenant: fb667f6f-f61c-4180-9603-da5ffa8a2457
 ---
 spring:
   config:
@@ -78,6 +76,3 @@ jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
   host: frankie.app:3000
-#  This belongs to askoura@gmail.com
-guestSurveysTenant: fb667f6f-f61c-4180-9603-da5ffa8a2457
-
