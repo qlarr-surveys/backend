@@ -38,7 +38,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         saveMetadata(File(path), contentType)
     }
 
-    override fun generateETagUsingMetadata(file: File): String {
+    private fun generateETagUsingMetadata(file: File): String {
         val lastModified = file.lastModified()
         val fileSize = file.length()
         return "$lastModified-$fileSize"

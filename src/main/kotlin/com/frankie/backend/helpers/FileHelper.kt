@@ -19,9 +19,6 @@ interface FileHelper {
             filename: String
     )
 
-    fun generateETagUsingMetadata(file: File): String
-
-
     fun doesFileExists(
             surveyId: UUID,
             surveyFolder: SurveyFolder,
