@@ -7,7 +7,7 @@ import com.frankie.backend.api.survey.SurveyDTO
 import com.frankie.backend.common.isValidName
 import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.*
-import com.frankie.backend.helpers.FileSystemHelper
+import com.frankie.backend.helpers.FileHelper
 import com.frankie.backend.mappers.SurveyMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.entities.VersionEntity
@@ -28,7 +28,7 @@ class SurveyService(
         private val versionRepository: VersionRepository,
         private val responsesRepository: ResponseRepository,
         private val designService: DesignService,
-        private val fileSystemHelper: FileSystemHelper,
+        private val fileSystemHelper: FileHelper,
 
         ) {
     @Transactional(rollbackFor = [DuplicateSurveyException::class])

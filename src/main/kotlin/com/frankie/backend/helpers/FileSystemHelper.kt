@@ -19,14 +19,14 @@ import java.time.ZoneId
 import java.util.*
 
 @Component
-class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
+class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) : FileHelper {
 
-    fun upload(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        file: MultipartFile,
-        contentType: String,
-        filename: String
+    override fun upload(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            file: MultipartFile,
+            contentType: String,
+            filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
         if (file.isEmpty) {
@@ -38,7 +38,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
         saveMetadata(File(path), contentType)
     }
 
-    fun generateETagUsingMetadata(file: File): String {
+    override fun generateETagUsingMetadata(file: File): String {
         val lastModified = file.lastModified()
         val fileSize = file.length()
         return "$lastModified-$fileSize"
@@ -49,13 +49,13 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
         val metadataFile = File(file.path + METADATA_POSTFIX)
         val path = Paths.get(file.parent)
         Files.createDirectories(path)
-        if (!file.exists()){
+        if (!file.exists()) {
             file.createNewFile()
         }
         metadataFile.writeText("content-type: $contentType\netag: $etag")
     }
 
-    fun fetchMetadata(filePath: String): Map<String, String> {
+    private fun fetchMetadata(filePath: String): Map<String, String> {
         val metadataFile = File("$filePath$METADATA_POSTFIX")
         if (!metadataFile.exists()) {
             return emptyMap()
@@ -71,68 +71,68 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
         return metadata
     }
 
-    fun doesFileExists(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        filename: String
+    override fun doesFileExists(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            filename: String
     ): Boolean {
         val filePath = buildFilePath(surveyId, surveyFolder, filename)
 
         return File(filePath).exists()
     }
 
-    fun upload(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        text: String,
-        filename: String
+    override fun upload(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            text: String,
+            filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
         saveToFile(text.byteInputStream(), path)
     }
 
-    fun listSurveyResources(surveyId: UUID): List<FileInfo> {
+    override fun listSurveyResources(surveyId: UUID): List<FileInfo> {
         return filerSurveyResources(surveyId)
     }
 
-    fun filerSurveyResources(
-        surveyId: UUID,
-        files: List<String>? = null,
-        dateFrom: LocalDateTime? = null
+    override fun filerSurveyResources(
+            surveyId: UUID,
+            files: List<String>?,
+            dateFrom: LocalDateTime?
     ): List<FileInfo> {
         return filerSurveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
     }
 
-    fun filerSurveyFiles(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        files: List<String>? = null,
-        dateFrom: LocalDateTime? = null
+    override fun filerSurveyFiles(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            files: List<String>?,
+            dateFrom: LocalDateTime?
     ): List<FileInfo> {
         val surveyPath = buildFolderPath(surveyId, surveyFolder)
         val surveyDir = File(surveyPath)
 
         return surveyDir.listFiles()?.asIterable()
-            ?.filter { file ->
-                dateFrom?.isBefore(
-                    LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(file.lastModified()),
-                        ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
+                ?.filter { file ->
+                    dateFrom?.isBefore(
+                            LocalDateTime.ofInstant(
+                                    Instant.ofEpochMilli(file.lastModified()),
+                                    ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
+                            )
+                    ) ?: true && files?.contains(file.name) ?: true
+                }?.map { file ->
+                    FileInfo(
+                            file.name,
+                            file.length(),
+                            LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
                     )
-                ) ?: true && files?.contains(file.name) ?: true
-            }?.map { file ->
-                FileInfo(
-                    file.name,
-                    file.length(),
-                    LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
-                )
-            } ?: throw ResourceNotFoundException()
+                } ?: throw ResourceNotFoundException()
     }
 
-    fun cloneResources(
-        sourceSurveyId: UUID,
-        destinationSurveyId: UUID
+    override fun cloneResources(
+            sourceSurveyId: UUID,
+            destinationSurveyId: UUID
     ) {
         val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.RESOURCES)
         val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.RESOURCES)
@@ -143,11 +143,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
         FileUtils.copyDirectory(sourceDir, destinationDir)
     }
 
-    fun copyDesign(
-        sourceSurveyId: UUID,
-        destinationSurveyId: UUID,
-        sourceFileName: String,
-        newFileName: String
+    override fun copyDesign(
+            sourceSurveyId: UUID,
+            destinationSurveyId: UUID,
+            sourceFileName: String,
+            newFileName: String
     ) {
         val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.DESIGN)
         val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.DESIGN)
@@ -158,29 +158,29 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
         FileUtils.copyFile(sourceFile, destinationFile)
     }
 
-    fun deleteSurveyFiles(
-        surveyId: UUID,
+    override fun deleteSurveyFiles(
+            surveyId: UUID,
     ) {
         val surveyPath = buildFolderPath(surveyId)
 
         FileUtils.deleteDirectory(File(surveyPath))
     }
 
-    fun download(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        filename: String
+    override fun download(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            filename: String
     ): FileDownload {
         val path = buildFilePath(surveyId, surveyFolder, filename)
         val metadata = fetchMetadata(path)
 
-        return FileDownload(metadata,File(path).inputStream())
+        return FileDownload(metadata, File(path).inputStream())
     }
 
-    fun getText(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        filename: String
+    override fun getText(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            filename: String
     ): String {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
@@ -190,14 +190,14 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
     }
 
 
-    fun delete(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        filename: String
+    override fun delete(
+            surveyId: UUID,
+            surveyFolder: SurveyFolder,
+            filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
-        FileUtils.delete(File(path+ METADATA_POSTFIX))
+        FileUtils.delete(File(path + METADATA_POSTFIX))
         FileUtils.delete(File(path))
     }
 
@@ -212,30 +212,28 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) {
     }
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =
-        String.format(
-            "${fileSystemProperties.rootFolder}/%s/%s/%s",
-            surveyId.toString(),
-            surveyFolder.path,
-            filename
-        )
+            String.format(
+                    "${fileSystemProperties.rootFolder}/%s/%s/%s",
+                    surveyId.toString(),
+                    surveyFolder.path,
+                    filename
+            )
 
     private fun buildFolderPath(surveyId: UUID, surveyFolder: SurveyFolder) =
-        String.format(
-            "${fileSystemProperties.rootFolder}/%s/%s",
-            surveyId.toString(),
-            surveyFolder.path,
-        )
+            String.format(
+                    "${fileSystemProperties.rootFolder}/%s/%s",
+                    surveyId.toString(),
+                    surveyFolder.path,
+            )
 
     private fun buildFolderPath(surveyId: UUID) =
-        String.format(
-            "${fileSystemProperties.rootFolder}/%s",
-            surveyId.toString()
-        )
+            String.format(
+                    "${fileSystemProperties.rootFolder}/%s",
+                    surveyId.toString()
+            )
 
-    companion object{
-        const val METADATA_POSTFIX=".metadata"
+    companion object {
+        const val METADATA_POSTFIX = ".metadata"
     }
 
 }
-
-class FileDownload(val objectMetadata: Map<String,String>, val inputStream: InputStream)

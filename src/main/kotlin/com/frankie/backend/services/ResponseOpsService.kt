@@ -6,15 +6,15 @@ import com.frankie.backend.common.SurveyFolder
 import com.frankie.backend.common.UserUtils
 import com.frankie.backend.exceptions.*
 import com.frankie.backend.expressionmanager.SurveyProcessor
-import com.frankie.backend.helpers.FileSystemHelper
+import com.frankie.backend.helpers.FileHelper
 import com.frankie.backend.persistence.entities.SurveyResponseEntity
 import com.frankie.backend.persistence.repositories.ResponseRepository
 import com.frankie.expressionmanager.model.*
 import com.frankie.expressionmanager.usecase.SurveyDesignWithErrorException
-import org.apache.http.protocol.HTTP.CONTENT_TYPE
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 class ResponseOpsService(
         private val responseRepository: ResponseRepository,
         private val surveyService: SurveyService,
-        private val helper: FileSystemHelper,
+        private val helper: FileHelper,
         private val userUtils: UserUtils,
         private val designService: DesignService,
 ) {

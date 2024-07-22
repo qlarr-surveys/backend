@@ -7,7 +7,7 @@ import com.frankie.backend.common.UserUtils
 import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.SurveyIsActiveException
 import com.frankie.backend.exceptions.SurveyIsClosedException
-import com.frankie.backend.helpers.FileSystemHelper
+import com.frankie.backend.helpers.FileHelper
 import com.frankie.backend.mappers.SurveyMapper
 import com.frankie.backend.mappers.VersionMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
@@ -45,7 +45,7 @@ class SurveyServiceTest {
     private lateinit var responseRepository: ResponseRepository
 
     @MockK
-    private lateinit var fileSystemHelper: FileSystemHelper
+    private lateinit var fileSystemHelper: FileHelper
 
     @MockK
     private lateinit var surveyRepository: SurveyRepository
@@ -123,16 +123,16 @@ class SurveyServiceTest {
     companion object {
         private const val NEW_NAME = "new Survey name"
         fun buildSurvey(id: UUID, status: Status = Status.ACTIVE) = SurveyEntity(
-            id = id,
-            creationDate = nowUtc(),
-            lastModified = nowUtc(),
-            name = "Survey",
-            status = status,
-            usage = Usage.MIXED,
-            quota = -1,
-            canLockSurvey = true,
-            startDate = null,
-            endDate = null,
+                id = id,
+                creationDate = nowUtc(),
+                lastModified = nowUtc(),
+                name = "Survey",
+                status = status,
+                usage = Usage.MIXED,
+                quota = -1,
+                canLockSurvey = true,
+                startDate = null,
+                endDate = null,
         )
     }
 

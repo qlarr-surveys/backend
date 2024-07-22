@@ -12,6 +12,7 @@ import com.frankie.backend.common.SurveyFolder
 import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.*
 import com.frankie.backend.expressionmanager.SurveyProcessor
+import com.frankie.backend.helpers.FileHelper
 import com.frankie.backend.helpers.FileSystemHelper
 import com.frankie.backend.mappers.VersionMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
@@ -31,7 +32,7 @@ import java.util.*
 class DesignService(
         private val versionRepository: VersionRepository,
         private val surveyRepository: SurveyRepository,
-        private val helper: FileSystemHelper,
+        private val helper: FileHelper,
         private val versionMapper: VersionMapper,
         private val responseRepository: ResponseRepository,
 ) {

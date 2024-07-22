@@ -4,7 +4,7 @@ import com.frankie.backend.api.response.ResponsesDto
 import com.frankie.backend.api.user.*
 import com.frankie.backend.exceptions.UnrecognizedZoneException
 import com.frankie.backend.services.ResponseService
-import org.apache.http.protocol.HTTP.CONTENT_TYPE
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize

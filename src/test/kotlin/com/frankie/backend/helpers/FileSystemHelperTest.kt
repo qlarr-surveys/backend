@@ -16,7 +16,7 @@ import java.util.*
 class FileSystemHelperTest {
 
     private val rootDir = "src/test/resources/root"
-    private val fileSystemHelper: FileSystemHelper = FileSystemHelper(FileSystemProperties(rootDir))
+    private val fileSystemHelper: FileHelper = FileSystemHelper(FileSystemProperties(rootDir))
 
     @AfterEach
     fun setUp() {
@@ -25,14 +25,14 @@ class FileSystemHelperTest {
 
     @Test
     fun upload_should_uploadExistingFileToDirectory() {
-        val file = File("src/test/resources/files/photo.png");
+        val file = File("src/test/resources/files/photo.png")
         val mock = MockMultipartFile("photo.png", file.inputStream())
         val surveyId = UUID.randomUUID()
         val fileName = "test.png"
 
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, mock, "", fileName)
 
-        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue()
+        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue
     }
 
     @Test
@@ -43,7 +43,7 @@ class FileSystemHelperTest {
 
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, text, fileName)
 
-        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue()
+        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue
         assertThat(fileSystemHelper.getText(surveyId, SurveyFolder.RESOURCES, fileName)).isEqualTo(text)
     }
 
@@ -149,8 +149,8 @@ class FileSystemHelperTest {
 
         val doesExist = fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, filename)
 
-        assertThat(doesExist).isFalse()
-        assertThat(File("$rootDir/$surveyId").exists()).isFalse()
+        assertThat(doesExist).isFalse
+        assertThat(File("$rootDir/$surveyId").exists()).isFalse
     }
 
     @Test

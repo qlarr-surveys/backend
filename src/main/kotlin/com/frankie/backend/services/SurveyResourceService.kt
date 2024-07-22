@@ -7,12 +7,12 @@ import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.ResourceNotFoundException
 import com.frankie.backend.exceptions.SurveyIsClosedException
 import com.frankie.backend.exceptions.SurveyNotFoundException
-import com.frankie.backend.helpers.FileSystemHelper
+import com.frankie.backend.helpers.FileHelper
 import com.frankie.backend.persistence.repositories.SurveyRepository
-import org.apache.http.protocol.HTTP.CONTENT_TYPE
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class SurveyResourceService(
-        private val helper: FileSystemHelper,
+        private val helper: FileHelper,
         private val surveyRepository: SurveyRepository,
 ) {
     fun uploadResource(surveyId: UUID, file: MultipartFile): ResponseEntity<FileInfo> {
