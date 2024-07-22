@@ -13,7 +13,6 @@ import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.*
 import com.frankie.backend.expressionmanager.SurveyProcessor
 import com.frankie.backend.helpers.FileHelper
-import com.frankie.backend.helpers.FileSystemHelper
 import com.frankie.backend.mappers.VersionMapper
 import com.frankie.backend.persistence.entities.SurveyEntity
 import com.frankie.backend.persistence.entities.VersionEntity
@@ -208,7 +207,7 @@ class DesignService(
             val json = helper.getText(surveyId, SurveyFolder.DESIGN, publishedVersion.version.toString())
             val validationJsonOutput = jacksonKtMapper.readValue(json, ValidationJsonOutput::class.java)
             val resources = validationJsonOutput.survey.resources()
-            val files = helper.filerSurveyResources(surveyId, resources, publishInfo.lastModified)
+            val files = helper.surveyResourcesFiles(surveyId, resources, publishInfo.lastModified)
             return DesignDiffDto(
                     files,
                     PublishInfo(publishedVersion.version, publishedVersion.subVersion, publishedVersion.lastModified!!),

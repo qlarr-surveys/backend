@@ -93,18 +93,18 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun listSurveyResources(surveyId: UUID): List<FileInfo> {
-        return filerSurveyResources(surveyId)
+        return surveyResourcesFiles(surveyId)
     }
 
-    override fun filerSurveyResources(
+    override fun surveyResourcesFiles(
             surveyId: UUID,
             files: List<String>?,
             dateFrom: LocalDateTime?
     ): List<FileInfo> {
-        return filerSurveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
+        return surveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
     }
 
-    override fun filerSurveyFiles(
+    private fun surveyFiles(
             surveyId: UUID,
             surveyFolder: SurveyFolder,
             files: List<String>?,

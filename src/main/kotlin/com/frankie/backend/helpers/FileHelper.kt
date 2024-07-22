@@ -2,12 +2,9 @@ package com.frankie.backend.helpers
 
 import com.frankie.backend.api.survey.FileInfo
 import com.frankie.backend.common.SurveyFolder
-import com.frankie.backend.exceptions.ResourceNotFoundException
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.util.*
 
@@ -40,15 +37,8 @@ interface FileHelper {
 
     fun listSurveyResources(surveyId: UUID): List<FileInfo>
 
-    fun filerSurveyResources(
+    fun surveyResourcesFiles(
             surveyId: UUID,
-            files: List<String>? = null,
-            dateFrom: LocalDateTime? = null
-    ):List<FileInfo>
-
-    fun filerSurveyFiles(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
             files: List<String>? = null,
             dateFrom: LocalDateTime? = null
     ): List<FileInfo>
@@ -65,15 +55,10 @@ interface FileHelper {
 
     fun download(surveyId: UUID, surveyFolder: SurveyFolder, filename: String): FileDownload
 
-    fun getText(surveyId: UUID, surveyFolder: SurveyFolder, filename: String):String
+    fun getText(surveyId: UUID, surveyFolder: SurveyFolder, filename: String): String
 
 
     fun delete(surveyId: UUID, surveyFolder: SurveyFolder, filename: String)
-
-
-    companion object {
-        const val METADATA_POSTFIX = ".metadata"
-    }
 
 }
 

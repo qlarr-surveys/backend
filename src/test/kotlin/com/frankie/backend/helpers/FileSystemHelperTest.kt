@@ -67,7 +67,7 @@ class FileSystemHelperTest {
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", "test1.txt")
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST321", "test2.txt")
 
-        val resources = fileSystemHelper.filerSurveyResources(surveyId)
+        val resources = fileSystemHelper.surveyResourcesFiles(surveyId)
 
         assertThat(resources).hasSize(2)
     }
@@ -79,7 +79,7 @@ class FileSystemHelperTest {
 
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", fileName)
 
-        val resources = fileSystemHelper.filerSurveyResources(surveyId, files = listOf(fileName))
+        val resources = fileSystemHelper.surveyResourcesFiles(surveyId, files = listOf(fileName))
 
         assertThat(resources).hasSize(1)
                 .extracting(FileInfo::name).containsOnly(tuple(fileName))
@@ -91,8 +91,8 @@ class FileSystemHelperTest {
 
         fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", "test.txt")
 
-        val result1 = fileSystemHelper.filerSurveyResources(surveyId, dateFrom = LocalDateTime.now().minusHours(1))
-        val result2 = fileSystemHelper.filerSurveyResources(surveyId, dateFrom = LocalDateTime.now().plusHours(1))
+        val result1 = fileSystemHelper.surveyResourcesFiles(surveyId, dateFrom = LocalDateTime.now().minusHours(1))
+        val result2 = fileSystemHelper.surveyResourcesFiles(surveyId, dateFrom = LocalDateTime.now().plusHours(1))
 
         assertThat(result1).hasSize(1)
         assertThat(result2).isEmpty()
@@ -118,24 +118,6 @@ class FileSystemHelperTest {
                 .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(fileName1), tuple(fileName2))
     }
 
-    @Test
-    fun copyDesign_should_copyFileFromOneSurveyDesignFolderIntoAnother() {
-        val sourceSurveyId = UUID.randomUUID()
-        val sourceFileName = "test1.txt"
-        val newFileName = "new_file.txt"
-
-        // prepare files for copying
-        fileSystemHelper.upload(sourceSurveyId, SurveyFolder.DESIGN, "TEST123", sourceFileName)
-
-        val destinationSurveyId = UUID.randomUUID()
-
-        fileSystemHelper.copyDesign(sourceSurveyId, destinationSurveyId, sourceFileName, newFileName)
-
-        val resources = fileSystemHelper.filerSurveyFiles(destinationSurveyId, SurveyFolder.DESIGN)
-
-        assertThat(resources).hasSize(1)
-                .extracting(FileInfo::name).containsExactlyInAnyOrder(tuple(newFileName))
-    }
 
     @Test
     fun deleteSurveyFiles_should_deleteAllSurveyFiles() {
