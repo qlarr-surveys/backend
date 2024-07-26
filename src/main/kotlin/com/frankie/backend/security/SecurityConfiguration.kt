@@ -35,6 +35,10 @@ class SecurityConfiguration(
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         http.authorizeHttpRequests { authorize ->
             authorize
+                    .requestMatchers(GET, "/swagger-ui/**").permitAll()
+                    .requestMatchers(GET, "/v3/api-docs").permitAll()
+                    .requestMatchers(GET, "/v3/api-docs/**").permitAll()
+                    
                     .requestMatchers(POST, "/survey/{surveyId}/run/start").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/run/runtime.js").permitAll()
