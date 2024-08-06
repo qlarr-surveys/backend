@@ -7,50 +7,59 @@ import com.frankie.expressionmanager.model.Dependency
 import com.frankie.expressionmanager.model.NavigationUseCaseInput
 import com.frankie.expressionmanager.model.SurveyMode
 import com.frankie.expressionmanager.usecase.*
-import com.frankie.scriptengine.ScriptEngineWrapper
+import com.frankie.scriptengine.ScriptEngineNavigation
+import com.frankie.scriptengine.ScriptEngineValidation
 
 object SurveyProcessor {
 
-    val scriptEngineWrapper = ScriptEngineWrapper(ScriptUtils().engineScript)
+    val scriptEngineNavigation = ScriptEngineNavigation(ScriptUtils().engineScript)
+    val scriptEngineValidation = ScriptEngineValidation()
 
-    private val scriptEngine = object : ScriptEngine {
-        override fun executeScript(method: String, script: String): String {
-            return scriptEngineWrapper.executeScript(method, script)
+    private val scriptEngineValidate = object : ScriptEngineValidate {
+        override fun validate(input: List<ScriptValidationInput>): List<ScriptValidationOutput> {
+            return scriptEngineValidation.validate(input)
         }
+    }
+
+    private val scriptEngineNavigate = object : ScriptEngineNavigate {
+        override fun navigate(script: String): String {
+            return scriptEngineNavigation.navigate(script)
+        }
+
     }
 
     fun process(stateObj: ObjectNode): ValidationJsonOutput {
         val surveyNode = JsonExt.addChildren(stateObj["Survey"] as ObjectNode, "Survey", stateObj)
-        val useCase = ValidationUseCaseWrapperImpl(scriptEngine, surveyNode.toString())
+        val useCase = ValidationUseCaseWrapperImpl(scriptEngineValidate, surveyNode.toString())
         return useCase.validate()
     }
 
     fun processSample(surveyNode: ObjectNode): ValidationJsonOutput {
-        val useCase = ValidationUseCaseWrapperImpl(scriptEngine, surveyNode.toString())
+        val useCase = ValidationUseCaseWrapperImpl(scriptEngineValidate, surveyNode.toString())
         return useCase.validate()
     }
 
     fun navigate(
-        validationJsonOutput: ValidationJsonOutput,
-        useCaseInput: NavigationUseCaseInput,
-        skipInvalid: Boolean,
-        surveyMode:SurveyMode
+            validationJsonOutput: ValidationJsonOutput,
+            useCaseInput: NavigationUseCaseInput,
+            skipInvalid: Boolean,
+            surveyMode:SurveyMode
     ): NavigationJsonOutput {
         val useCase = NavigationUseCaseWrapperImpl(
-            scriptEngine,
-            validationJsonOutput,
-            useCaseInput,
-            skipInvalid,
-            surveyMode
+                scriptEngineNavigate,
+                validationJsonOutput,
+                useCaseInput,
+                skipInvalid,
+                surveyMode
         )
         return useCase.navigate()
     }
 
     fun maskedValues(
-        validationJsonOutput: ValidationJsonOutput,
-        useCaseInput: NavigationUseCaseInput
+            validationJsonOutput: ValidationJsonOutput,
+            useCaseInput: NavigationUseCaseInput
     ): Map<Dependency, Any> {
-        val useCase = MaskedValuesUseCase(scriptEngine, validationJsonOutput)
+        val useCase = MaskedValuesUseCase(scriptEngineNavigate, validationJsonOutput)
         return useCase.navigate(useCaseInput)
     }
 }

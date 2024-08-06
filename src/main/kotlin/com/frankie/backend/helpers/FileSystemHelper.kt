@@ -127,7 +127,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                             file.length(),
                             LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
                     )
-                } ?: throw ResourceNotFoundException()
+                } ?: emptyList()
     }
 
     override fun cloneResources(
