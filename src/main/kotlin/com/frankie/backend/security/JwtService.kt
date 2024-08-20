@@ -7,9 +7,6 @@ import com.frankie.backend.properties.JwtProperties
 import io.jsonwebtoken.*
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
@@ -19,7 +16,6 @@ import java.util.function.Function
 
 @Component
 class JwtService(private val props: JwtProperties) {
-    val log: Logger = LoggerFactory.getLogger(JwtService::class.java)
     fun extractSubject(token: String): String {
         return extractClaim(token, Claims::getSubject)
     }
@@ -110,8 +106,8 @@ class JwtService(private val props: JwtProperties) {
             claims.toJwtUserDetails()
             expiration.after(Date())
         } catch (ex: JwtException) {
-            log.info("Expired or wrong refresh token")
-            throw AuthenticationCredentialsNotFoundException("Expired or wrong refresh token")
+            ex.printStackTrace()
+            false
         }
     }
 

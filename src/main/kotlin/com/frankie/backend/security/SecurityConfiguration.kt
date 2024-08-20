@@ -1,6 +1,7 @@
 package com.frankie.backend.security
 
 import com.frankie.backend.api.user.Roles.*
+import io.netty.handler.codec.http.HttpMethod
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod.*
@@ -30,11 +31,11 @@ class SecurityConfiguration(
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.csrf { obj: CsrfConfigurer<HttpSecurity> -> obj.disable() }
         http.cors(Customizer.withDefaults())
-        http.exceptionHandling()
-        http.headers().frameOptions().disable()
+        http.headers().frameOptions().sameOrigin()
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         http.authorizeHttpRequests { authorize ->
             authorize
+                    .requestMatchers(OPTIONS).permitAll()
                     .requestMatchers(GET, "/swagger-ui/**").permitAll()
                     .requestMatchers(GET, "/v3/api-docs").permitAll()
                     .requestMatchers(GET, "/v3/api-docs/**").permitAll()
