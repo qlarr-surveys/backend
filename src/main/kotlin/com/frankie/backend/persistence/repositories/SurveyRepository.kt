@@ -59,11 +59,11 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
 
     @Query(
             "SELECT s as survey, v as latestVersion, " +
-                    "COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount, " +
+                    "COUNT(r.submitDate) as completeResponseCount, " +
                     "COUNT(case when r.surveyor = :userId then 1 else null end) as userResponseCount " +
                     "FROM SurveyEntity s " +
                     "JOIN VersionEntity v ON v.surveyId = s.id AND v.version = (SELECT MAX(p.version) FROM VersionEntity p WHERE p.surveyId = s.id AND p.published = TRUE GROUP BY p.surveyId) " +
-                    "LEFT JOIN SurveyResponseEntity r ON s.id = r.surveyId AND r.preview = false " +
+                    "LEFT JOIN SurveyResponseEntity r ON s.id = r.surveyId AND r.preview = false AND r.submitDate IS NOT NULL " +
                     "WHERE (s.status = 'ACTIVE' AND (s.usage = 'OFFLINE' OR s.usage = 'MIXED')) " +
                     "GROUP BY s.id, v.surveyId, v.version "
     )

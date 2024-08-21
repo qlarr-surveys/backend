@@ -15,10 +15,10 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
 
 
     @Query(
-            "SELECT COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount, " +
+            "SELECT COUNT(r.submitDate) as completeResponseCount, " +
                     "COUNT(case when r.surveyor = :userId then 1 else null end) as userResponseCount " +
                     "FROM SurveyResponseEntity r " +
-                    "WHERE  r.surveyId = :surveyId"
+                    "WHERE  r.surveyId = :surveyId AND r.preview = false AND r.submitDate IS NOT NULL"
     )
     fun responseCount(userId: UUID, surveyId: UUID): ResponseCount
 
