@@ -1,9 +1,6 @@
 package com.frankie.backend.services
 
-import com.frankie.backend.api.survey.EditSurveyRequest
-import com.frankie.backend.api.survey.Status
-import com.frankie.backend.api.survey.SurveyCreateRequest
-import com.frankie.backend.api.survey.SurveyDTO
+import com.frankie.backend.api.survey.*
 import com.frankie.backend.common.isValidName
 import com.frankie.backend.common.nowUtc
 import com.frankie.backend.exceptions.*
@@ -173,5 +170,47 @@ class SurveyService(
                         )
                 )
         )
+    }
+
+    fun getAllSurveysForGuest(): List<SimpleSurveyDto> {
+        return surveyRepository.findAllSurveysForGuest()
+            .map(surveyMapper::mapEntityToSimpleResponse)
+    }
+
+    fun cloneGuestSurvey(surveyId: UUID, name: String): SurveyDTO {
+        val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
+        val cloned = survey.copy(
+            id = null,
+            name = name,
+            status = Status.DRAFT,
+            startDate = null,
+            endDate = null,
+            creationDate = nowUtc(),
+            lastModified = nowUtc()
+        )
+        try {
+            surveyRepository.save(cloned)
+        } catch (e: DataIntegrityViolationException) {
+            throw DuplicateSurveyException()
+        }
+        fileSystemHelper.cloneResources(surveyId, cloned.id!!)
+        copyClonedDesign(surveyId, cloned.id)
+        return surveyMapper.mapEntityToDto(cloned)
+    }
+
+    @Transactional
+    fun copyClonedDesign(source: UUID, destination: UUID) {
+        val latestVersion = versionRepository.findLatestVersion(source) ?: return
+
+        versionRepository.save(
+            latestVersion.copy(
+                surveyId = destination,
+                version = 1,
+                published = false,
+                subVersion = 1,
+                lastModified = nowUtc()
+            )
+        )
+        fileSystemHelper.copyDesign(source, destination, latestVersion.version.toString(), "1")
     }
 }

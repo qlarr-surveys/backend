@@ -68,6 +68,17 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
                     "GROUP BY s.id, v.surveyId, v.version "
     )
     fun findAllOfflineSurveysByUserId(userId: UUID): List<OfflineSurveyResponseCount>
+
+    @Query(
+        "SELECT s as survey, 0 as responseCount, " +
+                "v as latestVersion, " +
+                "0 as completeResponseCount " +
+                "FROM SurveyEntity s " +
+                "JOIN VersionEntity v ON v.surveyId = s.id AND v.version = (SELECT MAX(p.version) FROM VersionEntity p WHERE s.id = p.surveyId) " +
+                "WHERE s.status = 'ACTIVE' " +
+                "GROUP BY s.id, v.surveyId, v.version"
+    )
+    fun findAllSurveysForGuest(): List<SurveyResponseCount>
 }
 
 enum class SurveySort {
