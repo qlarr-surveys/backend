@@ -40,6 +40,10 @@ data class SurveyEntity(
 
     @Column(name = "can_lock_survey")
     val canLockSurvey: Boolean,
+
+    val image: String?,
+
+    val description: String?,
 ) {
     fun isActive(): Boolean {
         return status == Status.ACTIVE

@@ -96,6 +96,8 @@ class SurveyService(
                 startDate = editSurveyRequest.startDate,
                 quota = editSurveyRequest.quota ?: survey.quota,
                 canLockSurvey = editSurveyRequest.canLockSurvey ?: survey.canLockSurvey,
+                description = editSurveyRequest.description ?: survey.description,
+                image = editSurveyRequest.image ?: survey.image,
         )
         if (newSurvey.startDate != null
                 && newSurvey.endDate != null && newSurvey.startDate.isAfter(newSurvey.endDate)

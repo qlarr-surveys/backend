@@ -133,6 +133,8 @@ class SurveyServiceTest {
                 canLockSurvey = true,
                 startDate = null,
                 endDate = null,
+                description = null,
+                image = null,
         )
     }
 

@@ -18,6 +18,8 @@ class SurveyMapper(
                 status = Status.DRAFT,
                 usage = surveyCreateRequest.usage,
                 quota = UNLIMITED_QUOTA,
+                description = null,
+                image = null,
                 startDate = null,
                 endDate = null,
                 canLockSurvey = true,
@@ -37,6 +39,8 @@ class SurveyMapper(
                 status = surveyEntity.status,
                 usage = surveyEntity.usage,
                 quota = surveyEntity.quota,
+                description = surveyEntity.description,
+                image = surveyEntity.image,
                 canLockSurvey = surveyEntity.canLockSurvey
         )
     }

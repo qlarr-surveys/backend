@@ -21,6 +21,8 @@ data class EditSurveyRequest(
     val usage: Usage? = null,
     val canLockSurvey: Boolean? = null,
     val quota: Int? = null,
+    val description: String? = null,
+    val image: String? = null,
 )
 
 data class CloneRequest(val name: String)

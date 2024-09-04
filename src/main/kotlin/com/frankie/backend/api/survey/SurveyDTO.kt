@@ -18,6 +18,8 @@ data class SurveyDTO(
     val startDate: LocalDateTime?,
     @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
     val endDate: LocalDateTime?,
+    val image: String?,
+    val description: String?,
     val name: String,
     val status: Status,
     val usage: Usage,
