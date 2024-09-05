@@ -135,9 +135,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
             destinationSurveyId: UUID
     ) {
         val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.RESOURCES)
-        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.RESOURCES)
-
         val sourceDir = File(sourceFolderPath)
+        if (!sourceDir.exists())
+            return
+
+        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.RESOURCES)
         val destinationDir = File(destinationFolderPath)
 
         FileUtils.copyDirectory(sourceDir, destinationDir)

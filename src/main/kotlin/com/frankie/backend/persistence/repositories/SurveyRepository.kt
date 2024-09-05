@@ -15,7 +15,7 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
     @Query(
             "SELECT s as survey, COUNT(r) as responseCount, " +
                     "v as latestVersion, " +
-                    "COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount " +
+                    "COUNT(r.submitDate) as completeResponseCount " +
                     "FROM SurveyEntity s " +
                     "LEFT JOIN SurveyResponseEntity r ON s.id = r.surveyId AND r.preview = false " +
                     "JOIN VersionEntity v ON v.surveyId = s.id AND v.version = (SELECT MAX(p.version) " +
@@ -37,7 +37,7 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
     @Query(
             "SELECT s as survey, COUNT(r) as responseCount, " +
                     "v as latestVersion, " +
-                    "COUNT(case when r.submitDate IS NOT NULL then 1 else null end) as completeResponseCount " +
+                    "COUNT(r.submitDate) as completeResponseCount " +
                     "FROM SurveyEntity s " +
                     "LEFT JOIN SurveyResponseEntity r ON s.id = r.surveyId AND r.preview = false " +
                     "JOIN VersionEntity v ON v.surveyId = s.id AND v.version = (SELECT MAX(p.version) " +
