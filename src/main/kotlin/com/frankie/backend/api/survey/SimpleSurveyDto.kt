@@ -1,5 +1,6 @@
 package com.frankie.backend.api.survey
 
+import com.fasterxml.jackson.annotation.JsonClassDescription
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.frankie.backend.api.version.VersionDto
 import com.frankie.backend.common.DATE_TIME_UTC_FORMAT
@@ -17,6 +18,8 @@ data class SimpleSurveyDto(
     @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
     val endDate: LocalDateTime?,
     val name: String,
+    val description: String?,
+    val image: String?,
     val status: Status,
     val usage: Usage,
     val surveyQuota: Int,
@@ -44,6 +47,8 @@ data class OfflineSurveyDto(
     @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
     val endDate: LocalDateTime?,
     val name: String,
+    val description: String?,
+    val image: String?,
     val status: Status,
     val usage: Usage,
     val surveyQuota: Int,
