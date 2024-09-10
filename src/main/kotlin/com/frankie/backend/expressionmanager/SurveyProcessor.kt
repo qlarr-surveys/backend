@@ -43,23 +43,22 @@ object SurveyProcessor {
             validationJsonOutput: ValidationJsonOutput,
             useCaseInput: NavigationUseCaseInput,
             skipInvalid: Boolean,
-            surveyMode:SurveyMode
+            surveyMode: SurveyMode
     ): NavigationJsonOutput {
         val useCase = NavigationUseCaseWrapperImpl(
-                scriptEngineNavigate,
                 validationJsonOutput,
                 useCaseInput,
                 skipInvalid,
                 surveyMode
         )
-        return useCase.navigate()
+        return useCase.navigate(scriptEngineNavigate)
     }
 
     fun maskedValues(
             validationJsonOutput: ValidationJsonOutput,
             useCaseInput: NavigationUseCaseInput
     ): Map<Dependency, Any> {
-        val useCase = MaskedValuesUseCase(scriptEngineNavigate, validationJsonOutput)
-        return useCase.navigate(useCaseInput)
+        val useCase = MaskedValuesUseCase(validationJsonOutput)
+        return useCase.navigate(scriptEngineNavigate, useCaseInput)
     }
 }
