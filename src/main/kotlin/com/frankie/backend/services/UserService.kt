@@ -146,6 +146,9 @@ class UserService(
     @Transactional
     // It is fine to mix master and tenant because user is logged in
     fun delete(userId: UUID) {
+        if (userId == userUtils.currentUserId()){
+            throw DeleteOwnUserException()
+        }
         val user = userRepository.findByIdAndDeletedIsFalse(userId) ?: throw UserNotFoundException()
         val prefix = "deleted_"
         val newUser = user.copy(

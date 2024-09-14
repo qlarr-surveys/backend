@@ -41,6 +41,13 @@ class ControllerExceptionHandler {
         return ResponseEntity(ErrorMessage("User not found", exception.javaClass.simpleName), HttpStatus.NOT_FOUND)
     }
 
+
+    @ExceptionHandler(DeleteOwnUserException::class)
+    fun handleException(exception: DeleteOwnUserException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(ErrorMessage("Cannot Delete Own User Account", exception.javaClass.simpleName), HttpStatus.BAD_REQUEST)
+    }
+
     @ExceptionHandler(EmptyRolesException::class)
     fun handleException(exception: EmptyRolesException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()

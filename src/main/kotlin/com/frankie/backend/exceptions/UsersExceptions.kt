@@ -13,6 +13,7 @@ class ExpiredResetTokenException : Throwable()
 
 class WrongEmailOrPasswordException : Throwable()
 
+class DeleteOwnUserException : Throwable()
 class UserNotFoundException : Throwable()
 class EmptyRolesException : Throwable()
 class EditOwnUserException : Throwable()
