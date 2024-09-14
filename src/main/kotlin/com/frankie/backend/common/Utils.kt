@@ -1,6 +1,5 @@
 package com.frankie.backend.common
 
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -32,25 +31,6 @@ fun Map<String, String>.stripHtmlTags(): Map<String, String> {
     return mutableMap
 }
 
-fun getClientIp(request: HttpServletRequest): String {
-    var clientIp = request.getHeader("X-Forwarded-For")
-    if (clientIp == null || clientIp.isEmpty() || "unknown".equals(clientIp, ignoreCase = true)) {
-        clientIp = request.getHeader("Proxy-Client-IP")
-    }
-    if (clientIp == null || clientIp.isEmpty() || "unknown".equals(clientIp, ignoreCase = true)) {
-        clientIp = request.getHeader("WL-Proxy-Client-IP")
-    }
-    if (clientIp == null || clientIp.isEmpty() || "unknown".equals(clientIp, ignoreCase = true)) {
-        clientIp = request.getHeader("HTTP_CLIENT_IP")
-    }
-    if (clientIp == null || clientIp.isEmpty() || "unknown".equals(clientIp, ignoreCase = true)) {
-        clientIp = request.getHeader("HTTP_X_FORWARDED_FOR")
-    }
-    if (clientIp == null || clientIp.isEmpty() || "unknown".equals(clientIp, ignoreCase = true)) {
-        clientIp = request.remoteAddr
-    }
-    return clientIp ?: ""
-}
 
 fun String.isValidName() = trim().length in 1..50
 
