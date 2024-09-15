@@ -21,7 +21,6 @@ class UserController(
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyAuthority({'super_admin', 'survey_admin'})")
     fun getById(@PathVariable userId: UUID): ResponseEntity<UserDTO> {
         val userDTO = userService.getUserById(userId)
         return ResponseEntity(userDTO, HttpStatus.OK)
