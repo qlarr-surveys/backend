@@ -1,4 +1,4 @@
-# Frankie Backend
+# Qlarr Backend
 
 ## Build Jar
 
@@ -9,7 +9,7 @@
 ## Run Jar
 
 ```
-java -jar -D{ENV_VAR_NAME}={ENV_VAR_VALUE} frankie-backend-0.0.1-SNAPSHOT.jar
+java -jar -D{ENV_VAR_NAME}={ENV_VAR_VALUE} qlarr-backend-0.0.1-SNAPSHOT.jar
 ```
 
 ## Run the Project locally
@@ -44,4 +44,4 @@ To access the PGADMIN on the browser [Click here](http://localhost:5050/browser)
 3. The **Server** require a name
 4. Connection Hostname/address type **local-postgres**
 5. Username field type **local-postgres** username
-6. Password field type **local-postgres** password# frankie-backend-core
+6. Password field type **local-postgres** password# qlarr-backend-core

@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/frankie_test
-    username: frankie_user
-    password: frankie_pass
+    url: jdbc:postgresql://localhost:5432/qlarr_test
+    username: qlarr_user
+    password: qlarr_pass
 mail:
   mock: true

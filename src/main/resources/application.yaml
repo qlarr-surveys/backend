@@ -2,7 +2,7 @@ spring:
   profiles:
     default: local
   datasource:
-    url: jdbc:postgresql://localhost:5432/frankiedb
+    url: jdbc:postgresql://localhost:5432/qlarrdb
     username: ${DB_USER}
     password: ${DB_PASSWORD}
   jpa:
@@ -36,15 +36,15 @@ mail:
 env:
   test: false
 frontend:
-  host: frankie.app:3000
+  host: qlarr.app:3000
 ---
 spring:
   config:
     activate:
       on-profile: local
   datasource:
-    url: jdbc:postgresql://localhost:5432/frankiedb
-    username: frankie
+    url: jdbc:postgresql://localhost:5432/qlarrdb
+    username: qlarr
     password: password
 mail:
   password: owzrmumizhrggtul
@@ -54,15 +54,15 @@ fileSystem:
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
-  host: frankie.app:3000
+  host: qlarr.app:3000
 ---
 spring:
   config:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:postgresql://local-postgres:5432/frankiedb
-    username: frankie
+    url: jdbc:postgresql://local-postgres:5432/qlarrdb
+    username: qlarr
     password: password
 mail:
   password: owzrmumizhrggtul
@@ -70,4 +70,4 @@ mail:
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
-  host: frankie.app:3000
+  host: qlarr.app:3000

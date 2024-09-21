@@ -12,9 +12,9 @@ services:
     networks:
       - docker-local_net
     environment:
-      - POSTGRES_USER=frankie
+      - POSTGRES_USER=qlarr
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=frankiedb
+      - POSTGRES_DB=qlarrdb
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
@@ -26,7 +26,7 @@ services:
 #    container_name: postgres_admin
 #    image: dpage/pgadmin4
 #    environment:
-#      PGADMIN_DEFAULT_EMAIL: frankie@pgadmin.org
+#      PGADMIN_DEFAULT_EMAIL: qlarr@pgadmin.org
 #      PGADMIN_DEFAULT_PASSWORD: password
 #      PGADMIN_CONFIG_SERVER_MODE: 'False'
 #    volumes:
@@ -39,7 +39,7 @@ services:
 #    restart: unless-stopped
 
   app:
-    container_name: 'frankie-backend'
+    container_name: 'qlarr-backend'
     build:
       context: .
       dockerfile: Dockerfile
