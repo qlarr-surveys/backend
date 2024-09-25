@@ -22,6 +22,17 @@ import java.util.*
 class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) : FileHelper {
 
     override fun upload(
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        inputStream: InputStream,
+        filename: String
+    ) {
+        val path = buildFilePath(surveyId, surveyFolder, filename)
+
+        saveToFile(inputStream, path)
+    }
+
+    override fun upload(
             surveyId: UUID,
             surveyFolder: SurveyFolder,
             file: MultipartFile,
