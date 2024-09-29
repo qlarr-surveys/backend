@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -32,15 +33,31 @@ class GuestSurveyService(
         val bufferedInputStream = BufferedInputStream(byteArrayInputStream)
         val zipInputStream = ZipInputStream(bufferedInputStream)
         zipInputStream.use {
-            val zipEntry: ZipEntry? = it.getNextEntry()
-            while (zipEntry != null) {
-                val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
-                fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, inputStream, zipEntry.name)
-            }
+            do {
+                val zipEntry: ZipEntry? = it.getNextEntry()
+                val path = zipEntry?.name?.split(File.pathSeparator)
+                val fileName = path?.get(path.size - 2)
+                if (zipEntry?.isDirectory == true && fileName == "resources") {
+                    unzipFolder(surveyId, SurveyFolder.RESOURCES, it)
+                }
+
+                if (zipEntry?.isDirectory == true && fileName == "design") {
+                    unzipFolder(surveyId, SurveyFolder.DESIGN, it)
+                }
+
+            } while (zipEntry != null)
         }
 
         return true
     }
 
+    fun unzipFolder(surveyId: UUID, surveyFolder: SurveyFolder, zipInputStream: ZipInputStream) {
+        val zipEntry: ZipEntry? = zipInputStream.getNextEntry()
+        while (zipEntry != null && !zipEntry.isDirectory) {
+            val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
+            fileSystemHelper.upload(surveyId, surveyFolder, inputStream, zipEntry.name)
 
+            zipInputStream.nextEntry
+        }
+    }
 }
