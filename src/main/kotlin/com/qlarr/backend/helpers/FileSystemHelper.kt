@@ -25,11 +25,13 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         surveyId: UUID,
         surveyFolder: SurveyFolder,
         inputStream: InputStream,
+        contentType: String,
         filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
         saveToFile(inputStream, path)
+        saveMetadata(File(path), contentType)
     }
 
     override fun upload(

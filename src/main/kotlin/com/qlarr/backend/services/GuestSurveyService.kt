@@ -16,6 +16,8 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
+import java.io.File
+import java.nio.file.Files
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -49,12 +51,13 @@ class GuestSurveyService(
                 if (zipEntry.isDirectory) {
                     continue
                 } else {
-                    if (extractFileName(zipEntry.name).equals("survey.json")) {
+                    val fileName = extractFileName(zipEntry.name)
+                    if (fileName.equals("survey.json")) {
                         saveSurveyData(surveyId, it)
                     } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
-                        unzipFileToFileSystem(surveyId, SurveyFolder.RESOURCES, it, extractFileName(zipEntry.name))
-                    } else if (extractFileName(zipEntry.name).equals("design.json")) {
-                        unzipFileToFileSystem(surveyId, SurveyFolder.DESIGN, it, "1")
+                        unzipFileToFileSystem(surveyId, SurveyFolder.RESOURCES, it, fileName, fileName)
+                    } else if (fileName.equals("design.json")) {
+                        unzipFileToFileSystem(surveyId, SurveyFolder.DESIGN, it, fileName, "1")
                     }
                 }
                 zipEntry = it.nextEntry
@@ -75,13 +78,14 @@ class GuestSurveyService(
         return pathArray?.get(pathArray.size - 1)
     }
 
-    fun unzipFileToFileSystem(surveyId: UUID, surveyFolder: SurveyFolder, zipInputStream: ZipInputStream, newFileName: String?) {
+    fun unzipFileToFileSystem(surveyId: UUID, surveyFolder: SurveyFolder, zipInputStream: ZipInputStream, currentFileName:String? , newFileName: String?) {
         val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
         if (newFileName == null) {
             throw RuntimeException("New file name cannot be null!")
         }
 
-        fileSystemHelper.upload(surveyId, surveyFolder, inputStream, newFileName)
+        val mimeType = currentFileName.let { Files.probeContentType(File(it!!).toPath()) }
+        fileSystemHelper.upload(surveyId, surveyFolder, inputStream, mimeType, newFileName)
     }
 
     fun saveSurveyData(surveyId: UUID, zipInputStream: ZipInputStream) {

@@ -14,6 +14,7 @@ interface FileHelper {
         surveyId: UUID,
         surveyFolder: SurveyFolder,
         inputStream: InputStream,
+        contentType: String,
         filename: String
     )
 
