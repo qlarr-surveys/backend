@@ -1,11 +1,13 @@
 package com.qlarr.backend.services
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.qlarr.backend.api.survey.SimpleSurveyDto
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.helpers.FileSystemHelper
+import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.VersionEntity
+import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
+import com.qlarr.expressionmanager.model.jacksonKtMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpMethod
@@ -14,7 +16,6 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -25,6 +26,7 @@ class GuestSurveyService(
     val restTemplate: RestTemplate,
     val fileSystemHelper: FileSystemHelper,
     val versionRepository: VersionRepository,
+    val surveyRepository: SurveyRepository,
     @Value("\${enterprise.domain}") val enterpriseDomain: String
 ) {
 
@@ -40,31 +42,36 @@ class GuestSurveyService(
         val byteArrayInputStream = ByteArrayInputStream(response.body)
         val bufferedInputStream = BufferedInputStream(byteArrayInputStream)
         val zipInputStream = ZipInputStream(bufferedInputStream)
+
         zipInputStream.use {
-            do {
-                val zipEntry: ZipEntry? = it.getNextEntry()
-                if (zipEntry?.isDirectory == true) {
+            var zipEntry: ZipEntry? = it.nextEntry
+            while (zipEntry != null) {
+                if (zipEntry.isDirectory) {
                     continue
                 } else {
-                    if (extractFileName(zipEntry?.name).equals("survey.json")) {
+                    if (extractFileName(zipEntry.name).equals("survey.json")) {
                         saveSurveyData(surveyId, it)
-                    } else if (extractParentFolderName(zipEntry?.name).equals("resources")) {
-                        unzipFileToFileSystem(surveyId, SurveyFolder.RESOURCES, it, extractFileName(zipEntry?.name))
-                    } else if (extractFileName(zipEntry?.name).equals("design.json")) {
+                    } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
+                        unzipFileToFileSystem(surveyId, SurveyFolder.RESOURCES, it, extractFileName(zipEntry.name))
+                    } else if (extractFileName(zipEntry.name).equals("design.json")) {
                         unzipFileToFileSystem(surveyId, SurveyFolder.DESIGN, it, "1")
                     }
                 }
-            } while (zipEntry != null)
+                zipEntry = it.nextEntry
+            }
         }
     }
 
     fun extractParentFolderName(path: String?): String? {
-        val pathArray = path?.split(File.pathSeparator)
-        return pathArray?.get(pathArray.size - 2)
+        val pathArray = path?.split("/")
+        if (pathArray == null || pathArray.size < 2) {
+            return null
+        }
+        return pathArray[pathArray.size - 2]
     }
 
     fun extractFileName(path: String?): String? {
-        val pathArray = path?.split(File.pathSeparator)
+        val pathArray = path?.split("/")
         return pathArray?.get(pathArray.size - 1)
     }
 
@@ -79,12 +86,31 @@ class GuestSurveyService(
 
     fun saveSurveyData(surveyId: UUID, zipInputStream: ZipInputStream) {
         val surveyDataString = String(zipInputStream.readAllBytes())
-        val simpleSurveyDto = jacksonObjectMapper().readValue(surveyDataString, SimpleSurveyDto::class.java)
+        val simpleSurveyDto = jacksonKtMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
+
+        val savedSurvey = surveyRepository.save(
+            simpleSurveyDto.let {
+                SurveyEntity(
+                    id = it.id,
+                    creationDate = it.creationDate,
+                    lastModified = it.lastModified,
+                    name = it.name,
+                    status = it.status,
+                    startDate = it.startDate,
+                    endDate = it.endDate,
+                    usage = it.usage,
+                    quota = it.surveyQuota,
+                    canLockSurvey = false,
+                    image = it.image,
+                    description = it.description
+                )
+            }
+        )
 
         versionRepository.save(
             simpleSurveyDto.latestVersion.let {
                 VersionEntity(version = it.version,
-                    surveyId = it.surveyId,
+                    surveyId = savedSurvey.id!!,
                     subVersion = it.subVersion,
                     valid = it.valid,
                     published = it.published,

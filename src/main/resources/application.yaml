@@ -37,7 +37,7 @@ env:
   test: false
 frontend:
   host: qlarr.app:3000
-enterprise.domain: https://frankie-backend-enterprise
+enterprise.domain: http://localhost:8080
 ---
 spring:
   config:

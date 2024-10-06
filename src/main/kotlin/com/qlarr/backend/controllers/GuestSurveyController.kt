@@ -12,9 +12,7 @@ class GuestSurveyController(val guestSurveyService: GuestSurveyService) {
 
     @GetMapping("/survey/{surveyId}/clone_guest")
     fun cloneGuestSurvey(@PathVariable surveyId: UUID): ResponseEntity<Void> {
-        if (!guestSurveyService.cloneGuestSurvey(surveyId)) {
-            return ResponseEntity.internalServerError().build()
-        }
+        guestSurveyService.cloneGuestSurvey(surveyId)
 
         return ResponseEntity.ok().build()
     }
