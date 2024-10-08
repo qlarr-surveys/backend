@@ -39,7 +39,6 @@ class SurveyResourceService(
         surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val response = helper.download(surveyId, SurveyFolder.RESOURCES, fileName)
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
                 .header(CONTENT_TYPE, response.objectMetadata["content-type"]!!)
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
                 .eTag(response.objectMetadata["eTag"]) // lastModified is also ava

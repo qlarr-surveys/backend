@@ -37,7 +37,7 @@ env:
   test: false
 frontend:
   host: qlarr.app:3000
-enterprise.domain: http://localhost:8080
+enterprise.domain: https://stg.api.qlarr.com/
 ---
 spring:
   config:
