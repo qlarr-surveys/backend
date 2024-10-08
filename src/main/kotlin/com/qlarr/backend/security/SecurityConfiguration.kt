@@ -45,7 +45,6 @@ class SecurityConfiguration(
                     .requestMatchers(GET, "/survey/{surveyId}/response/attach/{filename}").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/resource/{fileName}").permitAll()
-                    .requestMatchers(GET, "/survey/{surveyId}/clone_guest").permitAll()
                     .requestMatchers(POST, "/user/login").permitAll()
                     .requestMatchers(POST, "/user/forgot_password").permitAll()
                     .requestMatchers(POST, "/user/reset_password").permitAll()
