@@ -11,6 +11,14 @@ import java.util.*
 interface FileHelper {
 
     fun upload(
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        inputStream: InputStream,
+        contentType: String,
+        filename: String
+    )
+
+    fun upload(
             surveyId: UUID,
             surveyFolder: SurveyFolder,
             file: MultipartFile,

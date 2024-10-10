@@ -386,6 +386,24 @@ class ControllerExceptionHandler {
     }
 
     @ExceptionHandler
+    fun handleException(exception: DesignNotAvailableException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage("Design file is missing", exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
+    fun handleException(exception: SurveyDefNotAvailableException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage("Survey Definition file is missing", exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
     fun handleException(exception: ComponentDeletedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
