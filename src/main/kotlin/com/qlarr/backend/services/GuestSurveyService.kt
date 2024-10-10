@@ -1,8 +1,17 @@
 package com.qlarr.backend.services
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.qlarr.backend.api.survey.CloneRequest
 import com.qlarr.backend.api.survey.SimpleSurveyDto
+import com.qlarr.backend.api.survey.Status
+import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
+import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.exceptions.DesignNotAvailableException
+import com.qlarr.backend.exceptions.DuplicateSurveyException
+import com.qlarr.backend.exceptions.SurveyDefNotAvailableException
 import com.qlarr.backend.helpers.FileSystemHelper
+import com.qlarr.backend.mappers.SurveyMapper
 import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.SurveyRepository
@@ -10,6 +19,7 @@ import com.qlarr.backend.persistence.repositories.VersionRepository
 import com.qlarr.expressionmanager.model.jacksonKtMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -25,6 +35,7 @@ import java.util.zip.ZipInputStream
 
 @Service
 class GuestSurveyService(
+    val surveyMapper: SurveyMapper,
     val restTemplate: RestTemplate,
     val fileSystemHelper: FileSystemHelper,
     val versionRepository: VersionRepository,
@@ -33,7 +44,7 @@ class GuestSurveyService(
 ) {
 
     @Transactional
-    fun cloneGuestSurvey(surveyId: UUID) {
+    fun cloneGuestSurvey(surveyId: UUID, cloneRequest: CloneRequest): SurveyDTO {
         val url = "$enterpriseDomain/guest/survey/$surveyId/clone_to_local"
         val response = restTemplate.exchange(url, HttpMethod.GET, null, ByteArray::class.java)
 
@@ -45,82 +56,104 @@ class GuestSurveyService(
         val bufferedInputStream = BufferedInputStream(byteArrayInputStream)
         val zipInputStream = ZipInputStream(bufferedInputStream)
 
+        var surveyDTO: SurveyDTO? = null
+        var designSaved = false
+
+        val newId = UUID.randomUUID()
+
         zipInputStream.use {
             var zipEntry: ZipEntry? = it.nextEntry
             while (zipEntry != null) {
+                println(
+                    "name: ${zipEntry.name}, fileName: ${extractFileName(zipEntry.name)}, parentFolderName: ${
+                        extractParentFolderName(
+                            zipEntry.name
+                        )
+                    }"
+                )
                 if (zipEntry.isDirectory) {
                     continue
                 } else {
                     val fileName = extractFileName(zipEntry.name)
-                    if (fileName.equals("survey.json")) {
-                        saveSurveyData(surveyId, it)
+                    if (fileName == "survey.json") {
+                        surveyDTO = saveSurveyData(it, cloneRequest)
                     } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
-                        unzipFileToFileSystem(surveyId, SurveyFolder.RESOURCES, it, fileName, fileName)
-                    } else if (fileName.equals("design.json")) {
-                        unzipFileToFileSystem(surveyId, SurveyFolder.DESIGN, it, fileName, "1")
+                        unzipFileToFileSystem(newId, SurveyFolder.RESOURCES, it, fileName, fileName)
+                    } else if (fileName == "design.json") {
+                        unzipFileToFileSystem(newId, SurveyFolder.DESIGN, it, fileName, "1")
+                        designSaved = true
                     }
                 }
                 zipEntry = it.nextEntry
             }
         }
-    }
-
-    fun extractParentFolderName(path: String?): String? {
-        val pathArray = path?.split("/")
-        if (pathArray == null || pathArray.size < 2) {
-            return null
+        if (!designSaved) {
+            throw DesignNotAvailableException()
         }
-        return pathArray[pathArray.size - 2]
+        if (surveyDTO == null) {
+            throw SurveyDefNotAvailableException()
+        }
+        fileSystemHelper.changeSurveyDirectory(newId.toString(), surveyDTO!!.id.toString())
+        return surveyDTO ?: throw SurveyDefNotAvailableException()
+
     }
 
-    fun extractFileName(path: String?): String? {
-        val pathArray = path?.split("/")
-        return pathArray?.get(pathArray.size - 1)
-    }
+    private fun extractParentFolderName(path: String): String? = path.split("/")
+        .takeIf { it.size >= 2 }?.let { it[0] }
 
-    fun unzipFileToFileSystem(surveyId: UUID, surveyFolder: SurveyFolder, zipInputStream: ZipInputStream, currentFileName:String? , newFileName: String?) {
+
+    fun extractFileName(path: String): String = path.split("/").let { it[it.size - 1] }
+
+    fun unzipFileToFileSystem(
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        zipInputStream: ZipInputStream,
+        currentFileName: String,
+        newFileName: String
+    ) {
         val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
-        if (newFileName == null) {
-            throw RuntimeException("New file name cannot be null!")
-        }
-
-        val mimeType = currentFileName.let { Files.probeContentType(File(it!!).toPath()) }
+        val mimeType = currentFileName.let { Files.probeContentType(File(it).toPath()) }
         fileSystemHelper.upload(surveyId, surveyFolder, inputStream, mimeType, newFileName)
     }
 
-    fun saveSurveyData(surveyId: UUID, zipInputStream: ZipInputStream) {
+    fun saveSurveyData(zipInputStream: ZipInputStream, cloneRequest: CloneRequest): SurveyDTO {
         val surveyDataString = String(zipInputStream.readAllBytes())
-        val simpleSurveyDto = jacksonKtMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
+        val simpleSurveyDto =
+            jacksonKtMapper.registerModule(JavaTimeModule()).readValue(surveyDataString, SimpleSurveyDto::class.java)
 
-        val savedSurvey = surveyRepository.save(
-            simpleSurveyDto.let {
+        val savedSurvey = try {
+            surveyRepository.save(
                 SurveyEntity(
-                    id = it.id,
-                    creationDate = it.creationDate,
-                    lastModified = it.lastModified,
-                    name = it.name,
-                    status = it.status,
-                    startDate = it.startDate,
-                    endDate = it.endDate,
-                    usage = it.usage,
-                    quota = it.surveyQuota,
+                    creationDate = simpleSurveyDto.creationDate,
+                    lastModified = simpleSurveyDto.lastModified,
+                    name = cloneRequest.name,
+                    status = Status.DRAFT,
+                    startDate = simpleSurveyDto.startDate,
+                    endDate = simpleSurveyDto.endDate,
+                    usage = simpleSurveyDto.usage,
+                    quota = -1,
                     canLockSurvey = false,
-                    image = it.image,
-                    description = it.description
+                    image = simpleSurveyDto.image,
+                    description = simpleSurveyDto.description
                 )
-            }
-        )
+            )
+        } catch (exception: DataIntegrityViolationException) {
+            // we assume here that at least only the email constraint could be violated
+            throw DuplicateSurveyException()
+        }
+
 
         versionRepository.save(
-            simpleSurveyDto.latestVersion.let {
-                VersionEntity(version = it.version,
-                    surveyId = savedSurvey.id!!,
-                    subVersion = it.subVersion,
-                    valid = it.valid,
-                    published = it.published,
-                    schema = listOf(),
-                    lastModified = it.lastModified)
-            }
+            VersionEntity(
+                version = 1,
+                surveyId = savedSurvey.id!!,
+                subVersion = 1,
+                valid = simpleSurveyDto.latestVersion.valid,
+                published = false,
+                schema = listOf(),
+                lastModified = nowUtc()
+            )
         )
+        return surveyMapper.mapEntityToDto(savedSurvey)
     }
 }

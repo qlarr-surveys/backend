@@ -35,11 +35,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun upload(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            file: MultipartFile,
-            contentType: String,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        file: MultipartFile,
+        contentType: String,
+        filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
         if (file.isEmpty) {
@@ -85,9 +85,9 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun doesFileExists(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        filename: String
     ): Boolean {
         val filePath = buildFilePath(surveyId, surveyFolder, filename)
 
@@ -95,10 +95,10 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun upload(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            text: String,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        text: String,
+        filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
@@ -110,42 +110,42 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun surveyResourcesFiles(
-            surveyId: UUID,
-            files: List<String>?,
-            dateFrom: LocalDateTime?
+        surveyId: UUID,
+        files: List<String>?,
+        dateFrom: LocalDateTime?
     ): List<FileInfo> {
         return surveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
     }
 
     private fun surveyFiles(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            files: List<String>?,
-            dateFrom: LocalDateTime?
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        files: List<String>?,
+        dateFrom: LocalDateTime?
     ): List<FileInfo> {
         val surveyPath = buildFolderPath(surveyId, surveyFolder)
         val surveyDir = File(surveyPath)
 
         return surveyDir.listFiles()?.asIterable()
-                ?.filter { file ->
-                    dateFrom?.isBefore(
-                            LocalDateTime.ofInstant(
-                                    Instant.ofEpochMilli(file.lastModified()),
-                                    ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
-                            )
-                    ) ?: true && files?.contains(file.name) ?: true
-                }?.map { file ->
-                    FileInfo(
-                            file.name,
-                            file.length(),
-                            LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
+            ?.filter { file ->
+                dateFrom?.isBefore(
+                    LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(file.lastModified()),
+                        ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
                     )
-                } ?: emptyList()
+                ) ?: true && files?.contains(file.name) ?: true
+            }?.map { file ->
+                FileInfo(
+                    file.name,
+                    file.length(),
+                    LocalDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
+                )
+            } ?: emptyList()
     }
 
     override fun cloneResources(
-            sourceSurveyId: UUID,
-            destinationSurveyId: UUID
+        sourceSurveyId: UUID,
+        destinationSurveyId: UUID
     ) {
         val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.RESOURCES)
         val sourceDir = File(sourceFolderPath)
@@ -159,10 +159,10 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun copyDesign(
-            sourceSurveyId: UUID,
-            destinationSurveyId: UUID,
-            sourceFileName: String,
-            newFileName: String
+        sourceSurveyId: UUID,
+        destinationSurveyId: UUID,
+        sourceFileName: String,
+        newFileName: String
     ) {
         val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.DESIGN)
         val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.DESIGN)
@@ -174,7 +174,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun deleteSurveyFiles(
-            surveyId: UUID,
+        surveyId: UUID,
     ) {
         val surveyPath = buildFolderPath(surveyId)
 
@@ -182,9 +182,9 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun download(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        filename: String
     ): FileDownload {
         val path = buildFilePath(surveyId, surveyFolder, filename)
         val metadata = fetchMetadata(path)
@@ -193,9 +193,9 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun getText(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        filename: String
     ): String {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
@@ -206,9 +206,9 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
 
 
     override fun delete(
-            surveyId: UUID,
-            surveyFolder: SurveyFolder,
-            filename: String
+        surveyId: UUID,
+        surveyFolder: SurveyFolder,
+        filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
@@ -227,25 +227,25 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =
-            String.format(
-                    "${fileSystemProperties.rootFolder}/%s/%s/%s",
-                    surveyId.toString(),
-                    surveyFolder.path,
-                    filename
-            )
+        "${fileSystemProperties.rootFolder}/$surveyId/${surveyFolder.path}/$filename"
 
     private fun buildFolderPath(surveyId: UUID, surveyFolder: SurveyFolder) =
-            String.format(
-                    "${fileSystemProperties.rootFolder}/%s/%s",
-                    surveyId.toString(),
-                    surveyFolder.path,
-            )
+        "${fileSystemProperties.rootFolder}/$surveyId/${surveyFolder.path}"
 
-    private fun buildFolderPath(surveyId: UUID) =
-            String.format(
-                    "${fileSystemProperties.rootFolder}/%s",
-                    surveyId.toString()
-            )
+
+    private fun buildFolderPath(surveyId: UUID) = "${fileSystemProperties.rootFolder}/$surveyId"
+
+    fun changeSurveyDirectory(from: String, to: String): Boolean {
+        val oldDir = File("${fileSystemProperties.rootFolder}/$from")
+        val newDir = File("${fileSystemProperties.rootFolder}/$to")
+
+        // Ensure the old directory exists and is a directory
+        if (oldDir.exists() && oldDir.isDirectory) {
+            // Rename the directory (move to new path)
+            return oldDir.renameTo(newDir)
+        }
+        return false
+    }
 
     companion object {
         const val METADATA_POSTFIX = ".metadata"
