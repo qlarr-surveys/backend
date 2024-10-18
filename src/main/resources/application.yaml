@@ -68,6 +68,8 @@ spring:
 mail:
   password: owzrmumizhrggtul
   email: askoura@gmail.com
+fileSystem:
+  rootFolder: /var/qlarr/resources
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
