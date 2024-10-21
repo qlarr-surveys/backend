@@ -150,7 +150,7 @@ class ResponseOpsService(
         val file = helper.download(surveyId, SurveyFolder.RESPONSES, filename.toString())
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .header(CONTENT_TYPE, file.objectMetadata["content-type"]!!)
+                .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
                 .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
                 .body(InputStreamResource(file.inputStream))
