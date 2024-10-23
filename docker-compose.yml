@@ -6,8 +6,8 @@ networks:
 
 services:
 
-  local-postgres:
-    container_name: 'local-postgres'
+ db-postgres:
+    container_name: 'postgres-db'
     image: postgres:15.1
     networks:
       - docker-local_net
@@ -20,7 +20,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - $HOME/data/local-postgres-data:/var/lib/postgresql/data
+      - $HOME/data/qlarr/postgres-data:/var/lib/postgresql/data
 
 #  postgres_admin:
 #    container_name: postgres_admin
@@ -48,7 +48,7 @@ services:
     networks:
       - docker-local_net
     depends_on:
-      - local-postgres
+      -db-postgres
     restart: unless-stopped
     volumes:
-      - $HOME/data/qlarr/resources:/var/qlarr/resources
+      - $HOME/data/qlarr/survey-files:/var/qlarr/resources

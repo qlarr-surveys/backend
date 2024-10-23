@@ -62,7 +62,7 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:postgresql://local-postgres:5432/qlarrdb
+    url: jdbc:postgresql://postgres-db:5432/qlarrdb
     username: qlarr
     password: password
 mail:

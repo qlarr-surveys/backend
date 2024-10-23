@@ -42,6 +42,6 @@ To access the PGADMIN on the browser [Click here](http://localhost:5050/browser)
 1. Use the **PGADMIN_DEFAULT_PASSWORD** to unlock saved password
 2. Create new server **Register** => **Server**
 3. The **Server** require a name
-4. Connection Hostname/address type **local-postgres**
-5. Username field type **local-postgres** username
-6. Password field type **local-postgres** password# qlarr-backend-core
+4. Connection Hostname/address type **postgres-db**
+5. Username field type **postgres-db** username
+6. Password field type **postgres-db** password# qlarr-backend-core
