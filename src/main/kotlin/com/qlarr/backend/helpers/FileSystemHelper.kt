@@ -65,7 +65,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         if (!file.exists()) {
             file.createNewFile()
         }
-        metadataFile.writeText("content-type: $contentType\netag: $etag")
+        metadataFile.writeText("Content-Type: $contentType\netag: $etag")
     }
 
     private fun fetchMetadata(filePath: String): Map<String, String> {
