@@ -50,3 +50,5 @@ services:
     depends_on:
       - local-postgres
     restart: unless-stopped
+    volumes:
+      - $HOME/data/qlarr/resources:/var/qlarr/resources

@@ -1,8 +1,8 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:19-jre
 
 WORKDIR /app
 
-COPY build/libs/*-SNAPSHOT.jar app.jar
+COPY build/libs/qlarr-backend-core-0.0.1.jar app.jar
 
 EXPOSE 8080
 
