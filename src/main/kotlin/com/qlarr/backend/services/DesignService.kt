@@ -19,9 +19,9 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.expressionmanager.ext.resources
-import com.qlarr.expressionmanager.model.jacksonKtMapper
-import com.qlarr.expressionmanager.usecase.ValidationJsonOutput
+import com.qlarr.surveyengine.ext.resources
+import com.qlarr.surveyengine.model.jacksonKtMapper
+import com.qlarr.surveyengine.usecase.ValidationJsonOutput
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

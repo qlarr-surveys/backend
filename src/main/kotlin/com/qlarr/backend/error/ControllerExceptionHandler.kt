@@ -1,7 +1,7 @@
 package com.qlarr.backend.error
 
 import com.qlarr.backend.exceptions.*
-import com.qlarr.expressionmanager.usecase.SurveyDesignWithErrorException
+import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import io.jsonwebtoken.JwtException
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order

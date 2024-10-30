@@ -3,8 +3,8 @@ package com.qlarr.backend.mappers
 import com.qlarr.backend.api.response.ResponseDto
 import com.qlarr.backend.common.utcToLocalTZ
 import com.qlarr.backend.services.ResponseWithSurveyorName
-import com.qlarr.expressionmanager.model.Dependency
-import com.qlarr.expressionmanager.model.ReservedCode
+import com.qlarr.surveyengine.model.Dependency
+import com.qlarr.surveyengine.model.ReservedCode
 import org.springframework.stereotype.Component
 import java.time.ZoneId
 

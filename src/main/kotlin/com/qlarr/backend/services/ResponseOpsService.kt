@@ -9,8 +9,8 @@ import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.expressionmanager.model.*
-import com.qlarr.expressionmanager.usecase.SurveyDesignWithErrorException
+import com.qlarr.surveyengine.model.*
+import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl

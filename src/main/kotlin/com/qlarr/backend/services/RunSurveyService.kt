@@ -9,11 +9,11 @@ import com.qlarr.backend.exceptions.SurveyIsNotActiveException
 import com.qlarr.backend.mappers.RunMapper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.expressionmanager.ext.ScriptUtils
-import com.qlarr.expressionmanager.model.NavigationDirection
-import com.qlarr.expressionmanager.model.NavigationIndex
-import com.qlarr.expressionmanager.model.SurveyMode
-import com.qlarr.expressionmanager.usecase.SurveyDesignWithErrorException
+import com.qlarr.surveyengine.ext.ScriptUtils
+import com.qlarr.surveyengine.model.NavigationDirection
+import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.SurveyMode
+import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.*

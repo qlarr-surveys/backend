@@ -16,7 +16,7 @@ import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.expressionmanager.model.jacksonKtMapper
+import com.qlarr.surveyengine.model.jacksonKtMapper
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DataIntegrityViolationException

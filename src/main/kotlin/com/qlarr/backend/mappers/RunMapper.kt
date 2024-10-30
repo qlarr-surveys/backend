@@ -2,8 +2,8 @@ package com.qlarr.backend.mappers
 
 import com.qlarr.backend.api.runsurvey.RunSurveyDto
 import com.qlarr.backend.persistence.entities.SurveyEntity
-import com.qlarr.expressionmanager.model.SurveyLang
-import com.qlarr.expressionmanager.usecase.NavigationJsonOutput
+import com.qlarr.surveyengine.model.SurveyLang
+import com.qlarr.surveyengine.usecase.NavigationJsonOutput
 import org.springframework.stereotype.Component
 import java.util.*
 

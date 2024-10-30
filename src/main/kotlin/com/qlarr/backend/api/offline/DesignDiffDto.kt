@@ -3,7 +3,7 @@ package com.qlarr.backend.api.offline
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.common.DATE_TIME_UTC_FORMAT
-import com.qlarr.expressionmanager.usecase.ValidationJsonOutput
+import com.qlarr.surveyengine.usecase.ValidationJsonOutput
 import java.time.LocalDateTime
 
 data class DesignDiffDto(

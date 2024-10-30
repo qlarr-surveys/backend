@@ -8,8 +8,8 @@ import com.qlarr.backend.expressionmanager.validateSchema
 import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.expressionmanager.model.*
-import com.qlarr.expressionmanager.usecase.*
+import com.qlarr.surveyengine.model.*
+import com.qlarr.surveyengine.usecase.*
 import org.springframework.stereotype.Service
 import java.util.*
 

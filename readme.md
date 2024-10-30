@@ -44,4 +44,4 @@ To access the PGADMIN on the browser [Click here](http://localhost:5050/browser)
 3. The **Server** require a name
 4. Connection Hostname/address type **postgres-db**
 5. Username field type **postgres-db** username
-6. Password field type **postgres-db** password# qlarr-backend-core
+6. Password field type **postgres-db** password# qlarr-backend

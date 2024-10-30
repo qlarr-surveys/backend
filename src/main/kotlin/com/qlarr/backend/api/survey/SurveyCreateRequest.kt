@@ -2,7 +2,7 @@ package com.qlarr.backend.api.survey
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.qlarr.backend.common.DATE_TIME_UTC_FORMAT
-import com.qlarr.expressionmanager.model.SurveyLang
+import com.qlarr.surveyengine.model.SurveyLang
 import java.time.LocalDateTime
 
 data class SurveyCreateRequest(

@@ -5,7 +5,7 @@ import com.qlarr.backend.api.runsurvey.RunSurveyDto
 import com.qlarr.backend.api.runsurvey.StartRequest
 import com.qlarr.backend.api.user.*
 import com.qlarr.backend.services.RunSurveyService
-import com.qlarr.expressionmanager.model.SurveyMode
+import com.qlarr.surveyengine.model.SurveyMode
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

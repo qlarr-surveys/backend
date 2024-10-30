@@ -1,12 +1,12 @@
 package com.qlarr.backend.expressionmanager
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.qlarr.expressionmanager.ext.JsonExt
-import com.qlarr.expressionmanager.ext.ScriptUtils
-import com.qlarr.expressionmanager.model.Dependency
-import com.qlarr.expressionmanager.model.NavigationUseCaseInput
-import com.qlarr.expressionmanager.model.SurveyMode
-import com.qlarr.expressionmanager.usecase.*
+import com.qlarr.surveyengine.ext.JsonExt
+import com.qlarr.surveyengine.ext.ScriptUtils
+import com.qlarr.surveyengine.model.Dependency
+import com.qlarr.surveyengine.model.NavigationUseCaseInput
+import com.qlarr.surveyengine.model.SurveyMode
+import com.qlarr.surveyengine.usecase.*
 import com.qlarr.scriptengine.ScriptEngineNavigation
 import com.qlarr.scriptengine.ScriptEngineValidation
 

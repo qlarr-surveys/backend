@@ -1,6 +1,6 @@
 package com.qlarr.backend.api.runsurvey
 
-import com.qlarr.expressionmanager.model.NavigationDirection
+import com.qlarr.surveyengine.model.NavigationDirection
 import java.util.*
 
 data class StartRequest(

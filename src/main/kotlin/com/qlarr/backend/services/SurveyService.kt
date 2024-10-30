@@ -14,7 +14,7 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.expressionmanager.usecase.ValidationJsonOutput
+import com.qlarr.surveyengine.usecase.ValidationJsonOutput
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service

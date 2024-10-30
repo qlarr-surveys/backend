@@ -1,8 +1,8 @@
 package com.qlarr.backend.api.runsurvey
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.qlarr.expressionmanager.model.NavigationIndex
-import com.qlarr.expressionmanager.model.SurveyLang
+import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.SurveyLang
 import java.util.*
 
 data class RunSurveyDto(

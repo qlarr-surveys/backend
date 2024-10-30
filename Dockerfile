@@ -1,8 +1,8 @@
 FROM eclipse-temurin:19-jre
 
 WORKDIR /app
-
-COPY build/libs/qlarr-backend-core-0.0.1.jar app.jar
+CMD ["./gradlew", "clean", "bootJar"]
+COPY build/libs/*.jar app.jar
 
 EXPOSE 8080
 
