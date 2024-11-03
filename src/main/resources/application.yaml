@@ -36,7 +36,7 @@ mail:
 env:
   test: false
 frontend:
-  host: qlarr.app:3000
+  host: localhost:3000
 enterprise.domain: https://stg.api.qlarr.com/
 ---
 spring:
@@ -55,7 +55,7 @@ fileSystem:
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
-  host: qlarr.app:3000
+  host: localhost:3000
 ---
 spring:
   config:
@@ -73,4 +73,4 @@ fileSystem:
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontend:
-  host: qlarr.app:3000
+  host: localhost:3000
