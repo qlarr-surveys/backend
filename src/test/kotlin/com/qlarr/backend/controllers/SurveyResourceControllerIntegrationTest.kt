@@ -9,7 +9,6 @@ import com.qlarr.backend.services.SurveyResourceService
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.hamcrest.CoreMatchers.containsString
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.MediaType
@@ -46,17 +45,6 @@ class SurveyResourceControllerIntegrationTest : IntegrationTestBase() {
                 .with(csrf())
                 .withRole(Roles.SURVEY_ADMIN)
         ).andExpect(status().isNotFound).andExpect(jsonPath("$.message").value("Survey not found"))
-    }
-
-    @Disabled("Security rules were changed for demo purposes")
-    @Test
-    fun `upload resource failed expect unAuthorized 401`() {
-        mockMvc.perform(
-            multipart("/survey/{surveyId}/resource", UUID.randomUUID()).file(file)
-                .content(MediaType.MULTIPART_FORM_DATA_VALUE)
-                .with(csrf())
-                .withRole(Roles.SURVEYOR)
-        ).andExpect(status().isForbidden)
     }
 
     @Test

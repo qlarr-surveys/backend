@@ -1,7 +1,9 @@
 package com.qlarr.backend.services
 
 import com.qlarr.backend.api.user.*
-import com.qlarr.backend.common.*
+import com.qlarr.backend.common.UserUtils
+import com.qlarr.backend.common.isValidEmail
+import com.qlarr.backend.common.isValidName
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.mappers.UserMapper
 import com.qlarr.backend.persistence.entities.EmailChangesEntity
@@ -27,16 +29,16 @@ import java.util.*
 
 @Service
 class UserService(
-        private val emailChangesRepository: EmailChangesRepository,
-        private val userMapper: UserMapper,
-        private val userRepository: UserRepository,
-        private val jwtService: JwtService,
-        private val refreshTokenRepository: RefreshTokenRepository,
-        private val encoder: PasswordEncoder,
-        private val emailService: EmailService,
-        private val userUtils: UserUtils,
-        @Value("\${frontend.host}")
-        val frontendDomain: String,
+    private val emailChangesRepository: EmailChangesRepository,
+    private val userMapper: UserMapper,
+    private val userRepository: UserRepository,
+    private val jwtService: JwtService,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val encoder: PasswordEncoder,
+    private val emailService: EmailService,
+    private val userUtils: UserUtils,
+    @Value("\${frontendUrl}")
+        val frontendUrl: String,
 ) {
 
     fun getAllUsers(): List<UserDTO> {
@@ -245,7 +247,7 @@ class UserService(
         val resetToken = jwtService.generatePasswordResetToken(userEntity, newUser = false)
         emailService.sendEmail(
                 to = userEntity.email,
-                body = " To reset your password... Follow this link: http://$frontendDomain/reset-password?token=$resetToken",
+                body = " To reset your password... Follow this link: $frontendUrl/reset-password?token=$resetToken",
                 subject = "Your Password Reset Token"
         )
     }
@@ -254,7 +256,7 @@ class UserService(
         val resetToken = jwtService.generatePasswordResetToken(userEntity, newUser = true)
         emailService.sendEmail(
                 to = userEntity.email,
-                body = " You have been invited... Follow this link: http://$frontendDomain/reset-password?token=$resetToken",
+                body = " You have been invited... Follow this link: $frontendUrl/reset-password?token=$resetToken",
                 subject = "Invitation to join Qlarr.com"
         )
     }

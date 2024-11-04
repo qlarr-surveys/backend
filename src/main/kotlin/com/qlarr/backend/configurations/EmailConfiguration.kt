@@ -7,21 +7,22 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
 
 @Configuration
-class EmailConfiguration(private val props: EmailProperties) {
+class EmailConfiguration(private val emailProperties: EmailProperties) {
 
     @Bean
     fun getMailSender(): JavaMailSender {
         val sender = JavaMailSenderImpl()
-        sender.host = props.host
-        sender.username = props.email
-        sender.password = props.password
-        sender.port = props.port
+        sender.host = emailProperties.host
+        sender.username = emailProperties.email
+        sender.password = emailProperties.password
+        sender.port = emailProperties.port
         val props = sender.javaMailProperties
         props["mail.transport.protocol"] = "smtp"
-        props["mail.smtp.auth"] = "true"
-        props["mail.smtp.starttls.enable"] = "true"
-        props["mail.debug"] = "true"
-        props["mail.smtp.ssl.enable"] = "true"
+        if (emailProperties.password.isNotEmpty()) {
+            props["mail.smtp.auth"] = "true"
+            props["mail.smtp.starttls.enable"] = "true"
+            props["mail.smtp.ssl.enable"] = "true"
+        }
         return sender
     }
 }

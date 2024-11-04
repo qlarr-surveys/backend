@@ -2,7 +2,7 @@ spring:
   profiles:
     default: local
   datasource:
-    url: jdbc:postgresql://localhost:5432/qlarrdb
+    url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
   jpa:
@@ -27,16 +27,13 @@ jwt:
   resetExpirationMs: 3600000
   resetExpirationForNewUsersMs: 2592000000
   refreshExpirationMs: 31536000000
+  secret: {JWT_SECRET}
 mail:
-  host: smtp.gmail.com
-  port: 465
+  host: ${MAIL_HOST}
+  port: ${MAIL_PORT}
   password: ${MAIL_PASSWORD}
   email: ${MAIL_EMAIL}
-  mock: false
-env:
-  test: false
-frontend:
-  host: localhost:3000
+frontendUrl: ${FRONTEND_URL}
 enterprise.domain: https://stg.api.qlarr.com/
 ---
 spring:
@@ -48,29 +45,12 @@ spring:
     username: qlarr
     password: password
 mail:
-  password: owzrmumizhrggtul
-  email: askoura@gmail.com
+  host: localhost
+  port: 1025
+  password:
+  email:
 fileSystem:
   rootFolder: src/main/resources/root
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
-frontend:
-  host: localhost:3000
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: jdbc:postgresql://postgres-db:5432/qlarrdb
-    username: qlarr
-    password: password
-mail:
-  password: owzrmumizhrggtul
-  email: askoura@gmail.com
-fileSystem:
-  rootFolder: /var/qlarr/resources
-jwt:
-  secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
-frontend:
-  host: localhost:3000
+frontendUrl: http://localhost:3000

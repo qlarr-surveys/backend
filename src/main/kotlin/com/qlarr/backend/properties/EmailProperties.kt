@@ -15,9 +15,6 @@ data class EmailProperties(
     val password: String,
 
     @Value("\${mail.port}")
-    val port: Int,
+    val port: Int
 
-    @Value("\${mail.mock}")
-    val send: Boolean,
-
-    )
+)

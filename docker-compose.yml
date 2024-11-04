@@ -5,6 +5,11 @@ networks:
     driver: bridge
 
 services:
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI
 
   postgres-db:
     container_name: 'postgres-db'
@@ -22,21 +27,21 @@ services:
     volumes:
       - $HOME/qlarr-data/postgres:/var/lib/postgresql/data
 
-#  postgres_admin:
-#    container_name: postgres_admin
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: qlarr@pgadmin.org
-#      PGADMIN_DEFAULT_PASSWORD: password
-#      PGADMIN_CONFIG_SERVER_MODE: 'False'
-#    volumes:
-#      - $HOME/data/postgres-admin-data:/var/lib/postgresql/data
-#      - $HOME/data/postgres-admin-bkp:/var/lib/postgresql/bkp
-#    ports:
-#      - "5050:80"
-#    networks:
-#      - docker-local_net
-#    restart: unless-stopped
+  postgres_admin:
+    container_name: postgres_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: qlarr@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - $HOME/data/postgres-admin-data:/var/lib/postgresql/data
+      - $HOME/data/postgres-admin-bkp:/var/lib/postgresql/bkp
+    ports:
+      - "5050:80"
+    networks:
+      - docker-local_net
+    restart: unless-stopped
 
   app:
     container_name: 'qlarr-backend'
@@ -52,3 +57,15 @@ services:
     restart: unless-stopped
     volumes:
       - $HOME/qlarr-data/survey-files:/var/qlarr/resources
+    environment:
+#      - Any profile but not local or default
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_URL=jdbc:postgresql://postgres-db:5432/qlarrdb
+      - DB_USER=qlarr
+      - DB_PASSWORD=password
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=465
+      - MAIL_PASSWORD=owzrmumizhrggtul
+      - MAIL_EMAIL=askoura@gmail.com
+      - FRONTEND_URL=http://localhost:3000
+      - JWT_SECRET=lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug
