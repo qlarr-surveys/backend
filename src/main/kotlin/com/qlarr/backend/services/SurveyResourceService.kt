@@ -2,6 +2,7 @@ package com.qlarr.backend.services
 
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.Status
+import com.qlarr.backend.common.RandomResourceIdGenerator
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.nowUtc
 import com.qlarr.backend.exceptions.ResourceNotFoundException
@@ -30,8 +31,9 @@ class SurveyResourceService(
                 throw SurveyIsClosedException()
             }
         } ?: throw SurveyNotFoundException()
-        helper.upload(surveyId, SurveyFolder.RESOURCES, file, file.contentType ?: "", file.originalFilename!!)
-        return ResponseEntity.ok().body(FileInfo(file.originalFilename!!, file.size, nowUtc()))
+        val filename = RandomResourceIdGenerator.generateRandomIdWithExtension(file)
+        helper.upload(surveyId, SurveyFolder.RESOURCES, file, file.contentType ?: "", filename)
+        return ResponseEntity.ok().body(FileInfo(filename, file.size, nowUtc()))
     }
 
 
