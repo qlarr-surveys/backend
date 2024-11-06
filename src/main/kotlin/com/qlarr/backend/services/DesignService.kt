@@ -201,7 +201,7 @@ class DesignService(
         }
         val publishedVersion =
             versionRepository.findLatestPublishedVersion(surveyId) ?: throw NoPublishedVersionException()
-        return if (!publishInfo.forceListFiles && publishedVersion.version == publishInfo.version && publishedVersion.subVersion == publishInfo.subVersion) {
+        return if (publishedVersion.version == publishInfo.version && publishedVersion.subVersion == publishInfo.subVersion) {
             DesignDiffDto(publishInfo = publishInfo)
         } else {
             val json = helper.getText(surveyId, SurveyFolder.DESIGN, publishedVersion.version.toString())
@@ -213,7 +213,6 @@ class DesignService(
                 PublishInfo(
                     publishedVersion.version,
                     publishedVersion.subVersion,
-                    publishInfo.forceListFiles,
                     publishedVersion.lastModified!!
                 ),
                 validationJsonOutput = validationJsonOutput
