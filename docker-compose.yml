@@ -35,8 +35,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
-      - $HOME/data/postgres-admin-data:/var/lib/postgresql/data
-      - $HOME/data/postgres-admin-bkp:/var/lib/postgresql/bkp
+      - $HOME/qlarr-data/postgres-admin-data:/var/lib/postgresql/data
+      - $HOME/qlarr-data/postgres-admin-bkp:/var/lib/postgresql/bkp
     ports:
       - "5050:80"
     networks:
