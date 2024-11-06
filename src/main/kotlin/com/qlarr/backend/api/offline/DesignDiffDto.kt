@@ -15,6 +15,7 @@ data class DesignDiffDto(
 data class PublishInfo(
     val version: Int,
     val subVersion: Int,
+    val listFiles: Boolean = false,
     @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
     val lastModified: LocalDateTime,
 )

@@ -29,20 +29,20 @@ import java.util.*
 
 @Service
 class DesignService(
-        private val versionRepository: VersionRepository,
-        private val surveyRepository: SurveyRepository,
-        private val helper: FileHelper,
-        private val versionMapper: VersionMapper,
-        private val responseRepository: ResponseRepository,
+    private val versionRepository: VersionRepository,
+    private val surveyRepository: SurveyRepository,
+    private val helper: FileHelper,
+    private val versionMapper: VersionMapper,
+    private val responseRepository: ResponseRepository,
 ) {
 
     @Transactional
     fun setDesign(
-            surveyId: UUID,
-            design: ObjectNode,
-            version: Int,
-            subVersion: Int,
-            sampleSurvey: Boolean = false,
+        surveyId: UUID,
+        design: ObjectNode,
+        version: Int,
+        subVersion: Int,
+        sampleSurvey: Boolean = false,
     ): DesignDto {
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         if (survey.status == Status.CLOSED) {
@@ -57,39 +57,39 @@ class DesignService(
         val subversionToSave = if (latestVersion.published) 1 else latestVersion.subVersion + 1
 
         val validationJsonOutput =
-                if (sampleSurvey) SurveyProcessor.processSample(design) else SurveyProcessor.process(design)
+            if (sampleSurvey) SurveyProcessor.processSample(design) else SurveyProcessor.process(design)
         if (latestPublishedVersion != null) {
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublishedVersion.version.toString())
             val oldCodes =
-                    jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java)
-                            .toDesignerInput().state.fieldNames().asSequence().toList()
+                jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java)
+                    .toDesignerInput().state.fieldNames().asSequence().toList()
             val newCodes = validationJsonOutput.toDesignerInput().state.fieldNames().asSequence().toList()
             if (!newCodes.containsAll(oldCodes)) {
                 throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
             }
         }
         helper.upload(
-                surveyId,
-                SurveyFolder.DESIGN,
-                jacksonObjectMapper().writeValueAsString(validationJsonOutput),
-                versionToSave.toString()
+            surveyId,
+            SurveyFolder.DESIGN,
+            jacksonObjectMapper().writeValueAsString(validationJsonOutput),
+            versionToSave.toString()
         )
         val designerInput = validationJsonOutput.toDesignerInput()
         val isValid: Boolean = (validationJsonOutput.survey["errors"] as? ArrayNode)?.let { it.size() == 0 } ?: true
         val versionEntity = latestVersion.copy(
-                published = false,
-                version = versionToSave,
-                surveyId = surveyId,
-                valid = isValid,
-                subVersion = subversionToSave,
-                schema = validationJsonOutput.schema,
-                lastModified = nowUtc()
+            published = false,
+            version = versionToSave,
+            surveyId = surveyId,
+            valid = isValid,
+            subVersion = subversionToSave,
+            schema = validationJsonOutput.schema,
+            lastModified = nowUtc()
         )
         val saved = versionRepository.save(versionEntity)
         surveyRepository.save(survey.copy(lastModified = nowUtc()))
         return DesignDto(
-                designerInput = designerInput,
-                versionDto = versionMapper.toDto(saved, survey.status)
+            designerInput = designerInput,
+            versionDto = versionMapper.toDto(saved, survey.status)
         )
     }
 
@@ -97,8 +97,8 @@ class DesignService(
         val processedSurvey = getProcessedSurvey(surveyId, false)
         val designerInput = processedSurvey.validationJsonOutput.toDesignerInput()
         return DesignDto(
-                designerInput = designerInput,
-                versionDto = versionMapper.toDto(processedSurvey.latestVersion, processedSurvey.survey.status)
+            designerInput = designerInput,
+            versionDto = versionMapper.toDto(processedSurvey.latestVersion, processedSurvey.survey.status)
         )
     }
 
@@ -136,34 +136,34 @@ class DesignService(
             throw InvalidDesignException()
         }
         if ((latestPublished == null && latestVersion.version != 1)
-                || (latestPublished != null && latestVersion.version - latestPublished.version > 1)
+            || (latestPublished != null && latestVersion.version - latestPublished.version > 1)
         ) {
             throw DesignOutOfSyncException(latestVersion.subVersion)
         }
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         if (survey.status != Status.ACTIVE) {
             surveyRepository.save(
-                    survey.copy(
-                            status = Status.ACTIVE,
-                            lastModified = nowUtc()
-                    )
+                survey.copy(
+                    status = Status.ACTIVE,
+                    lastModified = nowUtc()
+                )
             )
         }
         // This is the first time to publish ever
         val saved = if (latestPublished == null) {
             latestVersion.copy(
-                    published = true,
-                    version = 1,
-                    subVersion = 1,
-                    lastModified = nowUtc()
+                published = true,
+                version = 1,
+                subVersion = 1,
+                lastModified = nowUtc()
             )
         } else {
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublished.version.toString())
             val oldComponentIndex =
-                    jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
+                jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
             val newJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
             val newComponentIndex =
-                    jacksonKtMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
+                jacksonKtMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
             val newCodes = newComponentIndex.map { it.code }
             val oldCodes = oldComponentIndex.map { it.code }
             if (!newCodes.containsAll(oldCodes)) {
@@ -177,16 +177,16 @@ class DesignService(
                 helper.delete(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
                 helper.upload(surveyId, SurveyFolder.DESIGN, newJson, latestPublished.version.toString())
                 latestPublished.copy(
-                        published = true,
-                        subVersion = latestPublished.subVersion + 1,
-                        lastModified = nowUtc()
+                    published = true,
+                    subVersion = latestPublished.subVersion + 1,
+                    lastModified = nowUtc()
                 )
             } else {
                 // Material changes... we have a new published version
                 latestVersion.copy(
-                        published = true,
-                        subVersion = 1,
-                        lastModified = nowUtc()
+                    published = true,
+                    subVersion = 1,
+                    lastModified = nowUtc()
                 )
             }
         }
@@ -200,8 +200,8 @@ class DesignService(
             throw SurveyIsClosedException()
         }
         val publishedVersion =
-                versionRepository.findLatestPublishedVersion(surveyId) ?: throw NoPublishedVersionException()
-        return if (publishedVersion.version == publishInfo.version && publishedVersion.subVersion == publishInfo.subVersion) {
+            versionRepository.findLatestPublishedVersion(surveyId) ?: throw NoPublishedVersionException()
+        return if (!publishInfo.listFiles && publishedVersion.version == publishInfo.version && publishedVersion.subVersion == publishInfo.subVersion) {
             DesignDiffDto(publishInfo = publishInfo)
         } else {
             val json = helper.getText(surveyId, SurveyFolder.DESIGN, publishedVersion.version.toString())
@@ -209,16 +209,21 @@ class DesignService(
             val resources = validationJsonOutput.survey.resources()
             val files = helper.surveyResourcesFiles(surveyId, resources, publishInfo.lastModified)
             return DesignDiffDto(
-                    files,
-                    PublishInfo(publishedVersion.version, publishedVersion.subVersion, publishedVersion.lastModified!!),
-                    validationJsonOutput = validationJsonOutput
+                files,
+                PublishInfo(
+                    publishedVersion.version,
+                    publishedVersion.subVersion,
+                    publishInfo.listFiles,
+                    publishedVersion.lastModified!!
+                ),
+                validationJsonOutput = validationJsonOutput
             )
         }
     }
 }
 
 data class ProcessedSurvey(
-        val survey: SurveyEntity,
-        val latestVersion: VersionEntity,
-        val validationJsonOutput: ValidationJsonOutput
+    val survey: SurveyEntity,
+    val latestVersion: VersionEntity,
+    val validationJsonOutput: ValidationJsonOutput
 )
