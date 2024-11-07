@@ -31,6 +31,7 @@ jwt:
 mail:
   host: ${MAIL_HOST}
   port: ${MAIL_PORT}
+  ssl: ${MAIL_SMTP_SSL}
   password: ${MAIL_PASSWORD}
   email: ${MAIL_EMAIL}
 frontendUrl: ${FRONTEND_URL}
@@ -47,6 +48,7 @@ spring:
 mail:
   host: localhost
   port: 1025
+  ssl: false
   password:
   email:
 fileSystem:

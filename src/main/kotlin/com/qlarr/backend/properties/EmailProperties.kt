@@ -15,6 +15,9 @@ data class EmailProperties(
     val password: String,
 
     @Value("\${mail.port}")
-    val port: Int
+    val port: Int,
+
+    @Value("\${mail.ssl}")
+    val ssl: String
 
 )

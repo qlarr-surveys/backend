@@ -21,7 +21,7 @@ class EmailConfiguration(private val emailProperties: EmailProperties) {
         if (emailProperties.password.isNotEmpty()) {
             props["mail.smtp.auth"] = "true"
             props["mail.smtp.starttls.enable"] = "true"
-            props["mail.smtp.ssl.enable"] = "true"
+            props["mail.smtp.ssl.enable"] = emailProperties.ssl
         }
         return sender
     }
