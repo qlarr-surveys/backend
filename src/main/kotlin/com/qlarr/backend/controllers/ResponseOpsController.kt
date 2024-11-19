@@ -49,9 +49,10 @@ class ResponseOpsController(
             request: HttpServletRequest,
             @PathVariable fileName: String,
             @PathVariable surveyId: UUID,
+            @RequestPart fileType: String,
             @RequestPart file: MultipartFile
     ): ResponseEntity<ResponseUploadFile> {
-        val result = responseOpsService.uploadOfflineResponseFile(surveyId, fileName, file)
+        val result = responseOpsService.uploadOfflineResponseFile(surveyId, fileName, fileType, file)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
