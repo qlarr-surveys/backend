@@ -56,17 +56,18 @@ services:
     volumes:
       - $HOME/qlarr-data/survey-files:/var/qlarr/resources
     environment:
-      #      - Any profile but not local or default
       - SPRING_PROFILES_ACTIVE=docker
       - DB_URL=jdbc:postgresql://postgres-db:5432/qlarrdb
       - DB_USER=qlarr
+      - FILE_SYSTEM_ROOT_FOLDER=/var/qlarr/resources
       - DB_PASSWORD=password
       - MAIL_HOST=
       - MAIL_SMTP_SSL=
+      - MAIL_SMTP_STARTTLS=
       - MAIL_PORT=
       - MAIL_PASSWORD=
-      - MAIL_EMAIL=
-      - FRONTEND_URL=http://localhost:3000
+      - MAIL_USERNAME=
+      - FRONTEND_URL=http://localhost
       - JWT_SECRET=
 
   react-app:

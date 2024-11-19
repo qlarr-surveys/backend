@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component
 
 @Component
 data class EmailProperties(
-    @Value("\${mail.email}")
-    val email: String,
+    @Value("\${mail.username}")
+    val username: String,
 
     @Value("\${mail.host}")
     val host: String,
@@ -18,6 +18,9 @@ data class EmailProperties(
     val port: Int,
 
     @Value("\${mail.ssl}")
-    val ssl: String
+    val ssl: String,
+
+    @Value("\${mail.starttls}")
+    val starttls: String
 
 )

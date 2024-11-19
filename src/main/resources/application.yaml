@@ -32,10 +32,13 @@ mail:
   host: ${MAIL_HOST}
   port: ${MAIL_PORT}
   ssl: ${MAIL_SMTP_SSL}
+  starttls: ${MAIL_SMTP_STARTTLS}
   password: ${MAIL_PASSWORD}
-  email: ${MAIL_EMAIL}
+  username: ${MAIL_USERNAME}
 frontendUrl: ${FRONTEND_URL}
 enterprise.domain: https://stg.api.qlarr.com/
+fileSystem:
+  rootFolder: ${FILE_SYSTEM_ROOT_FOLDER}
 ---
 spring:
   config:
@@ -49,8 +52,9 @@ mail:
   host: localhost
   port: 1025
   ssl: false
+  startTls: false
   password:
-  email:
+  username:
 fileSystem:
   rootFolder: src/main/resources/root
 jwt:
