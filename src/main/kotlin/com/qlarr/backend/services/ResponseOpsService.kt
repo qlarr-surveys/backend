@@ -1,6 +1,8 @@
 package com.qlarr.backend.services
 
-import com.qlarr.backend.api.response.*
+import com.qlarr.backend.api.response.ResponseCountDto
+import com.qlarr.backend.api.response.ResponseUploadFile
+import com.qlarr.backend.api.response.UploadResponseRequestData
 import com.qlarr.backend.api.survey.Status
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.UserUtils
@@ -18,8 +20,6 @@ import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
-import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -66,7 +66,7 @@ class ResponseOpsService(
         if (survey.status != Status.ACTIVE) {
             throw SurveyIsNotActiveException()
         }
-        val mimeType = file.originalFilename!!.let { Files.probeContentType(File(it).toPath()) }
+        val mimeType = file.contentType ?: "application/octet-stream"
         helper.upload(surveyId, SurveyFolder.RESPONSES, file, mimeType, filename)
         return ResponseUploadFile(filename, filename, file.size, file.contentType ?: "")
     }
