@@ -48,7 +48,7 @@ class NavigationService(
             processedSurvey.validationJsonOutput.survey.availableLangByCode(navigationLang ?: responseLang)
         } ?: processedSurvey.validationJsonOutput.survey.availableLangByCode(navigationLang)
 
-        val navigationUseCaseInput = NavigationUseCaseInput(
+            val navigationUseCaseInput = NavigationUseCaseInput(
                 values = mutableMapOf<String, Any>().apply {
                     response?.values?.let { putAll(it) }
                     putAll(values)

@@ -39,6 +39,7 @@ class RunSurveyService(
                 surveyId = surveyId,
                 response = null,
                 processedSurvey = processedSurvey,
+                navigationLang = startRequest.lang,
                 navigationDirection = NavigationDirection.Start,
                 values = startRequest.values,
                 preview = preview,
@@ -78,6 +79,7 @@ class RunSurveyService(
         val result = navigationService.navigate(
                 surveyId = surveyId,
                 response = response,
+                navigationLang = navigateRequest.lang,
                 processedSurvey = processedSurvey,
                 navigationDirection = navigateRequest.navigationDirection,
                 values = response.values.toMutableMap().apply {
