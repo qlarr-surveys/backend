@@ -113,6 +113,7 @@ class GuestSurveyService(
     ) {
         val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
         val mimeType = currentFileName.let { Files.probeContentType(File(it).toPath()) }
+            ?: "application/octet-stream"
         fileSystemHelper.upload(surveyId, surveyFolder, inputStream, mimeType, newFileName)
     }
 

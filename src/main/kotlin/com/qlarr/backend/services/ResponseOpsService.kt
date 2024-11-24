@@ -16,6 +16,7 @@ import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
+import org.springframework.http.HttpHeaders.CONTENT_DISPOSITION
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -48,7 +49,10 @@ class ResponseOpsService(
         }
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
         val fileName = UUID.randomUUID().toString()
-        helper.upload(surveyId, SurveyFolder.RESPONSES, file, file.contentType ?: "", fileName)
+        val mimeType = file.contentType
+            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
+            ?: "application/octet-stream"
+        helper.upload(surveyId, SurveyFolder.RESPONSES, file, mimeType, fileName)
         val responseUploadFile = ResponseUploadFile(
             file.originalFilename!!, fileName, file.size, file.contentType
                 ?: ""
@@ -68,9 +72,9 @@ class ResponseOpsService(
         if (survey.status != Status.ACTIVE) {
             throw SurveyIsNotActiveException()
         }
-        val mimeType =
-            file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
-                ?: "application/octet-stream";
+        val mimeType = file.contentType
+            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
+            ?: "application/octet-stream"
         helper.upload(surveyId, SurveyFolder.RESPONSES, file, mimeType, filename)
         return ResponseUploadFile(filename, filename, file.size, file.contentType ?: "")
     }

@@ -17,6 +17,8 @@ import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
+import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +34,10 @@ class SurveyResourceService(
             }
         } ?: throw SurveyNotFoundException()
         val filename = RandomResourceIdGenerator.generateRandomIdWithExtension(file)
-        helper.upload(surveyId, SurveyFolder.RESOURCES, file, file.contentType ?: "", filename)
+        val mimeType = file.contentType
+            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
+            ?: "application/octet-stream"
+        helper.upload(surveyId, SurveyFolder.RESOURCES, file, mimeType, filename)
         return ResponseEntity.ok().body(FileInfo(filename, file.size, nowUtc()))
     }
 
