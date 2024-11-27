@@ -3,7 +3,6 @@ package com.qlarr.backend.controllers
 import com.qlarr.backend.api.response.ResponseCountDto
 import com.qlarr.backend.api.response.ResponseUploadFile
 import com.qlarr.backend.api.response.UploadResponseRequestData
-import com.qlarr.backend.api.user.*
 import com.qlarr.backend.services.ResponseOpsService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.io.InputStreamResource
@@ -85,6 +84,15 @@ class ResponseOpsController(
             @PathVariable filename: UUID
     ): ResponseEntity<InputStreamResource> {
         return responseOpsService.downloadFile(request.serverName, surveyId, filename)
+    }
+
+    @GetMapping("/survey/response/attach/{questionId}/{responseId}")
+    fun getResponseFileNew(
+        request: HttpServletRequest,
+        @PathVariable responseId: UUID,
+        @PathVariable questionId: String
+    ): ResponseEntity<InputStreamResource> {
+        return responseOpsService.downloadFileNew(responseId, questionId)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")

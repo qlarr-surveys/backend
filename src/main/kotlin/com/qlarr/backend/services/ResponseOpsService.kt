@@ -16,7 +16,6 @@ import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
-import org.springframework.http.HttpHeaders.CONTENT_DISPOSITION
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -164,6 +163,32 @@ class ResponseOpsService(
             .body(InputStreamResource(file.inputStream))
     }
 
+    fun downloadFileNew(
+        responseId: UUID,
+        questionId: String
+    ): ResponseEntity<InputStreamResource> {
+        val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
+        val questionValue = response.values["$questionId.value"]
+        if (questionValue is LinkedHashMap<*, *> && questionValue.containsKey("filename")
+            && questionValue.containsKey("stored_filename")
+        ) {
+            val file =
+                helper.download(response.surveyId, SurveyFolder.RESPONSES, questionValue["stored_filename"] as String)
+            val customFileName = "${response.surveyResponseIndex}-$questionId-${questionValue["filename"]}"
+            return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
+                .header(
+                    "Content-Disposition",
+                    "attachment; filename=\"$customFileName\""
+                )
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
+                .body(InputStreamResource(file.inputStream))
+        } else {
+            throw InvalidQuestionId()
+        }
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun deleteResponse(surveyId: UUID, responseId: UUID) {

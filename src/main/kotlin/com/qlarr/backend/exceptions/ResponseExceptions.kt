@@ -8,3 +8,4 @@ class WrongValueType(val columnName: String, val expectedClassName: String, val 
 class ResponseAlreadySyncedException : Throwable()
 
 class UnrecognizedZoneException(val zone:String) : Throwable()
+class InvalidQuestionId : Throwable()

@@ -24,6 +24,9 @@ data class SurveyResponseEntity(
 
         val surveyor: UUID?,
 
+        @Column(name = "survey_response_index", updatable = false, insertable = false)
+        val surveyResponseIndex: Int? = null,
+
         @Column(name = "nav_index")
         @Convert(converter = NavigationIndexConverter::class)
         val navigationIndex: NavigationIndex,
