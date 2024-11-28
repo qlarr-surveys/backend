@@ -164,6 +164,7 @@ class ResponseOpsService(
     }
 
     fun downloadFileNew(
+        surveyId: UUID,
         responseId: UUID,
         questionId: String
     ): ResponseEntity<InputStreamResource> {
@@ -173,7 +174,7 @@ class ResponseOpsService(
             && questionValue.containsKey("stored_filename")
         ) {
             val file =
-                helper.download(response.surveyId, SurveyFolder.RESPONSES, questionValue["stored_filename"] as String)
+                helper.download(surveyId, SurveyFolder.RESPONSES, questionValue["stored_filename"] as String)
             val customFileName = "${response.surveyResponseIndex}-$questionId-${questionValue["filename"]}"
             return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))

@@ -43,6 +43,7 @@ class SecurityConfiguration(
                     .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/run/runtime.js").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/response/attach/{filename}").permitAll()
+                .requestMatchers(GET, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/resource/{fileName}").permitAll()
                     .requestMatchers(POST, "/user/login").permitAll()

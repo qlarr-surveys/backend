@@ -30,6 +30,16 @@ class ResponseOpsController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
+    @GetMapping("/survey/{surveyId}/response/attach/{responseId}/{questionId}")
+    fun getResponseFileNew(
+        request: HttpServletRequest,
+        @PathVariable surveyId: UUID,
+        @PathVariable responseId: UUID,
+        @PathVariable questionId: String
+    ): ResponseEntity<InputStreamResource> {
+        return responseOpsService.downloadFileNew(surveyId, responseId, questionId)
+    }
+
     @PostMapping("/survey/{surveyId}/response/preview/attach/{responseId}/{questionId}")
     fun uploadResponsePreviewFile(
             request: HttpServletRequest,
@@ -84,15 +94,6 @@ class ResponseOpsController(
             @PathVariable filename: UUID
     ): ResponseEntity<InputStreamResource> {
         return responseOpsService.downloadFile(request.serverName, surveyId, filename)
-    }
-
-    @GetMapping("/survey/response/attach/{questionId}/{responseId}")
-    fun getResponseFileNew(
-        request: HttpServletRequest,
-        @PathVariable responseId: UUID,
-        @PathVariable questionId: String
-    ): ResponseEntity<InputStreamResource> {
-        return responseOpsService.downloadFileNew(responseId, questionId)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
