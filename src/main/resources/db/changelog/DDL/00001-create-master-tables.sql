@@ -2,12 +2,6 @@
 -- preconditions onFail:HALT onError:HALT
 -- changeset master:1
 
-CREATE TABLE user_registration
-(
-    id          UUID            NOT NULL PRIMARY KEY,
-    email       VARCHAR(255)    NOT NULL
-);
-
 CREATE TABLE users
 (
     id         UUID           NOT NULL PRIMARY KEY,
@@ -30,16 +24,11 @@ CREATE TABLE surveys
     start_date              TIMESTAMP,
     end_date                TIMESTAMP,
     name                    VARCHAR(255) NOT NULL
-        constraint uc_surveys_name
-            unique,
+            constraint uc_surveys_name
+                unique,
     quota                   INTEGER      NOT NULL,
-    record_gps              BOOLEAN      NOT NULL,
-    save_ip                 BOOLEAN      NOT NULL,
-    save_timings            BOOLEAN      NOT NULL,
-    public_within_org       BOOLEAN      NOT NULL,
     status                  VARCHAR(255),
-    usage                   VARCHAR(255),
-    background_audio         BOOLEAN              NOT NULL
+    usage                   VARCHAR(255)
 );
 
 CREATE TABLE versions

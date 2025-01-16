@@ -1,13 +1,15 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id 'org.springframework.boot' version '3.0.2'
     id 'io.spring.dependency-management' version '1.1.0'
-    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.8.10'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '1.8.10'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.20'
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.0.20'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '2.0.20'
 }
 
-group = 'com.frankie'
-version = '0.0.1-SNAPSHOT'
+group = 'com.qlarr'
+version = '0.1.0'
 
 configurations {
     compileOnly {
@@ -15,19 +17,12 @@ configurations {
     }
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-}
 
 dependencies {
-    implementation project(':expressionmanager')
-    implementation project(':scriptengine')
-//    implementation files('libs/expressionmanager-1.0.jar')
-//    implementation files('libs/scriptengine-1.0.jar')
-
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'com.github.qlarr-surveys.survey-engine:surveyengine:v0.1.1'
+    implementation 'com.github.qlarr-surveys.survey-engine:scriptengine:v0.1.1'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -42,13 +37,11 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.liquibase:liquibase-core'
     implementation 'com.github.blagerweij:liquibase-sessionlock:1.6.2'
-    implementation 'org.postgresql:postgresql:42.5.4'
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.470'
+    implementation 'org.postgresql:postgresql:42.7.2'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.5'
-    // https://mvnrepository.com/artifact/com.amazonaws.secretsmanager/aws-secretsmanager-jdbc
-    implementation 'com.amazonaws.secretsmanager:aws-secretsmanager-jdbc:1.0.12'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-csv
     implementation 'org.apache.commons:commons-csv:1.10.0'
+    implementation 'commons-io:commons-io:2.16.1'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -59,18 +52,21 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
     testImplementation 'org.testcontainers:postgresql:1.17.6'
 
-    implementation 'org.json:json:20230227'
+    implementation 'org.json:json:20231013'
     implementation "org.graalvm.js:js:22.3.1"
     implementation "org.graalvm.js:js-scriptengine:22.3.1"
-    implementation 'com.google.api-client:google-api-client:2.2.0'
-
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
         freeCompilerArgs = ['-Xjsr305=strict']
-        jvmTarget = '17'
+        jvmTarget = '19'
     }
+}
+
+java {
+    sourceCompatibility = 19
+    targetCompatibility = 19
 }
 
 tasks.named('test') {

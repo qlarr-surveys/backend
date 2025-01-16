@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/DDL/00001-create-master-tables.sql
+  - include:
+      file: db/changelog/DDL/00002-add-fields-to-survey-table.sql
+  - include:
+      file: db/changelog/DDL/00003-modify-response-table.sql

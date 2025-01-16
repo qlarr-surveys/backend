@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'amr.askoura.frankie-backend' is invalid and this project uses 'amr.askoura.frankiebackend' instead.
+* The original package name 'amr.askoura.qlarr-backend' is invalid and this project uses 'amr.askoura.qlarrbackend' instead.
 
 # Getting Started
 

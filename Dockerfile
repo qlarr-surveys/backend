@@ -1,8 +1,8 @@
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:19-jre
 
 WORKDIR /app
-
-COPY build/libs/*-SNAPSHOT.jar app.jar
+CMD ["./gradlew", "clean", "bootJar"]
+COPY build/libs/*.jar app.jar
 
 EXPOSE 8080
 

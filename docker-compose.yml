@@ -1,53 +1,85 @@
-version: '3.1'
-
 networks:
   docker-local_net:
     driver: bridge
 
 services:
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI
 
-  local-postgres:
-    container_name: 'local-postgres'
+  postgres-db:
+    container_name: 'postgres-db'
     image: postgres:15.1
     networks:
       - docker-local_net
     environment:
-      - POSTGRES_USER=frankie
+      - POSTGRES_USER=qlarr
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=frankiedb
+      - POSTGRES_DB=qlarrdb
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - $HOME/data/local-postgres-data:/var/lib/postgresql/data
+      - $HOME/qlarr-data/postgres:/var/lib/postgresql/data
 
   postgres_admin:
     container_name: postgres_admin
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: frankie@pgadmin.org
+      PGADMIN_DEFAULT_EMAIL: qlarr@pgadmin.org
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
-      - $HOME/data/postgres-admin-data:/var/lib/postgresql/data
-      - $HOME/data/postgres-admin-bkp:/var/lib/postgresql/bkp
+      - $HOME/qlarr-data/postgres-admin-data:/var/lib/postgresql/data
+      - $HOME/qlarr-data/postgres-admin-bkp:/var/lib/postgresql/bkp
     ports:
       - "5050:80"
     networks:
       - docker-local_net
     restart: unless-stopped
 
-  app:
-    container_name: 'frankie-backend'
-    image: openjdk:17
+  backend-app:
+    container_name: 'qlarr-backend'
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     networks:
       - docker-local_net
-    volumes:
-      - "./frankie-backend-0.0.1-SNAPSHOT.jar:/app/app.jar"
-    command: [ "java", "-Dspring.profiles.active=docker", "-jar", "/app/app.jar" ]
     depends_on:
-      - local-postgres
+      - postgres-db
     restart: unless-stopped
+    volumes:
+      - $HOME/qlarr-data/survey-files:/var/qlarr/resources
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_URL=jdbc:postgresql://postgres-db:5432/qlarrdb
+      - DB_USER=qlarr
+      - FILE_SYSTEM_ROOT_FOLDER=/var/qlarr/resources
+      - DB_PASSWORD=password
+      - MAIL_HOST=
+      - MAIL_SMTP_SSL=
+      - MAIL_SMTP_STARTTLS=
+      - MAIL_PORT=
+      - MAIL_PASSWORD=
+      - MAIL_USERNAME=
+      - FRONTEND_URL=http://localhost
+      - JWT_SECRET=
+
+  react-app:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_FRONT_END_HOST: "localhost"
+        VITE_PROTOCOL: "http"
+        VITE_BE_URL: "http://localhost:8080"
+        VITE_CLOUD_URL: "https://stg.api.qlarr.com"
+    depends_on:
+      - backend-app
+    ports:
+      - "80:80"
