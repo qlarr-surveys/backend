@@ -196,7 +196,7 @@ class ResponseOpsService(
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
         val processedSurvey = designService.getProcessedSurveyByVersion(surveyId, response.version)
         processedSurvey.validationJsonOutput.schema
-            .filter { it.dataType == DataType.FILE }
+            .filter { it.dataType == ReturnType.FILE }
             .forEach { responseField ->
                 response.values[responseField.toValueKey()]?.let {
                     (it as Map<String, String>)["stored_filename"]?.let { storedFileName ->

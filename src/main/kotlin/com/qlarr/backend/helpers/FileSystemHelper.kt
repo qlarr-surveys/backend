@@ -134,7 +134,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                 dateFrom?.isBefore(
                     LocalDateTime.ofInstant(
                         Instant.ofEpochMilli(file.lastModified()),
-                        ZoneId.systemDefault() // Zone changed to system default from UTC, since we are comparing to date from file system and not from S3
+                        ZoneId.systemDefault()
                     )
                 ) ?: true && files?.contains(file.name) ?: true
             }?.map { file ->

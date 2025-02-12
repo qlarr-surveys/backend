@@ -2,8 +2,8 @@ package com.qlarr.backend.expressionmanager
 
 import com.qlarr.backend.exceptions.WrongColumnException
 import com.qlarr.backend.exceptions.WrongValueType
-import com.qlarr.surveyengine.model.DataType
 import com.qlarr.surveyengine.model.ResponseField
+import com.qlarr.surveyengine.model.ReturnType
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -23,28 +23,28 @@ fun Map<String, Any>.validateSchema(responsesSchema: List<ResponseField>) {
     }
 }
 
-fun validateType(value: Any, dataType: DataType): Boolean {
+fun validateType(value: Any, dataType: ReturnType): Boolean {
     return when (dataType) {
-        DataType.BOOLEAN -> value is Boolean
-        DataType.DATE -> value is String
-        DataType.STRING -> value is String
-        DataType.DOUBLE -> value is Number
-        DataType.INT -> value is Int
-        DataType.LIST -> value is JSONArray
-        DataType.FILE,
-        DataType.MAP -> value is Map<*,*>
+        ReturnType.BOOLEAN -> value is Boolean
+        ReturnType.DATE -> value is String
+        ReturnType.STRING -> value is String
+        ReturnType.DOUBLE -> value is Number
+        ReturnType.INT -> value is Int
+        ReturnType.LIST -> value is JSONArray
+        ReturnType.FILE,
+        ReturnType.MAP -> value is Map<*,*>
     }
 }
 
-fun expectedType(dataType: DataType): String {
+fun expectedType(dataType: ReturnType): String {
     return when (dataType) {
-        DataType.BOOLEAN -> Boolean::class.java.name
-        DataType.DATE -> String::class.java.name
-        DataType.STRING -> String::class.java.name
-        DataType.DOUBLE -> Number::class.java.name
-        DataType.INT -> Int::class.java.name
-        DataType.LIST -> JSONArray::class.java.name
-        DataType.FILE,
-        DataType.MAP -> JSONObject::class.java.name
+        ReturnType.BOOLEAN -> Boolean::class.java.name
+        ReturnType.DATE -> String::class.java.name
+        ReturnType.STRING -> String::class.java.name
+        ReturnType.DOUBLE -> Number::class.java.name
+        ReturnType.INT -> Int::class.java.name
+        ReturnType.LIST -> JSONArray::class.java.name
+        ReturnType.FILE,
+        ReturnType.MAP -> JSONObject::class.java.name
     }
 }

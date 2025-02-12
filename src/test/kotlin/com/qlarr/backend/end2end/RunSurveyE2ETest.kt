@@ -34,9 +34,6 @@ class RunSurveyE2ETest : E2ETestBase() {
                 .consumeWith(System.out::println)
                 .returnResult()
                 .responseBody as SurveyDTO
-        // I know it is cheap...
-        // but we save design to S3 in async mannaer
-        Thread.sleep(500L)
 
         val startRequest = StartRequest(
         )
