@@ -659,3 +659,65 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+This project includes third-party software components. The following licenses apply to the included components:
+
+1. Spring Boot and Spring Framework (Apache License 2.0)
+   - spring-boot-starter-web
+   - spring-boot-starter-data-jpa
+   - spring-boot-starter-security
+   - spring-boot-starter-validation
+   - spring-boot-starter-mail
+   - spring-boot-starter-webflux
+   - spring-boot-starter-test
+
+2. Kotlin (Apache License 2.0)
+   - kotlin-stdlib-jdk8
+   - kotlin-reflect
+   - kotlin-stdlib
+
+3. Jackson (Apache License 2.0)
+   - jackson-module-kotlin
+   - jackson-databind
+   - jackson-core
+   - jackson-annotations
+
+4. JWT (MIT License)
+   - jjwt-api
+   - jjwt-impl
+   - jjwt-jackson
+
+5. Liquibase (Apache License 2.0)
+   - liquibase-core
+   - liquibase-sessionlock
+
+6. PostgreSQL JDBC Driver (BSD 3-Clause License)
+   - postgresql
+
+7. Caffeine (Apache License 2.0)
+   - caffeine
+
+8. Apache Commons (Apache License 2.0)
+   - commons-csv
+   - commons-io
+
+9. JSON (JSON License)
+   - org.json:json
+
+10. GraalVM (GPL v2 with Classpath Exception)
+    - graalvm.js
+    - graalvm.js-scriptengine
+
+11. Test Dependencies (Various Licenses)
+    - JUnit (Eclipse Public License 2.0)
+    - Mockito (MIT License)
+    - TestContainers (MIT License)
+    - SpringMockk (Apache License 2.0)
+
+For full license texts, please visit:
+- Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+- MIT License: https://opensource.org/licenses/MIT
+- BSD 3-Clause License: https://opensource.org/licenses/BSD-3-Clause
+- JSON License: https://www.json.org/license.html
+- GPL v2 with Classpath Exception: https://www.gnu.org/software/classpath/license.html
+- Eclipse Public License 2.0: https://www.eclipse.org/legal/epl-2.0/
