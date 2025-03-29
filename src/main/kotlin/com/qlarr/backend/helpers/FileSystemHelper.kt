@@ -287,9 +287,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                         )
                     }"
                 )
-                if (zipEntry.isDirectory) {
-                    continue
-                } else {
+                if (!zipEntry.isDirectory) {
                     val fileName = extractFileName(zipEntry.name)
                     if (fileName == "survey.json") {
                         val surveyDataString = String(zipInputStream.readAllBytes())
