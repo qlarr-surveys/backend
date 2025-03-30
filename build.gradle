@@ -21,8 +21,8 @@ configurations {
 dependencies {
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-    implementation 'com.github.qlarr-surveys.survey-engine:surveyengine:v0.1.6'
-    implementation 'com.github.qlarr-surveys.survey-engine:scriptengine:v0.1.6'
+    implementation 'com.github.qlarr-surveys.survey-engine:surveyengine:b7b0638'
+    implementation 'com.github.qlarr-surveys.survey-engine:scriptengine:b7b0638'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
