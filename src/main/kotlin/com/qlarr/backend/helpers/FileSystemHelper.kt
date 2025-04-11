@@ -24,7 +24,7 @@ import java.util.zip.ZipOutputStream
 @Component
 class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) : FileHelper {
 
-    override fun upload(
+    override fun uploadUnzippedFile(
         surveyId: UUID,
         surveyFolder: SurveyFolder,
         inputStream: InputStream,
@@ -33,8 +33,8 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
 
-        saveToFile(inputStream, path)
-        saveMetadata(File(path), contentType)
+        val length = saveToFile(inputStream, path)
+        saveMetadata(File(path), contentType, length)
     }
 
     override fun upload(
@@ -51,7 +51,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
 
         val byteStream = file.inputStream
         saveToFile(byteStream, path)
-        saveMetadata(File(path), contentType)
+        saveMetadata(File(path), contentType, file.size)
     }
 
     private fun generateETagUsingMetadata(file: File): String {
@@ -60,7 +60,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         return "$lastModified-$fileSize"
     }
 
-    fun saveMetadata(file: File, contentType: String) {
+    fun saveMetadata(file: File, contentType: String, length: Long) {
         val etag = generateETagUsingMetadata(file)
         val metadataFile = File(file.path + METADATA_POSTFIX)
         val path = Paths.get(file.parent)
@@ -68,7 +68,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         if (!file.exists()) {
             file.createNewFile()
         }
-        metadataFile.writeText("Content-Type: $contentType\netag: $etag")
+        metadataFile.writeText("Content-Type: $contentType\netag: $etag\nContent-Length: $length")
     }
 
     private fun fetchMetadata(filePath: String): Map<String, String> {
@@ -315,7 +315,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
         val mimeType = currentFileName.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
-        upload(surveyId, surveyFolder, inputStream, mimeType, newFileName)
+        uploadUnzippedFile(surveyId, surveyFolder, inputStream, mimeType, newFileName)
     }
 
     private fun extractFileName(path: String): String = path.split("/").let { it[it.size - 1] }
@@ -323,7 +323,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         .takeIf { it.size >= 2 }?.let { it[0] }
 
 
-    private fun saveToFile(byteStream: InputStream, path: String) {
+    private fun saveToFile(byteStream: InputStream, path: String):Long {
         val p = Paths.get(path)
 
         Files.createDirectories(p.parent)
@@ -331,6 +331,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         byteStream.use { inputStream ->
             Files.copy(inputStream, Paths.get(path), StandardCopyOption.REPLACE_EXISTING)
         }
+        return Files.size(Paths.get(path))
     }
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =

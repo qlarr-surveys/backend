@@ -16,6 +16,7 @@ import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
+import org.springframework.http.HttpHeaders.CONTENT_LENGTH
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -158,6 +159,7 @@ class ResponseOpsService(
         return ResponseEntity.ok()
             .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
             .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
+            .header(CONTENT_LENGTH, file.objectMetadata["Content-Length"]!!)
             .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
             .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
             .body(InputStreamResource(file.inputStream))
@@ -179,6 +181,7 @@ class ResponseOpsService(
             return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
                 .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
+                .header(CONTENT_LENGTH, file.objectMetadata["Content-Length"]!!)
                 .header(
                     "Content-Disposition",
                     "inline; filename=\"$customFileName\""

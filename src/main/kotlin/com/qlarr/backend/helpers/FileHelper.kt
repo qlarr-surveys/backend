@@ -11,7 +11,7 @@ import java.util.*
 
 interface FileHelper {
 
-    fun upload(
+    fun uploadUnzippedFile(
         surveyId: UUID,
         surveyFolder: SurveyFolder,
         inputStream: InputStream,
