@@ -1,5 +1,8 @@
 package com.qlarr.backend.services
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.qlarr.backend.api.survey.*
 import com.qlarr.backend.common.isValidName
@@ -13,6 +16,7 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
+import com.qlarr.surveyengine.ext.JsonExt
 import com.qlarr.surveyengine.model.jacksonKtMapper
 import com.qlarr.surveyengine.usecase.ValidationJsonOutput
 import org.springframework.dao.DataIntegrityViolationException
@@ -205,7 +209,46 @@ class SurveyService(
         return surveyData
     }
 
-    fun importSurvey(surveyName:String, inputStream: InputStream): SurveyDTO {
+    fun importAiSurvey( surveyDesign: String): SurveyDTO {
+        val stateObj = jacksonKtMapper.readTree(surveyDesign) as ObjectNode
+
+        var surveyName = stateObj.get("title").textValue()
+        if (surveyRepository.findAllSurveyNames().contains(surveyName)){
+            surveyName+="+1"
+        }
+        val surveyDescription = stateObj.get("description").textValue()
+        val surveyNode = JsonExt.addChildren(stateObj, "Survey", JsonNodeFactory.instance.objectNode())
+        val savedSurvey = surveyRepository.save(
+            SurveyEntity(
+                creationDate = nowUtc(),
+                lastModified = nowUtc(),
+                name = surveyName,
+                status = Status.DRAFT,
+                startDate = null,
+                endDate = null,
+                usage = Usage.MIXED,
+                quota = -1,
+                canLockSurvey = false,
+                image = null,
+                description = surveyDescription
+            )
+        )
+        versionRepository.save(
+            VersionEntity(
+                version = 1,
+                surveyId = savedSurvey.id!!,
+                subVersion = 1,
+                valid = true,
+                published = false,
+                schema = listOf(),
+                lastModified = nowUtc()
+            )
+        )
+        designService.setDesign(savedSurvey.id, surveyNode, 1, 1, true)
+        return surveyMapper.mapEntityToDto(savedSurvey)
+    }
+
+    fun importSurvey(surveyName: String, inputStream: InputStream): SurveyDTO {
         var surveyDTO: SurveyDTO? = null
         var designSaved = false
 

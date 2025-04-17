@@ -2,22 +2,24 @@ package com.qlarr.backend.controllers
 
 import com.qlarr.backend.api.survey.*
 import com.qlarr.backend.services.SurveyService
-import org.springframework.core.io.InputStreamResource
-import org.springframework.http.CacheControl
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.RestTemplate
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 @RestController
 class SurveyController(
-        private val surveyService: SurveyService,
+    private val restTemplate: RestTemplate,
+    private val surveyService: SurveyService,
+    @Value("\${aiGenerator}")
+    val aiGeneratorUrl: String,
 ) {
-
 
 
     @PostMapping("/survey/create")
@@ -36,7 +38,10 @@ class SurveyController(
 
     @PutMapping("/survey/{surveyId}")
     @PreAuthorize("hasAnyAuthority({'super_admin', 'survey_admin'})")
-    fun edit(@PathVariable surveyId: UUID, @RequestBody editSurveyRequest: EditSurveyRequest): ResponseEntity<SurveyDTO> {
+    fun edit(
+        @PathVariable surveyId: UUID,
+        @RequestBody editSurveyRequest: EditSurveyRequest
+    ): ResponseEntity<SurveyDTO> {
         val surveyDtoResponse = surveyService.edit(surveyId, editSurveyRequest)
         return ResponseEntity(surveyDtoResponse, HttpStatus.OK)
     }
@@ -82,5 +87,23 @@ class SurveyController(
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<SurveyDTO> {
         return ResponseEntity(surveyService.importSurvey(surveyName, file.inputStream), HttpStatus.OK)
+    }
+
+    @PostMapping("/survey/generate_ai")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
+    fun generateAiSurvey(
+        @RequestBody promptRequest: PromptRequest
+    ): ResponseEntity<SurveyDTO> {
+
+        // Create request with the prompt
+        val request = HttpEntity<Map<String, String>>(mapOf("prompt" to promptRequest.prompt))
+
+        // Make the POST request and get the response
+        val response = restTemplate.postForObject(aiGeneratorUrl, request, String::class.java)
+
+        return ResponseEntity(
+            surveyService.importAiSurvey( response!!),
+            HttpStatus.OK
+        )
     }
 }

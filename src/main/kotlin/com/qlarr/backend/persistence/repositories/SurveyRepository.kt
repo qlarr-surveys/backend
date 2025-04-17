@@ -12,6 +12,10 @@ import java.util.*
 
 interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
 
+
+    @Query("SELECT s.name FROM SurveyEntity s")
+    fun findAllSurveyNames(): List<String>
+
     @Query(
             "SELECT s as survey, COUNT(r) as responseCount, " +
                     "v as latestVersion, " +

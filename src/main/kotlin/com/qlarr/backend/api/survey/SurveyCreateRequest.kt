@@ -25,3 +25,4 @@ data class EditSurveyRequest(
 )
 
 data class CloneRequest(val name: String)
+data class PromptRequest(val prompt: String)

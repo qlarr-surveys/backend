@@ -69,6 +69,17 @@ services:
       - MAIL_USERNAME=
       - FRONTEND_URL=http://localhost
       - JWT_SECRET=
+      - AI_GENERATOR=
+
+  ai-generator:
+    build:
+      context: ../ai-generator
+      args:
+        - GEMINI_API_KEY=
+        - PORT=4000
+    ports:
+      - "4000:4000"
+    restart: always
 
   react-app:
     build:
