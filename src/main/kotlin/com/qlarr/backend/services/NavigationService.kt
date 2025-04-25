@@ -24,6 +24,7 @@ class NavigationService(
             navigationLang: String? = null,
             processedSurvey: ProcessedSurvey,
             navigationDirection: NavigationDirection,
+            navigationMode: NavigationMode? = null,
             values: Map<String, Any> = mapOf(),
             preview: Boolean,
             surveyMode: SurveyMode
@@ -57,6 +58,7 @@ class NavigationService(
                         navigationDirection = navigationDirection,
                         navigationIndex = response?.navigationIndex
                 ),
+                navigationMode = navigationMode,
                 lang = lang.code
         )
         val navigationJsonOutput = SurveyProcessor.navigate(

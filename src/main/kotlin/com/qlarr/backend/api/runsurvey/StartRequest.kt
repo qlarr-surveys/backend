@@ -1,10 +1,12 @@
 package com.qlarr.backend.api.runsurvey
 
 import com.qlarr.surveyengine.model.NavigationDirection
+import com.qlarr.surveyengine.model.NavigationMode
 import java.util.*
 
 data class StartRequest(
     val lang: String? = null,
+    val navigationMode: NavigationMode? = null,
     val values: Map<String, Any> = mapOf()
 )
 

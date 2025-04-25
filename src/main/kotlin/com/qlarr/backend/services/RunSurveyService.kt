@@ -12,6 +12,7 @@ import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.ScriptUtils
 import com.qlarr.surveyengine.model.NavigationDirection
 import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.NavigationMode
 import com.qlarr.surveyengine.model.SurveyMode
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.data.repository.findByIdOrNull
@@ -20,88 +21,89 @@ import java.util.*
 
 @Service
 class RunSurveyService(
-        private val designService: DesignService,
-        private val navigationService: NavigationService,
-        private val runMapper: RunMapper,
-        private val responseRepository: ResponseRepository,
+    private val designService: DesignService,
+    private val navigationService: NavigationService,
+    private val runMapper: RunMapper,
+    private val responseRepository: ResponseRepository,
 ) {
 
 
     fun start(
-            surveyId: UUID,
-            startRequest: StartRequest,
-            preview: Boolean,
-            surveyMode: SurveyMode
+        surveyId: UUID,
+        startRequest: StartRequest,
+        preview: Boolean,
+        surveyMode: SurveyMode
     ): RunSurveyDto {
         val processedSurvey = designService.getProcessedSurvey(surveyId, !preview)
 
         val result = navigationService.navigate(
-                surveyId = surveyId,
-                response = null,
-                processedSurvey = processedSurvey,
-                navigationLang = startRequest.lang,
-                navigationDirection = NavigationDirection.Start,
-                values = startRequest.values,
-                preview = preview,
-                surveyMode = surveyMode
+            surveyId = surveyId,
+            response = null,
+            processedSurvey = processedSurvey,
+            navigationLang = startRequest.lang,
+            navigationMode = startRequest.navigationMode,
+            navigationDirection = NavigationDirection.Start,
+            values = startRequest.values,
+            preview = preview,
+            surveyMode = surveyMode
         )
 
         val responseEntity = SurveyResponseEntity(
-                surveyId = surveyId,
-                lang = result.lang.code,
-                values = result.navigationJsonOutput.toSave,
-                startDate = nowUtc(),
-                navigationIndex = result.navigationJsonOutput.navigationIndex,
-                surveyor = null,
-                preview = preview,
-                version = processedSurvey.latestVersion.version
+            surveyId = surveyId,
+            lang = result.lang.code,
+            values = result.navigationJsonOutput.toSave,
+            startDate = nowUtc(),
+            navigationIndex = result.navigationJsonOutput.navigationIndex,
+            surveyor = null,
+            preview = preview,
+            version = processedSurvey.latestVersion.version
         )
         val savedResponse = responseRepository.save(responseEntity)
 
         return runMapper.toRunDto(
-                savedResponse.id!!,
-                result.lang,
-                result.additionalLang,
-                result.navigationJsonOutput,
-                processedSurvey.survey
+            savedResponse.id!!,
+            result.lang,
+            result.additionalLang,
+            result.navigationJsonOutput,
+            processedSurvey.survey
         )
     }
 
     fun navigate(
-            surveyId: UUID,
-            navigateRequest: NavigateRequest,
-            preview: Boolean,
-            surveyMode: SurveyMode
+        surveyId: UUID,
+        navigateRequest: NavigateRequest,
+        preview: Boolean,
+        surveyMode: SurveyMode
     ): RunSurveyDto {
         val processedSurvey = designService.getProcessedSurvey(surveyId, !preview)
         val response = responseRepository.findByIdOrNull(navigateRequest.responseId)
-                ?: throw ResponseNotFoundException()
+            ?: throw ResponseNotFoundException()
         val result = navigationService.navigate(
-                surveyId = surveyId,
-                response = response,
-                navigationLang = navigateRequest.lang,
-                processedSurvey = processedSurvey,
-                navigationDirection = navigateRequest.navigationDirection,
-                values = response.values.toMutableMap().apply {
-                    putAll(navigateRequest.values)
-                },
-                preview = preview,
-                surveyMode = surveyMode
+            surveyId = surveyId,
+            response = response,
+            navigationLang = navigateRequest.lang,
+            processedSurvey = processedSurvey,
+            navigationDirection = navigateRequest.navigationDirection,
+            values = response.values.toMutableMap().apply {
+                putAll(navigateRequest.values)
+            },
+            preview = preview,
+            surveyMode = surveyMode
         )
         val entityToSave = response.copy(
-                navigationIndex = result.navigationJsonOutput.navigationIndex,
-                lang = result.lang.code,
-                submitDate = if (result.navigationJsonOutput.navigationIndex is NavigationIndex.End) nowUtc() else null,
-                values = result.navigationJsonOutput.toSave,
-                preview = preview
+            navigationIndex = result.navigationJsonOutput.navigationIndex,
+            lang = result.lang.code,
+            submitDate = if (result.navigationJsonOutput.navigationIndex is NavigationIndex.End) nowUtc() else null,
+            values = result.navigationJsonOutput.toSave,
+            preview = preview
         )
         responseRepository.save(entityToSave)
         return runMapper.toRunDto(
-                navigateRequest.responseId,
-                result.lang,
-                result.additionalLang,
-                result.navigationJsonOutput,
-                processedSurvey.survey
+            navigateRequest.responseId,
+            result.lang,
+            result.additionalLang,
+            result.navigationJsonOutput,
+            processedSurvey.survey
         )
     }
 
