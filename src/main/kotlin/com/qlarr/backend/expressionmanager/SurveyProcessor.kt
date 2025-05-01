@@ -1,5 +1,6 @@
 package com.qlarr.backend.expressionmanager
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.surveyengine.ext.JsonExt
 import com.qlarr.surveyengine.ext.ScriptUtils
@@ -9,6 +10,7 @@ import com.qlarr.surveyengine.model.SurveyMode
 import com.qlarr.surveyengine.usecase.*
 import com.qlarr.scriptengine.ScriptEngineNavigation
 import com.qlarr.scriptengine.ScriptEngineValidation
+import com.qlarr.surveyengine.ext.flatten
 
 object SurveyProcessor {
 
@@ -28,8 +30,12 @@ object SurveyProcessor {
 
     }
 
-    fun process(stateObj: ObjectNode): ValidationJsonOutput {
-        val surveyNode = JsonExt.addChildren(stateObj["Survey"] as ObjectNode, "Survey", stateObj)
+    fun process(stateObj: ObjectNode, savedDesign: ObjectNode): ValidationJsonOutput {
+        val flatSurvey = savedDesign.flatten()
+        stateObj.fieldNames().forEach {
+            flatSurvey.set<JsonNode>(it, stateObj.get(it))
+        }
+        val surveyNode = JsonExt.addChildren(flatSurvey["Survey"] as ObjectNode, "Survey", flatSurvey)
         val useCase = ValidationUseCaseWrapperImpl(scriptEngineValidate, surveyNode.toString())
         return useCase.validate()
     }

@@ -50,14 +50,18 @@ class DesignService(
         }
         val latestVersion = versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
         val latestPublishedVersion = versionRepository.findLatestPublishedVersion(surveyId)
-        if (version != latestVersion.version || subVersion != latestVersion.subVersion) {
+        if (version != latestVersion.version) {
             throw DesignOutOfSyncException(latestVersion.subVersion)
         }
         val versionToSave = if (latestVersion.published) latestVersion.version + 1 else latestVersion.version
         val subversionToSave = if (latestVersion.published) 1 else latestVersion.subVersion + 1
 
-        val validationJsonOutput =
-            if (sampleSurvey) SurveyProcessor.processSample(design) else SurveyProcessor.process(design)
+        val validationJsonOutput = if (sampleSurvey) {
+            SurveyProcessor.processSample(design)
+        } else {
+            val savedDesign = getProcessedSurvey(surveyId, false).validationJsonOutput.survey
+            SurveyProcessor.process(design, savedDesign)
+        }
         if (latestPublishedVersion != null) {
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublishedVersion.version.toString())
             val oldCodes =
