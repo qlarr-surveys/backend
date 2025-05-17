@@ -19,10 +19,11 @@ configurations {
 
 
 dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-    implementation 'com.github.qlarr-surveys.survey-engine:surveyengine:e998ec4'
-    implementation 'com.github.qlarr-surveys.survey-engine:scriptengine:e998ec4'
+    implementation 'com.github.qlarr-surveys.survey-engine-kmp:surveyengine:5cf4101'
+    implementation 'com.github.qlarr-surveys.survey-engine-kmp:scriptengine:5cf4101'
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -39,7 +40,6 @@ dependencies {
     implementation 'com.github.blagerweij:liquibase-sessionlock:1.6.2'
     implementation 'org.postgresql:postgresql:42.7.2'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.5'
-    // https://mvnrepository.com/artifact/org.apache.commons/commons-csv
     implementation 'org.apache.commons:commons-csv:1.10.0'
     implementation 'commons-io:commons-io:2.16.1'
 

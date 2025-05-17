@@ -2,8 +2,8 @@ package com.qlarr.backend.expressionmanager
 
 import com.qlarr.backend.exceptions.WrongColumnException
 import com.qlarr.backend.exceptions.WrongValueType
-import com.qlarr.surveyengine.model.ResponseField
-import com.qlarr.surveyengine.model.ReturnType
+import com.qlarr.surveyengine.model.exposed.ResponseField
+import com.qlarr.surveyengine.model.exposed.ReturnType
 import org.json.JSONArray
 import org.json.JSONObject
 

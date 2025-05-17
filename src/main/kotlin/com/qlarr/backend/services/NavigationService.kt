@@ -1,33 +1,38 @@
 package com.qlarr.backend.services
 
 import com.qlarr.backend.api.survey.Status
+import com.qlarr.backend.api.surveyengine.NavigationJsonOutput
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.expressionmanager.validateSchema
 import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.surveyengine.model.*
-import com.qlarr.surveyengine.usecase.*
+import com.qlarr.surveyengine.model.SurveyLang
+import com.qlarr.surveyengine.model.exposed.NavigationDirection
+import com.qlarr.surveyengine.model.exposed.NavigationMode
+import com.qlarr.surveyengine.model.exposed.SurveyMode
+import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class NavigationService(
-        private val responseRepository: ResponseRepository,
+    private val responseRepository: ResponseRepository,
 ) {
 
     fun navigate(
-            surveyId: UUID,
-            response: SurveyResponseEntity?,
-            navigationLang: String? = null,
-            processedSurvey: ProcessedSurvey,
-            navigationDirection: NavigationDirection,
-            navigationMode: NavigationMode? = null,
-            values: Map<String, Any> = mapOf(),
-            preview: Boolean,
-            surveyMode: SurveyMode
+        surveyId: UUID,
+        response: SurveyResponseEntity?,
+        navigationLang: String? = null,
+        processedSurvey: ProcessedSurvey,
+        navigationDirection: NavigationDirection,
+        navigationMode: NavigationMode? = null,
+        values: Map<String, Any> = mapOf(),
+        preview: Boolean,
+        surveyMode: SurveyMode
     ): NavigationResult {
         val surveyNavigationData = processedSurvey.validationJsonOutput.surveyNavigationData()
         val survey = processedSurvey.survey
@@ -46,39 +51,34 @@ class NavigationService(
         validateSurveyForNavigation(survey, completeSurveyCount, preview)
         values.validateSchema(processedSurvey.validationJsonOutput.schema)
         val lang = response?.lang?.let { responseLang ->
-            processedSurvey.validationJsonOutput.survey.availableLangByCode(navigationLang ?: responseLang)
-        } ?: processedSurvey.validationJsonOutput.survey.availableLangByCode(navigationLang)
+            processedSurvey.validationJsonOutput.availableLangByCode(navigationLang ?: responseLang)
+        } ?: processedSurvey.validationJsonOutput.availableLangByCode(navigationLang)
 
-            val navigationUseCaseInput = NavigationUseCaseInput(
-                values = mutableMapOf<String, Any>().apply {
-                    response?.values?.let { putAll(it) }
-                    putAll(values)
-                },
-                navigationInfo = NavigationInfo(
-                        navigationDirection = navigationDirection,
-                        navigationIndex = response?.navigationIndex
-                ),
-                navigationMode = navigationMode,
-                lang = lang.code
-        )
         val navigationJsonOutput = SurveyProcessor.navigate(
-                processedSurvey.validationJsonOutput,
-                navigationUseCaseInput,
-                surveyNavigationData.skipInvalid,
-                surveyMode
+            values = objectMapper.writeValueAsString(mutableMapOf<String, Any>().apply {
+                response?.values?.let { putAll(it) }
+                putAll(values)
+            }),
+            navigationDirection = navigationDirection,
+            navigationIndex = response?.navigationIndex,
+            navigationMode = navigationMode,
+            lang = lang.code,
+            processedSurvey = processedSurvey.validationJsonOutput.stringified(),
+            surveyMode = surveyMode,
+            skipInvalid = surveyNavigationData.skipInvalid
         )
         val additionalLang =
-                mutableListOf(processedSurvey.validationJsonOutput.survey.defaultSurveyLang()).apply {
-                    addAll(
-                            processedSurvey.validationJsonOutput.survey.additionalLang()
-                    )
-                }.filter {
-                    it.code != lang.code
-                }
+            mutableListOf(processedSurvey.validationJsonOutput.defaultSurveyLang()).apply {
+                addAll(
+                    processedSurvey.validationJsonOutput.additionalLang()
+                )
+            }.filter {
+                it.code != lang.code
+            }
         return NavigationResult(
-                navigationJsonOutput = navigationJsonOutput,
-                lang = lang,
-                additionalLang = additionalLang
+            navigationJsonOutput = navigationJsonOutput,
+            lang = lang,
+            additionalLang = additionalLang
         )
 
     }
@@ -110,7 +110,7 @@ class NavigationService(
 }
 
 data class NavigationResult(
-        val navigationJsonOutput: NavigationJsonOutput,
-        val lang: SurveyLang,
-        val additionalLang: List<SurveyLang>
+    val navigationJsonOutput: NavigationJsonOutput,
+    val lang: SurveyLang,
+    val additionalLang: List<SurveyLang>
 )

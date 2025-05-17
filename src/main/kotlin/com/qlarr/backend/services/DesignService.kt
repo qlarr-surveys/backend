@@ -7,9 +7,11 @@ import com.qlarr.backend.api.design.DesignDto
 import com.qlarr.backend.api.offline.DesignDiffDto
 import com.qlarr.backend.api.offline.PublishInfo
 import com.qlarr.backend.api.survey.Status
+import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
 import com.qlarr.backend.api.version.VersionDto
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.helpers.FileHelper
@@ -19,9 +21,7 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.surveyengine.ext.resources
-import com.qlarr.surveyengine.model.jacksonKtMapper
-import com.qlarr.surveyengine.usecase.ValidationJsonOutput
+import com.qlarr.surveyengine.ext.JsonExt
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -65,7 +65,7 @@ class DesignService(
         if (latestPublishedVersion != null) {
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublishedVersion.version.toString())
             val oldCodes =
-                jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java)
+                objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
                     .componentIndexList.map { it.code }
             val newCodes = validationJsonOutput.componentIndexList.map { it.code }
             if (!newCodes.containsAll(oldCodes)) {
@@ -75,7 +75,7 @@ class DesignService(
         helper.upload(
             surveyId,
             SurveyFolder.DESIGN,
-            jacksonObjectMapper().writeValueAsString(validationJsonOutput),
+            objectMapper.writeValueAsString(validationJsonOutput),
             versionToSave.toString()
         )
         val designerInput = validationJsonOutput.toDesignerInput()
@@ -116,7 +116,7 @@ class DesignService(
             versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
         }
         val json = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
-        val validationJsonOutput = jacksonKtMapper.readValue(json, ValidationJsonOutput::class.java)
+        val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
 
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
     }
@@ -125,7 +125,7 @@ class DesignService(
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val latestVersion = versionRepository.findBySurveyIdAndVersion(surveyId, version) ?: throw DesignException()
         val json = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
-        val validationJsonOutput = jacksonKtMapper.readValue(json, ValidationJsonOutput::class.java)
+        val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
     }
 
@@ -164,10 +164,10 @@ class DesignService(
         } else {
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublished.version.toString())
             val oldComponentIndex =
-                jacksonKtMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
+                objectMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
             val newJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
             val newComponentIndex =
-                jacksonKtMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
+                objectMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
             val newCodes = newComponentIndex.map { it.code }
             val oldCodes = oldComponentIndex.map { it.code }
             if (!newCodes.containsAll(oldCodes)) {
@@ -209,8 +209,8 @@ class DesignService(
             DesignDiffDto(publishInfo = publishInfo)
         } else {
             val json = helper.getText(surveyId, SurveyFolder.DESIGN, publishedVersion.version.toString())
-            val validationJsonOutput = jacksonKtMapper.readValue(json, ValidationJsonOutput::class.java)
-            val resources = validationJsonOutput.survey.resources()
+            val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
+            val resources = validationJsonOutput.resources()
             val files = helper.surveyResourcesFiles(surveyId, resources, publishInfo.lastModified)
             return DesignDiffDto(
                 files,

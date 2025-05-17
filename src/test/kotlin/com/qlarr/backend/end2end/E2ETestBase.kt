@@ -36,7 +36,6 @@ class E2ETestBase {
             .withDatabaseName("qlarr_test")
             .withUsername("qlarr_user")
             .withPassword("qlarr_pass")
-            .withReuse(true)
 
         @DynamicPropertySource
         @JvmStatic

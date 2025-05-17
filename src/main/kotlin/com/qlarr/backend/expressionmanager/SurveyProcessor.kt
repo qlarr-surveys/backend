@@ -2,23 +2,27 @@ package com.qlarr.backend.expressionmanager
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.qlarr.backend.api.surveyengine.NavigationJsonOutput
+import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
+import com.qlarr.backend.configurations.objectMapper
+import com.qlarr.scriptengine.getNavigate
+import com.qlarr.scriptengine.getValidate
 import com.qlarr.surveyengine.ext.JsonExt
-import com.qlarr.surveyengine.ext.ScriptUtils
-import com.qlarr.surveyengine.model.Dependency
-import com.qlarr.surveyengine.model.NavigationUseCaseInput
-import com.qlarr.surveyengine.model.SurveyMode
+import com.qlarr.surveyengine.ext.engineScript
+import com.qlarr.surveyengine.model.exposed.NavigationDirection
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.NavigationMode
+import com.qlarr.surveyengine.model.exposed.SurveyMode
 import com.qlarr.surveyengine.usecase.*
-import com.qlarr.scriptengine.ScriptEngineNavigation
-import com.qlarr.scriptengine.ScriptEngineValidation
-import com.qlarr.surveyengine.ext.flatten
 
 object SurveyProcessor {
 
-    val scriptEngineNavigation = ScriptEngineNavigation(ScriptUtils().engineScript)
-    val scriptEngineValidation = ScriptEngineValidation()
+    val scriptEngineNavigation = getNavigate(engineScript().script)
+    val scriptEngineValidation = getValidate()
 
     private val scriptEngineValidate = object : ScriptEngineValidate {
-        override fun validate(input: List<ScriptValidationInput>): List<ScriptValidationOutput> {
+        override fun validate(input: String): String {
             return scriptEngineValidation.validate(input)
         }
     }
@@ -31,40 +35,54 @@ object SurveyProcessor {
     }
 
     fun process(stateObj: ObjectNode, savedDesign: ObjectNode): ValidationJsonOutput {
-        val flatSurvey = savedDesign.flatten()
+        val flatSurvey = objectMapper.readTree(JsonExt.flatObject(savedDesign.toString())) as ObjectNode
         stateObj.fieldNames().forEach {
             flatSurvey.set<JsonNode>(it, stateObj.get(it))
         }
-        val surveyNode = JsonExt.addChildren(flatSurvey["Survey"] as ObjectNode, "Survey", flatSurvey)
-        val useCase = ValidationUseCaseWrapperImpl(scriptEngineValidate, surveyNode.toString())
-        return useCase.validate()
+        val surveyNode = JsonExt.addChildren(flatSurvey["Survey"].toString(), "Survey", flatSurvey.toString())
+        val useCase = ValidationUseCaseWrapper.create(scriptEngineValidate, surveyNode)
+        return objectMapper.readValue(useCase.validate(), jacksonTypeRef<ValidationJsonOutput>())
     }
 
     fun processSample(surveyNode: ObjectNode): ValidationJsonOutput {
-        val useCase = ValidationUseCaseWrapperImpl(scriptEngineValidate, surveyNode.toString())
-        return useCase.validate()
+        val useCase = ValidationUseCaseWrapper.create(scriptEngineValidate, surveyNode.toString())
+        return objectMapper.readValue(useCase.validate(), jacksonTypeRef<ValidationJsonOutput>())
     }
 
     fun navigate(
-            validationJsonOutput: ValidationJsonOutput,
-            useCaseInput: NavigationUseCaseInput,
-            skipInvalid: Boolean,
-            surveyMode: SurveyMode
+        values: String = "{}",
+        processedSurvey: String,
+        lang: String? = null,
+        navigationMode: NavigationMode? = null,
+        navigationIndex: NavigationIndex? = null,
+        navigationDirection: NavigationDirection = NavigationDirection.Start,
+        skipInvalid: Boolean,
+        surveyMode: SurveyMode
     ): NavigationJsonOutput {
-        val useCase = NavigationUseCaseWrapperImpl(
-                validationJsonOutput,
-                useCaseInput,
-                skipInvalid,
-                surveyMode
+        val useCase = NavigationUseCaseWrapper.init(
+            scriptEngineNavigate,
+            values = values,
+            processedSurvey = processedSurvey,
+            lang = lang,
+            navigationMode = navigationMode,
+            navigationIndex = navigationIndex,
+            navigationDirection = navigationDirection,
+            skipInvalid = skipInvalid,
+            surveyMode = surveyMode
         )
-        return useCase.navigate(scriptEngineNavigate)
+        val navigationJsonOutput = objectMapper.readValue(useCase.navigate(), jacksonTypeRef<NavigationJsonOutput>())
+        return navigationJsonOutput
     }
 
     fun maskedValues(
-            validationJsonOutput: ValidationJsonOutput,
-            useCaseInput: NavigationUseCaseInput
-    ): Map<Dependency, Any> {
-        val useCase = MaskedValuesUseCase(validationJsonOutput)
-        return useCase.navigate(scriptEngineNavigate, useCaseInput)
+        validationJsonOutput: ValidationJsonOutput,
+        values: Map<String, Any>
+    ): Map<String, Any> {
+        val useCase = MaskedValuesUseCase(
+            scriptEngineNavigate,
+            validationJsonOutput.stringified(),
+            objectMapper.writeValueAsString(values)
+        )
+        return useCase.navigate()
     }
 }

@@ -6,12 +6,14 @@ import com.qlarr.backend.api.response.UploadResponseRequestData
 import com.qlarr.backend.api.survey.Status
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.UserUtils
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.model.*
+import com.qlarr.surveyengine.model.exposed.*
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
@@ -58,7 +60,7 @@ class ResponseOpsService(
                 ?: ""
         )
         val newValues = response.values.toMutableMap()
-            .apply { put("$questionId.value", jacksonKtMapper.convertValue(responseUploadFile, Map::class.java)) }
+            .apply { put("$questionId.value", objectMapper.convertValue(responseUploadFile, Map::class.java)) }
         responseRepository.save(response.copy(values = newValues))
         return responseUploadFile
     }
@@ -104,21 +106,15 @@ class ResponseOpsService(
             throw IncompleteResponse()
         }
 
-        val navigationUseCaseInput = NavigationUseCaseInput(
-            values = uploadResponseRequestData.values,
-            navigationInfo = NavigationInfo(
-                navigationDirection = NavigationDirection.Resume,
-                navigationIndex = uploadResponseRequestData.navigationIndex
-            ),
+        val navigationResult = SurveyProcessor.navigate(
+            values = objectMapper.writeValueAsString(uploadResponseRequestData.values),
+            navigationDirection = NavigationDirection.Resume,
+            navigationIndex = uploadResponseRequestData.navigationIndex,
             lang = uploadResponseRequestData.lang,
+            skipInvalid = false,
+            processedSurvey = survey.validationJsonOutput.stringified(),
+            surveyMode = SurveyMode.OFFLINE,
         )
-        val navigationResult =
-            SurveyProcessor.navigate(
-                survey.validationJsonOutput,
-                navigationUseCaseInput,
-                false,
-                SurveyMode.OFFLINE
-            )
 
         val isValid: Boolean =
             navigationResult.state["qlarrVariables"]?.get("Survey")?.get("validity")?.booleanValue() ?: false

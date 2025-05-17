@@ -15,7 +15,7 @@ class ResponseMapper {
     fun toDto(
             entity: ResponseWithSurveyorName,
             valueNames: List<String>,
-            maskedValues: Map<Dependency, Any> = mapOf(),
+            maskedValues: Map<String, Any> = mapOf(),
             clientZoneId: ZoneId? = null
     ) =
             ResponseDto(
@@ -31,7 +31,7 @@ class ResponseMapper {
                     values = LinkedHashMap(valueNames.map { valueName ->
                         val names = valueName.split(".")
                         if (names[1] == "value") {
-                            valueName to (maskedValues[Dependency(names[0], ReservedCode.MaskedValue)]?.let {
+                            valueName to (maskedValues["${names[0]}.${ReservedCode.MaskedValue.code}"]?.let {
                                 "$it [${entity.response.values[valueName]}]"
                             } ?: entity.response.values[valueName])
                         } else {

@@ -1,6 +1,6 @@
 package com.qlarr.backend.api.response
 
-import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import java.time.LocalDateTime
 
 data class UploadResponseRequestData(

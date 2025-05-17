@@ -1,7 +1,7 @@
 package com.qlarr.backend.persistence.entities
 
 import com.qlarr.backend.mappers.SchemaConverter
-import com.qlarr.surveyengine.model.ResponseField
+import com.qlarr.surveyengine.model.exposed.ResponseField
 import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.*

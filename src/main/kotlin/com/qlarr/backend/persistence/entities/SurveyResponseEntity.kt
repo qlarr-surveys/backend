@@ -1,7 +1,7 @@
 package com.qlarr.backend.persistence.entities
 
 import com.qlarr.backend.mappers.NavigationIndexConverter
-import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UuidGenerator

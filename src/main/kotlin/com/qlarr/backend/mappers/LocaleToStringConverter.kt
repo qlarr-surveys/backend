@@ -1,7 +1,10 @@
 package com.qlarr.backend.mappers
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.surveyengine.model.*
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.ResponseField
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Converter
 
@@ -10,11 +13,11 @@ import jakarta.persistence.Converter
 class SchemaConverter :
     AttributeConverter<List<ResponseField>, String> {
     override fun convertToDatabaseColumn(attribute: List<ResponseField>): String {
-        return jacksonKtMapper.writeValueAsString(attribute)
+        return objectMapper.writeValueAsString(attribute)
     }
 
     override fun convertToEntityAttribute(dbData: String): List<ResponseField> {
-        return jacksonKtMapper.readValue(dbData, jacksonTypeRef<List<ResponseField>>())
+        return objectMapper.readValue(dbData, jacksonTypeRef<List<ResponseField>>())
     }
 
 }
@@ -23,11 +26,11 @@ class SchemaConverter :
 class NavigationIndexConverter :
     AttributeConverter<NavigationIndex, String> {
     override fun convertToDatabaseColumn(attribute: NavigationIndex): String {
-        return jacksonKtMapper.writeValueAsString(attribute)
+        return objectMapper.writeValueAsString(attribute)
     }
 
     override fun convertToEntityAttribute(dbData: String): NavigationIndex {
-        return jacksonKtMapper.readValue(dbData, NavigationIndex::class.java)
+        return objectMapper.readValue(dbData, NavigationIndex::class.java)
     }
 
 }

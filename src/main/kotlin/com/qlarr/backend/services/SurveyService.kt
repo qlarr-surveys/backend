@@ -1,12 +1,10 @@
 package com.qlarr.backend.services
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.qlarr.backend.api.survey.*
 import com.qlarr.backend.common.isValidName
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.SurveyMapper
@@ -17,8 +15,7 @@ import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
 import com.qlarr.surveyengine.ext.JsonExt
-import com.qlarr.surveyengine.model.jacksonKtMapper
-import com.qlarr.surveyengine.usecase.ValidationJsonOutput
+import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -62,7 +59,7 @@ class SurveyService(
             )
             designService.setDesign(
                 surveyId = surveyEntity.id!!,
-                design = ValidationJsonOutput.new(surveyCreateRequest.name).survey,
+                design = objectMapper.readTree(ValidationUseCaseWrapper.new(surveyCreateRequest.name)) as ObjectNode,
                 version = 1,
                 subVersion = 1,
                 sampleSurvey = true
@@ -203,21 +200,21 @@ class SurveyService(
         }.let {
             surveyMapper.mapEntityToSimpleResponse(it)
         }.let {
-            jacksonKtMapper.registerModule(JavaTimeModule()).writeValueAsString(it)
+            objectMapper.writeValueAsString(it)
         }
 
         return surveyData
     }
 
-    fun importAiSurvey( surveyDesign: String): SurveyDTO {
-        val stateObj = jacksonKtMapper.readTree(surveyDesign) as ObjectNode
+    fun importAiSurvey(surveyDesign: String): SurveyDTO {
+        val stateObj = objectMapper.readTree(surveyDesign) as ObjectNode
 
         var surveyName = stateObj.get("title").textValue()
-        if (surveyRepository.findAllSurveyNames().contains(surveyName)){
-            surveyName+="+1"
+        if (surveyRepository.findAllSurveyNames().contains(surveyName)) {
+            surveyName += "+1"
         }
         val surveyDescription = stateObj.get("description").textValue()
-        val surveyNode = JsonExt.addChildren(stateObj, "Survey", JsonNodeFactory.instance.objectNode())
+        val surveyNode = JsonExt.addChildren(stateObj.toString(), "Survey", "{}")
         val savedSurvey = surveyRepository.save(
             SurveyEntity(
                 creationDate = nowUtc(),
@@ -244,7 +241,7 @@ class SurveyService(
                 lastModified = nowUtc()
             )
         )
-        designService.setDesign(savedSurvey.id, surveyNode, 1, 1, true)
+        designService.setDesign(savedSurvey.id, objectMapper.readTree(surveyNode) as ObjectNode, 1, 1, true)
         return surveyMapper.mapEntityToDto(savedSurvey)
     }
 
@@ -269,7 +266,7 @@ class SurveyService(
 
     fun saveSurveyData(surveyDataString: String, surveyName: String): SurveyDTO {
         val simpleSurveyDto =
-            jacksonKtMapper.registerModule(JavaTimeModule()).readValue(surveyDataString, SimpleSurveyDto::class.java)
+            objectMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
 
         val savedSurvey = try {
             surveyRepository.save(

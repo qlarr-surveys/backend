@@ -8,8 +8,8 @@ import com.qlarr.backend.api.survey.SurveyCreateRequest
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.security.constant.SecurityConstants.Companion.HEADER_STRING
 import com.qlarr.backend.security.constant.SecurityConstants.Companion.TOKEN_PREFIX
-import com.qlarr.surveyengine.model.NavigationDirection
-import com.qlarr.surveyengine.model.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.NavigationDirection
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
