@@ -60,7 +60,6 @@ object SurveyProcessor {
         surveyMode: SurveyMode
     ): NavigationJsonOutput {
         val useCase = NavigationUseCaseWrapper.init(
-            scriptEngineNavigate,
             values = values,
             processedSurvey = processedSurvey,
             lang = lang,
@@ -70,7 +69,7 @@ object SurveyProcessor {
             skipInvalid = skipInvalid,
             surveyMode = surveyMode
         )
-        val navigationJsonOutput = objectMapper.readValue(useCase.navigate(), jacksonTypeRef<NavigationJsonOutput>())
+        val navigationJsonOutput = objectMapper.readValue(useCase.navigate(scriptEngineNavigate), jacksonTypeRef<NavigationJsonOutput>())
         return navigationJsonOutput
     }
 
@@ -79,10 +78,8 @@ object SurveyProcessor {
         values: Map<String, Any>
     ): Map<String, Any> {
         val useCase = MaskedValuesUseCase(
-            scriptEngineNavigate,
             validationJsonOutput.stringified(),
-            objectMapper.writeValueAsString(values)
         )
-        return useCase.navigate()
+        return useCase.navigate(scriptEngineNavigate, objectMapper.writeValueAsString(values))
     }
 }
