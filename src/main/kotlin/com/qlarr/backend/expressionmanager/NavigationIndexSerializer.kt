@@ -16,11 +16,13 @@ class NavigationIndexDeserializer : StdDeserializer<NavigationIndex>(NavigationI
         val node: JsonNode = p.codec.readTree(p)
         var objName = ""
         var groupId = ""
+        var questionId = ""
         var groupIds = listOf<String>()
         node.fieldNames().forEach { name ->
             when (name) {
                 "name" -> objName = node[name].textValue()
                 "groupId" -> groupId = node[name].textValue()
+                "questionId" -> questionId = node[name].textValue()
                 "groupIds" -> groupIds = (node[name] as ArrayNode).map { it.textValue() }
             }
         }
@@ -28,7 +30,7 @@ class NavigationIndexDeserializer : StdDeserializer<NavigationIndex>(NavigationI
             "end" -> NavigationIndex.End(groupId)
             "group" -> NavigationIndex.Group(groupId)
             "groups" -> NavigationIndex.Groups(groupIds)
-            "question" -> NavigationIndex.Question(groupId)
+            "question" -> NavigationIndex.Question(questionId)
             else -> throw IllegalStateException("invalid name for NavigationIndex")
         }
     }
