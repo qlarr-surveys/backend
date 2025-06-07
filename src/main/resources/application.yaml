@@ -36,10 +36,8 @@ mail:
   password: ${MAIL_PASSWORD}
   username: ${MAIL_USERNAME}
 frontendUrl: ${FRONTEND_URL}
-enterprise.domain: https://stg.api.qlarr.com/
 fileSystem:
   rootFolder: ${FILE_SYSTEM_ROOT_FOLDER}
-aiGenerator: ${AI_GENERATOR}
 ---
 spring:
   config:

@@ -1,9 +1,10 @@
 package com.qlarr.backend.controllers
 
-import com.qlarr.backend.api.survey.*
+import com.qlarr.backend.api.survey.CloneRequest
+import com.qlarr.backend.api.survey.EditSurveyRequest
+import com.qlarr.backend.api.survey.SurveyCreateRequest
+import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.services.SurveyService
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,12 +15,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 @RestController
-class SurveyController(
-    private val restTemplate: RestTemplate,
-    private val surveyService: SurveyService,
-    @Value("\${aiGenerator}")
-    val aiGeneratorUrl: String,
-) {
+class SurveyController(private val surveyService: SurveyService) {
 
 
     @PostMapping("/survey/create")
@@ -87,23 +83,5 @@ class SurveyController(
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<SurveyDTO> {
         return ResponseEntity(surveyService.importSurvey(surveyName, file.inputStream), HttpStatus.OK)
-    }
-
-    @PostMapping("/survey/generate_ai")
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
-    fun generateAiSurvey(
-        @RequestBody promptRequest: PromptRequest
-    ): ResponseEntity<SurveyDTO> {
-
-        // Create request with the prompt
-        val request = HttpEntity<Map<String, String>>(mapOf("prompt" to promptRequest.prompt))
-
-        // Make the POST request and get the response
-        val response = restTemplate.postForObject(aiGeneratorUrl, request, String::class.java)
-
-        return ResponseEntity(
-            surveyService.importAiSurvey( response!!),
-            HttpStatus.OK
-        )
     }
 }

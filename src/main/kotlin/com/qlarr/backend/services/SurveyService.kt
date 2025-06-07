@@ -14,7 +14,6 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.surveyengine.ext.JsonExt
 import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
@@ -204,45 +203,6 @@ class SurveyService(
         }
 
         return surveyData
-    }
-
-    fun importAiSurvey(surveyDesign: String): SurveyDTO {
-        val stateObj = objectMapper.readTree(surveyDesign) as ObjectNode
-
-        var surveyName = stateObj.get("title").textValue()
-        if (surveyRepository.findAllSurveyNames().contains(surveyName)) {
-            surveyName += "+1"
-        }
-        val surveyDescription = stateObj.get("description").textValue()
-        val surveyNode = JsonExt.addChildren(stateObj.toString(), "Survey", "{}")
-        val savedSurvey = surveyRepository.save(
-            SurveyEntity(
-                creationDate = nowUtc(),
-                lastModified = nowUtc(),
-                name = surveyName,
-                status = Status.DRAFT,
-                startDate = null,
-                endDate = null,
-                usage = Usage.MIXED,
-                quota = -1,
-                canLockSurvey = false,
-                image = null,
-                description = surveyDescription
-            )
-        )
-        versionRepository.save(
-            VersionEntity(
-                version = 1,
-                surveyId = savedSurvey.id!!,
-                subVersion = 1,
-                valid = true,
-                published = false,
-                schema = listOf(),
-                lastModified = nowUtc()
-            )
-        )
-        designService.setDesign(savedSurvey.id, objectMapper.readTree(surveyNode) as ObjectNode, 1, 1, true)
-        return surveyMapper.mapEntityToDto(savedSurvey)
     }
 
     fun importSurvey(surveyName: String, inputStream: InputStream): SurveyDTO {

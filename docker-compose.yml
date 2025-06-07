@@ -69,8 +69,6 @@ services:
       - MAIL_USERNAME=
       - FRONTEND_URL=http://localhost
       - JWT_SECRET=
-      - AI_GENERATOR=
-
   ai-generator:
     build:
       context: ../ai-generator
