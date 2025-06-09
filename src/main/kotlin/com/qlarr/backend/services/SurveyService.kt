@@ -205,12 +205,12 @@ class SurveyService(
         return surveyData
     }
 
-    fun importSurvey(surveyName: String, inputStream: InputStream): SurveyDTO {
+    fun importSurvey(inputStream: InputStream): SurveyDTO {
         var surveyDTO: SurveyDTO? = null
         var designSaved = false
 
         fileSystemHelper.importSurvey(inputStream.readAllBytes(), onSurveyData = {
-            surveyDTO = saveSurveyData(it, surveyName)
+            surveyDTO = saveSurveyData(it)
             surveyDTO!!
         }, onDesign = { designSaved = true })
 
@@ -224,16 +224,27 @@ class SurveyService(
         return surveyDTO ?: throw SurveyDefNotAvailableException()
     }
 
-    fun saveSurveyData(surveyDataString: String, surveyName: String): SurveyDTO {
-        val simpleSurveyDto =
-            objectMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
+    fun saveSurveyData(surveyDataString: String): SurveyDTO {
+        val simpleSurveyDto = objectMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
+        var increment = 1
+        var finalSurveyName = simpleSurveyDto.name
+
+        if (surveyRepository.findAllSurveyNames().contains(surveyDataString)) {
+            finalSurveyName = "${simpleSurveyDto.name}($increment)"
+        }
+
+        while (surveyRepository.findAllSurveyNames().contains(finalSurveyName)) {
+            increment++
+            finalSurveyName = "${simpleSurveyDto.name}($increment)"
+        }
+
 
         val savedSurvey = try {
             surveyRepository.save(
                 SurveyEntity(
                     creationDate = nowUtc(),
                     lastModified = nowUtc(),
-                    name = surveyName,
+                    name = finalSurveyName,
                     status = Status.DRAFT,
                     startDate = simpleSurveyDto.startDate,
                     endDate = simpleSurveyDto.endDate,

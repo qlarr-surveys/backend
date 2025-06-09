@@ -79,9 +79,8 @@ class SurveyController(private val surveyService: SurveyService) {
     @PostMapping("/survey/import")
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
     fun importSurvey(
-        @RequestParam("survey_name") surveyName: String,
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<SurveyDTO> {
-        return ResponseEntity(surveyService.importSurvey(surveyName, file.inputStream), HttpStatus.OK)
+        return ResponseEntity(surveyService.importSurvey(file.inputStream), HttpStatus.OK)
     }
 }
