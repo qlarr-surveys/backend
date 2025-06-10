@@ -23,5 +23,3 @@ data class EditSurveyRequest(
     val description: String? = null,
     val image: String? = null,
 )
-
-data class CloneRequest(val name: String)

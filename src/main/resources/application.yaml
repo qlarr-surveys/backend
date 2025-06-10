@@ -55,7 +55,7 @@ mail:
   password:
   username: username
 fileSystem:
-  rootFolder: src/main/resources/root
+  rootFolder: local-data
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontendUrl: http://localhost:3000

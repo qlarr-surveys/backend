@@ -37,7 +37,9 @@ class SurveyService(
         if (!surveyCreateRequest.name.isValidName()) {
             throw InvalidSurveyName()
         }
-        val surveyEntity = surveyMapper.mapCreateRequestToEntity(surveyCreateRequest)
+        val surveyEntity = surveyMapper.mapCreateRequestToEntity(surveyCreateRequest).let {
+            it.copy(name = uniqueSurveyName(it.name))
+        }
         if (surveyEntity.startDate != null
             && surveyEntity.endDate != null && surveyEntity.startDate.isAfter(surveyEntity.endDate)
         ) {
@@ -126,11 +128,11 @@ class SurveyService(
         } ?: throw SurveyNotFoundException()
     }
 
-    fun clone(surveyId: UUID, name: String): SurveyDTO {
+    fun clone(surveyId: UUID): SurveyDTO {
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val cloned = survey.copy(
             id = null,
-            name = name,
+            name = uniqueSurveyName(survey.name),
             status = Status.DRAFT,
             creationDate = nowUtc(),
             lastModified = nowUtc()
@@ -224,27 +226,49 @@ class SurveyService(
         return surveyDTO ?: throw SurveyDefNotAvailableException()
     }
 
+    private fun uniqueSurveyName(surveyName: String): String {
+        val existingNames = surveyRepository.findAllSurveyNames()
+
+        // If the original name doesn't exist, return it as-is
+        if (!existingNames.contains(surveyName)) {
+            return surveyName
+        }
+
+        // Extract base name and starting number
+        val regex = Regex("""^(.+)\((\d+)\)$""")
+        val matchResult = regex.find(surveyName)
+
+        val (baseName, startingNumber) = if (matchResult != null) {
+            // Input already has a number suffix like "name(5)"
+            val baseName = matchResult.groupValues[1]
+            val number = matchResult.groupValues[2].toInt()
+            Pair(baseName, number)
+        } else {
+            // Input has no number suffix, start from 1
+            Pair(surveyName, 1)
+        }
+
+        // Find the first available number
+        var increment = startingNumber
+        var candidateName: String
+
+        do {
+            candidateName = "$baseName($increment)"
+            increment++
+        } while (existingNames.contains(candidateName))
+
+        return candidateName
+    }
+
     fun saveSurveyData(surveyDataString: String): SurveyDTO {
         val simpleSurveyDto = objectMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
-        var increment = 1
-        var finalSurveyName = simpleSurveyDto.name
-
-        if (surveyRepository.findAllSurveyNames().contains(surveyDataString)) {
-            finalSurveyName = "${simpleSurveyDto.name}($increment)"
-        }
-
-        while (surveyRepository.findAllSurveyNames().contains(finalSurveyName)) {
-            increment++
-            finalSurveyName = "${simpleSurveyDto.name}($increment)"
-        }
-
 
         val savedSurvey = try {
             surveyRepository.save(
                 SurveyEntity(
                     creationDate = nowUtc(),
                     lastModified = nowUtc(),
-                    name = finalSurveyName,
+                    name = uniqueSurveyName(simpleSurveyDto.name),
                     status = Status.DRAFT,
                     startDate = simpleSurveyDto.startDate,
                     endDate = simpleSurveyDto.endDate,

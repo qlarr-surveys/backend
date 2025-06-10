@@ -1,6 +1,5 @@
 package com.qlarr.backend.controllers
 
-import com.qlarr.backend.api.survey.CloneRequest
 import com.qlarr.backend.api.survey.EditSurveyRequest
 import com.qlarr.backend.api.survey.SurveyCreateRequest
 import com.qlarr.backend.api.survey.SurveyDTO
@@ -10,7 +9,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.RestTemplate
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
@@ -59,8 +57,8 @@ class SurveyController(private val surveyService: SurveyService) {
 
     @PostMapping("/survey/{surveyId}/clone")
     @PreAuthorize("hasAnyAuthority({'super_admin', 'survey_admin'})")
-    fun cloneSurvey(@PathVariable surveyId: UUID, @RequestBody cloneRequest: CloneRequest): ResponseEntity<SurveyDTO> {
-        val surveyDTO = surveyService.clone(surveyId, cloneRequest.name)
+    fun cloneSurvey(@PathVariable surveyId: UUID): ResponseEntity<SurveyDTO> {
+        val surveyDTO = surveyService.clone(surveyId)
         return ResponseEntity(surveyDTO, HttpStatus.OK)
     }
 
