@@ -211,7 +211,7 @@ class SurveyService(
         var surveyDTO: SurveyDTO? = null
         var designSaved = false
 
-        fileSystemHelper.importSurvey(inputStream.readAllBytes(), onSurveyData = {
+        fileSystemHelper.importSurvey(inputStream, onSurveyData = {
             surveyDTO = saveSurveyData(it)
             surveyDTO!!
         }, onDesign = { designSaved = true })

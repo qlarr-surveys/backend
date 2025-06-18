@@ -69,7 +69,7 @@ interface FileHelper {
     fun exportSurvey(surveyId: UUID, designFileName: String, surveyDataJson: String): ByteArray
 
     fun importSurvey(
-        byteArray: ByteArray,
+        inputStream: InputStream,
         onSurveyData: (String) -> SurveyDTO,
         onDesign: () -> Unit
     )

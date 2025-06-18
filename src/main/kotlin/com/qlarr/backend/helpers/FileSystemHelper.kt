@@ -10,9 +10,11 @@ import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
 import java.io.*
+import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -228,7 +230,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
 
     fun zipFolder(surveyId: UUID, surveyFolder: SurveyFolder, zipOutputStream: ZipOutputStream) {
         return File(buildFolderPath(surveyId, surveyFolder)).run {
-            listFiles()!!.filter { file->
+            listFiles()!!.filter { file ->
                 !file.name.endsWith(METADATA_POSTFIX)
             }.forEach { file ->
                 zipOutputStream.putNextEntry(ZipEntry("${surveyFolder.path}/${file.name}"))
@@ -265,13 +267,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun importSurvey(
-        byteArray: ByteArray,
+        inputStream: InputStream,
         onSurveyData: (String) -> SurveyDTO,
         onDesign: () -> Unit
     ) {
-        val byteArrayInputStream = ByteArrayInputStream(byteArray)
-        val bufferedInputStream = BufferedInputStream(byteArrayInputStream)
-        val zipInputStream = ZipInputStream(bufferedInputStream)
+        val zipInputStream = ZipInputStream(inputStream)
 
 
         val newId = UUID.randomUUID()
@@ -290,7 +290,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                 if (!zipEntry.isDirectory) {
                     val fileName = extractFileName(zipEntry.name)
                     if (fileName == "survey.json") {
-                        val surveyDataString = String(zipInputStream.readAllBytes())
+                        val surveyDataString = zipInputStream.bufferedReader().readText()
                         newSurveyId = onSurveyData(surveyDataString).id
                     } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
                         unzipFileToFileSystem(newId, SurveyFolder.RESOURCES, it, fileName, fileName)
@@ -305,6 +305,10 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         changeSurveyDirectory(newId.toString(), newSurveyId.toString())
     }
 
+    private fun getMimeType(fileName: String): String {
+        return URLConnection.guessContentTypeFromName(fileName) ?: "application/octet-stream"
+    }
+
     private fun unzipFileToFileSystem(
         surveyId: UUID,
         surveyFolder: SurveyFolder,
@@ -312,26 +316,30 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         currentFileName: String,
         newFileName: String
     ) {
-        val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
-        val mimeType = currentFileName.let { Files.probeContentType(File(it).toPath()) }
-            ?: "application/octet-stream"
-        uploadUnzippedFile(surveyId, surveyFolder, inputStream, mimeType, newFileName)
+        val mimeType = getMimeType(currentFileName)
+        uploadUnzippedFile(surveyId, surveyFolder, zipInputStream, mimeType, newFileName)
     }
 
     private fun extractFileName(path: String): String = path.split("/").let { it[it.size - 1] }
     private fun extractParentFolderName(path: String): String? = path.split("/")
         .takeIf { it.size >= 2 }?.let { it[0] }
 
+    private fun saveToFile(inputStream: InputStream, path: String): Long {
+        val typedPath = Paths.get(path)
+        Files.createDirectories(typedPath.parent)
 
-    private fun saveToFile(byteStream: InputStream, path: String):Long {
-        val p = Paths.get(path)
+        var totalBytes = 0L
+        val buffer = ByteArray(8192) // 8KB buffer
 
-        Files.createDirectories(p.parent)
-
-        byteStream.use { inputStream ->
-            Files.copy(inputStream, Paths.get(path), StandardCopyOption.REPLACE_EXISTING)
+        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).use { outputStream ->
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+                totalBytes += bytesRead
+            }
         }
-        return Files.size(Paths.get(path))
+
+        return totalBytes
     }
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =
