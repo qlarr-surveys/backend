@@ -197,15 +197,19 @@ class DesignService(
             }
         }
         versionRepository.save(saved)
-        cleanUnusedResources(surveyId, newValidationJsonOutput)
+        val resources = if (survey.image != null) {
+            newValidationJsonOutput.resources() + survey.image
+        } else {
+            newValidationJsonOutput.resources()
+        }
+        cleanUnusedResources(surveyId, resources.toSet())
 
         return versionMapper.toDto(saved, survey.status)
     }
 
-    private fun cleanUnusedResources(surveyId: UUID, validationJsonOutput: ValidationJsonOutput) {
-        val resources = validationJsonOutput.resources().toSet()
+    private fun cleanUnusedResources(surveyId: UUID, designResourceList: Set<String>) {
         helper.surveyResourcesFiles(surveyId).forEach { file ->
-            if (!file.name.endsWith("metadata") && !resources.contains(file.name)) {
+            if (!file.name.endsWith("metadata") && !designResourceList.contains(file.name)) {
                 try {
                     helper.delete(surveyId, SurveyFolder.RESOURCES, file.name)
                 } catch (e: IOException) {
