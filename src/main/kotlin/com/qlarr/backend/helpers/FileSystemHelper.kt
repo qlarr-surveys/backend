@@ -117,7 +117,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         files: List<String>?,
         dateFrom: LocalDateTime?
     ): List<FileInfo> {
-        return surveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
+        return surveyFiles(surveyId, SurveyFolder.Resources, files, dateFrom)
     }
 
     private fun surveyFiles(
@@ -150,12 +150,12 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         sourceSurveyId: UUID,
         destinationSurveyId: UUID
     ) {
-        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.RESOURCES)
+        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.Resources)
         val sourceDir = File(sourceFolderPath)
         if (!sourceDir.exists())
             return
 
-        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.RESOURCES)
+        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.Resources)
         val destinationDir = File(destinationFolderPath)
 
         FileUtils.copyDirectory(sourceDir, destinationDir)
@@ -167,8 +167,8 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         sourceFileName: String,
         newFileName: String
     ) {
-        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.DESIGN)
-        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.DESIGN)
+        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.Design)
+        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.Design)
 
         val sourceFile = File("$sourceFolderPath/$sourceFileName")
         val destinationFile = File("$destinationFolderPath/$newFileName")
@@ -244,11 +244,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         val zipOutputStream = ZipOutputStream(bufferedOutputStream)
 
         zipOutputStream.use { zipOut ->
-            if (isFolderNotEmpty(surveyId, SurveyFolder.RESOURCES)) {
-                zipFolder(surveyId, SurveyFolder.RESOURCES, zipOut)
+            if (isFolderNotEmpty(surveyId, SurveyFolder.Resources)) {
+                zipFolder(surveyId, SurveyFolder.Resources, zipOut)
             }
 
-            val designFile = File(buildFilePath(surveyId, SurveyFolder.DESIGN, designFileName))
+            val designFile = File(buildFilePath(surveyId, SurveyFolder.Design, designFileName))
             if (designFile.exists()) {
                 val designFilePath = "design.json"
                 zipOut.putNextEntry(ZipEntry(designFilePath))
@@ -293,9 +293,9 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                         val surveyDataString = String(zipInputStream.readAllBytes())
                         newSurveyId = onSurveyData(surveyDataString).id
                     } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
-                        unzipFileToFileSystem(newId, SurveyFolder.RESOURCES, it, fileName, fileName)
+                        unzipFileToFileSystem(newId, SurveyFolder.Resources, it, fileName, fileName)
                     } else if (fileName == "design.json") {
-                        unzipFileToFileSystem(newId, SurveyFolder.DESIGN, it, fileName, "1")
+                        unzipFileToFileSystem(newId, SurveyFolder.Design, it, fileName, "1")
                         onDesign()
                     }
                 }
