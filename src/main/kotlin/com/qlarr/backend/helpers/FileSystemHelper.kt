@@ -5,14 +5,21 @@ import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.exceptions.ResourceNotFoundException
 import com.qlarr.backend.properties.FileSystemProperties
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.function.ServerResponse.async
 import java.io.*
+import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -232,7 +239,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
 
     fun zipFolder(surveyId: UUID, surveyFolder: SurveyFolder, zipOutputStream: ZipOutputStream) {
         return File(buildFolderPath(surveyId, surveyFolder)).run {
-            listFiles()!!.filter { file->
+            listFiles()!!.filter { file ->
                 !file.name.endsWith(METADATA_POSTFIX)
             }.forEach { file ->
                 zipOutputStream.putNextEntry(ZipEntry("${surveyFolder.path}/${file.name}"))
@@ -269,73 +276,116 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     }
 
     override fun importSurvey(
-        byteArray: ByteArray,
+        inputStream: InputStream,
         onSurveyData: (String) -> SurveyDTO,
         onDesign: () -> Unit
     ) {
-        val byteArrayInputStream = ByteArrayInputStream(byteArray)
-        val bufferedInputStream = BufferedInputStream(byteArrayInputStream)
-        val zipInputStream = ZipInputStream(bufferedInputStream)
+        val zipInputStream = ZipInputStream(inputStream)
+        val tempFiles = mutableListOf<File>()
+        val uploadTasks = mutableListOf<() -> Unit>()
 
 
         val newId = UUID.randomUUID()
         var newSurveyId: UUID? = null
 
-        zipInputStream.use {
-            var zipEntry: ZipEntry? = it.nextEntry
-            while (zipEntry != null) {
-                println(
-                    "name: ${zipEntry.name}, fileName: ${extractFileName(zipEntry.name)}, parentFolderName: ${
-                        extractParentFolderName(
-                            zipEntry.name
-                        )
-                    }"
-                )
-                if (!zipEntry.isDirectory) {
-                    val fileName = extractFileName(zipEntry.name)
-                    if (fileName == "survey.json") {
-                        val surveyDataString = String(zipInputStream.readAllBytes())
-                        newSurveyId = onSurveyData(surveyDataString).id
-                    } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
-                        unzipFileToFileSystem(newId, SurveyFolder.Resources, it, fileName, fileName)
-                    } else if (fileName == "design.json") {
-                        unzipFileToFileSystem(newId, SurveyFolder.Design, it, fileName, "1")
-                        onDesign()
+        try {
+            zipInputStream.use {
+                var zipEntry: ZipEntry? = it.nextEntry
+                while (zipEntry != null) {
+                    println(
+                        "name: ${zipEntry.name}, fileName: ${extractFileName(zipEntry.name)}, parentFolderName: ${
+                            extractParentFolderName(
+                                zipEntry.name
+                            )
+                        }"
+                    )
+                    if (!zipEntry.isDirectory) {
+                        val fileName = extractFileName(zipEntry.name)
+                        if (fileName == "survey.json") {
+                            val surveyDataString = zipInputStream.bufferedReader().readText()
+                            newSurveyId = onSurveyData(surveyDataString).id
+                        } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
+                            val tempFile = kotlin.io.path.createTempFile("upload_", "_$fileName").toFile()
+                            tempFiles.add(tempFile)
+                            tempFile.outputStream().use { output ->
+                                zipInputStream.copyTo(output)
+                            }
+                            uploadTasks.add {
+                                tempFile.inputStream().use { fileInput ->
+                                    unzipFileToFileSystem(newId, SurveyFolder.Resources, fileInput, fileName, fileName)
+                                }
+                            }
+                        } else if (fileName == "design.json") {
+                            val tempFile = kotlin.io.path.createTempFile("upload_", "_design.json").toFile()
+                            tempFiles.add(tempFile)
+                            tempFile.outputStream().use { output ->
+                                zipInputStream.copyTo(output)
+                            }
+                            uploadTasks.add {
+                                tempFile.inputStream().use { fileInput ->
+                                    unzipFileToFileSystem(
+                                        newId,
+                                        SurveyFolder.Design,
+                                        fileInput,
+                                        getMimeType(fileName),
+                                        "1"
+                                    )
+                                }
+                            }
+                            onDesign()
+                        }
                     }
+                    zipEntry = it.nextEntry
                 }
-                zipEntry = it.nextEntry
             }
+            runBlocking {
+                uploadTasks.map { task ->
+                    async(Dispatchers.IO) {
+                        task()
+                    }
+                }.awaitAll()
+            }
+            changeSurveyDirectory(newId.toString(), newSurveyId.toString())
+        } finally {
+            tempFiles.forEach { it.delete() }
         }
-        changeSurveyDirectory(newId.toString(), newSurveyId.toString())
+    }
+
+    private fun getMimeType(fileName: String): String {
+        return URLConnection.guessContentTypeFromName(fileName) ?: "application/octet-stream"
     }
 
     private fun unzipFileToFileSystem(
         surveyId: UUID,
         surveyFolder: SurveyFolder,
-        zipInputStream: ZipInputStream,
+        zipInputStream: InputStream,
         currentFileName: String,
         newFileName: String
     ) {
-        val inputStream = ByteArrayInputStream(zipInputStream.readAllBytes())
-        val mimeType = currentFileName.let { Files.probeContentType(File(it).toPath()) }
-            ?: "application/octet-stream"
-        uploadUnzippedFile(surveyId, surveyFolder, inputStream, mimeType, newFileName)
+        val mimeType = getMimeType(currentFileName)
+        uploadUnzippedFile(surveyId, surveyFolder, zipInputStream, mimeType, newFileName)
     }
 
     private fun extractFileName(path: String): String = path.split("/").let { it[it.size - 1] }
     private fun extractParentFolderName(path: String): String? = path.split("/")
         .takeIf { it.size >= 2 }?.let { it[0] }
 
+    private fun saveToFile(inputStream: InputStream, path: String): Long {
+        val typedPath = Paths.get(path)
+        Files.createDirectories(typedPath.parent)
 
-    private fun saveToFile(byteStream: InputStream, path: String):Long {
-        val p = Paths.get(path)
+        var totalBytes = 0L
+        val buffer = ByteArray(8192) // 8KB buffer
 
-        Files.createDirectories(p.parent)
-
-        byteStream.use { inputStream ->
-            Files.copy(inputStream, Paths.get(path), StandardCopyOption.REPLACE_EXISTING)
+        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).use { outputStream ->
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+                totalBytes += bytesRead
+            }
         }
-        return Files.size(Paths.get(path))
+
+        return totalBytes
     }
 
     private fun buildFilePath(surveyId: UUID, surveyFolder: SurveyFolder, filename: String) =

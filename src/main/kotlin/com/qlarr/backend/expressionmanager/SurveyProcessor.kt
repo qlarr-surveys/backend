@@ -6,33 +6,23 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.api.surveyengine.NavigationJsonOutput
 import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
 import com.qlarr.backend.configurations.objectMapper
-import com.qlarr.scriptengine.getNavigate
-import com.qlarr.scriptengine.getValidate
 import com.qlarr.surveyengine.ext.JsonExt
-import com.qlarr.surveyengine.ext.engineScript
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import com.qlarr.surveyengine.model.exposed.NavigationMode
 import com.qlarr.surveyengine.model.exposed.SurveyMode
-import com.qlarr.surveyengine.usecase.*
+import com.qlarr.surveyengine.scriptengine.getNavigate
+import com.qlarr.surveyengine.scriptengine.getValidate
+import com.qlarr.surveyengine.usecase.MaskedValuesUseCase
+import com.qlarr.surveyengine.usecase.NavigationUseCaseWrapper
+import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 
 object SurveyProcessor {
 
-    val scriptEngineNavigation = getNavigate(engineScript().script)
-    val scriptEngineValidation = getValidate()
+    private val scriptEngineNavigate = getNavigate()
+    private val scriptEngineValidate = getValidate()
 
-    private val scriptEngineValidate = object : ScriptEngineValidate {
-        override fun validate(input: String): String {
-            return scriptEngineValidation.validate(input)
-        }
-    }
 
-    private val scriptEngineNavigate = object : ScriptEngineNavigate {
-        override fun navigate(script: String): String {
-            return scriptEngineNavigation.navigate(script)
-        }
-
-    }
 
     fun process(stateObj: ObjectNode, savedDesign: ObjectNode): ValidationJsonOutput {
         val flatSurvey = objectMapper.readTree(JsonExt.flatObject(savedDesign.toString())) as ObjectNode

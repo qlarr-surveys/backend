@@ -13,6 +13,7 @@ import com.qlarr.surveyengine.model.ReservedCode
 import com.qlarr.surveyengine.model.SurveyLang
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.ReturnType
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.client.RestTemplate
@@ -44,10 +45,12 @@ val objectMapper:ObjectMapper = ObjectMapper()
         .addSerializer(NavigationIndexSerializer())
         .addSerializer(NavigationDirectionSerializer())
         .addSerializer(SurveyLangSerializer())
+        .addSerializer(ReturnTypeSerializer())
         .addSerializer(ReservedCodeSerializer())
         .addDeserializer(SurveyLang::class.java, SurveyLangDeserializer())
         .addDeserializer(NavigationIndex::class.java, NavigationIndexDeserializer())
         .addDeserializer(NavigationDirection::class.java, NavigationDirectionDeserializer())
+        .addDeserializer(ReturnType::class.java, ReturnTypeDeserializer())
         .addDeserializer(SurveyLang::class.java, SurveyLangDeserializer())
         .addDeserializer(ReservedCode::class.java, ReservedCodeDeserializer())
     )

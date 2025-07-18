@@ -25,26 +25,28 @@ fun Map<String, Any>.validateSchema(responsesSchema: List<ResponseField>) {
 
 fun validateType(value: Any, dataType: ReturnType): Boolean {
     return when (dataType) {
-        ReturnType.BOOLEAN -> value is Boolean
-        ReturnType.DATE -> value is String
-        ReturnType.STRING -> value is String
-        ReturnType.DOUBLE -> value is Number
-        ReturnType.INT -> value is Int
-        ReturnType.LIST -> value is JSONArray
-        ReturnType.FILE,
-        ReturnType.MAP -> value is Map<*,*>
+        ReturnType.Boolean -> value is Boolean
+        ReturnType.Date -> value is String
+        is ReturnType.Enum,
+        ReturnType.String -> value is String
+        ReturnType.Double -> value is Number
+        ReturnType.Int -> value is Int
+        ReturnType.List -> value is JSONArray
+        ReturnType.File,
+        ReturnType.Map -> value is Map<*,*>
     }
 }
 
 fun expectedType(dataType: ReturnType): String {
     return when (dataType) {
-        ReturnType.BOOLEAN -> Boolean::class.java.name
-        ReturnType.DATE -> String::class.java.name
-        ReturnType.STRING -> String::class.java.name
-        ReturnType.DOUBLE -> Number::class.java.name
-        ReturnType.INT -> Int::class.java.name
-        ReturnType.LIST -> JSONArray::class.java.name
-        ReturnType.FILE,
-        ReturnType.MAP -> JSONObject::class.java.name
+        ReturnType.Boolean -> Boolean::class.java.name
+        ReturnType.Date -> String::class.java.name
+        is ReturnType.Enum,
+        ReturnType.String -> String::class.java.name
+        ReturnType.Double -> Number::class.java.name
+        ReturnType.Int -> Int::class.java.name
+        ReturnType.List -> JSONArray::class.java.name
+        ReturnType.File,
+        ReturnType.Map -> JSONObject::class.java.name
     }
 }

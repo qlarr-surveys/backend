@@ -9,10 +9,10 @@ import com.qlarr.backend.exceptions.SurveyIsNotActiveException
 import com.qlarr.backend.mappers.RunMapper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.surveyengine.ext.commonScript
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import com.qlarr.surveyengine.model.exposed.SurveyMode
+import com.qlarr.surveyengine.scriptengine.commonScript
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -114,6 +114,6 @@ class RunSurveyService(
         if (!processedSurvey.latestVersion.valid) {
             throw SurveyDesignWithErrorException
         }
-        return processedSurvey.validationJsonOutput.script + "\n\n" + commonScript().script
+        return commonScript().script + "\n\n" + processedSurvey.validationJsonOutput.script
     }
 }
