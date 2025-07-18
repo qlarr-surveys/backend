@@ -13,12 +13,10 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.function.ServerResponse.async
 import java.io.*
 import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.LocalDateTime
@@ -155,6 +153,27 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
 
     override fun responseFiles(surveyId: UUID, responseId: UUID): List<FileInfo> {
         return surveyFiles(surveyId, SurveyFolder.Responses(responseId.toString()), null, null)
+    }
+
+    override fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>) {
+        val responseFiles = values.mapNotNull {
+            (it.value as? LinkedHashMap<*, *>)?.run {
+                if (containsKey("stored_filename")) {
+                    get("stored_filename").toString()
+                } else {
+                    null
+                }
+            }
+        }.toSet()
+
+        val savedFiles = responseFiles(surveyId, responseId)
+            .mapNotNull { file ->
+                file.name.takeUnless { it.endsWith(METADATA_POSTFIX) }
+            }
+
+        (savedFiles - responseFiles).forEach { filename ->
+            delete(surveyId, SurveyFolder.Responses(responseId.toString()), filename)
+        }
     }
 
     override fun cloneResources(
@@ -377,13 +396,14 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         var totalBytes = 0L
         val buffer = ByteArray(8192) // 8KB buffer
 
-        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).use { outputStream ->
-            var bytesRead: Int
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                totalBytes += bytesRead
+        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+            .use { outputStream ->
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                    totalBytes += bytesRead
+                }
             }
-        }
 
         return totalBytes
     }

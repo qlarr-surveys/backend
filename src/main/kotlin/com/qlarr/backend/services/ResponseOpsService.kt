@@ -137,7 +137,7 @@ class ResponseOpsService(
             values = uploadResponseRequestData.values
         )
         responseRepository.save(responseEntity)
-        removeUnusedResponseData(surveyId, responseId, uploadResponseRequestData.values)
+        helper.deleteUnusedResponseFiles(surveyId, responseId, uploadResponseRequestData.values)
 
         return responseRepository.responseCount(
             userId = userUtils.currentUserId(),
@@ -149,24 +149,6 @@ class ResponseOpsService(
             )
         }
     }
-
-    private fun removeUnusedResponseData(surveyId: UUID, responseId: UUID, values: Map<String, Any>) {
-        val responseFiles = values.mapNotNull {
-            (it.value as? LinkedHashMap<*, *>)?.run {
-                if (containsKey("stored_filename")) {
-                    get("stored_filename") as UUID
-                } else {
-                    null
-                }
-            }
-        }
-        val savedFiles = helper.responseFiles(surveyId, responseId).toSet()
-
-        (responseFiles - savedFiles).forEach { filename ->
-            helper.delete(surveyId, SurveyFolder.Responses(responseId.toString()), filename.toString())
-        }
-    }
-
 
     fun downloadFile(
         serverName: String,

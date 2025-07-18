@@ -6,6 +6,7 @@ import com.qlarr.backend.api.runsurvey.StartRequest
 import com.qlarr.backend.common.nowUtc
 import com.qlarr.backend.exceptions.ResponseNotFoundException
 import com.qlarr.backend.exceptions.SurveyIsNotActiveException
+import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.RunMapper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
@@ -24,6 +25,7 @@ class RunSurveyService(
     private val navigationService: NavigationService,
     private val runMapper: RunMapper,
     private val responseRepository: ResponseRepository,
+    private val helper: FileHelper
 ) {
 
 
@@ -97,6 +99,10 @@ class RunSurveyService(
             preview = preview
         )
         responseRepository.save(entityToSave)
+
+        if (result.navigationJsonOutput.navigationIndex is NavigationIndex.End) {
+            helper.deleteUnusedResponseFiles(surveyId, navigateRequest.responseId, result.navigationJsonOutput.toSave)
+        }
         return runMapper.toRunDto(
             navigateRequest.responseId,
             result.lang,

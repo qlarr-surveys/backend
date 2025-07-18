@@ -79,6 +79,8 @@ interface FileHelper {
         onDesign: () -> Unit
     )
 
+    fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>)
+
 }
 
 class FileDownload(val objectMetadata: Map<String, String>, val inputStream: InputStream)
