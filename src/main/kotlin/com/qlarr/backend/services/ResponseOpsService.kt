@@ -14,7 +14,6 @@ import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
-import com.qlarr.surveyengine.model.exposed.ReturnType
 import com.qlarr.surveyengine.model.exposed.SurveyMode
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
@@ -138,6 +137,8 @@ class ResponseOpsService(
             values = uploadResponseRequestData.values
         )
         responseRepository.save(responseEntity)
+        removeUnusedResponseData(surveyId, responseId, uploadResponseRequestData.values)
+
         return responseRepository.responseCount(
             userId = userUtils.currentUserId(),
             surveyId = surveyId
@@ -146,6 +147,23 @@ class ResponseOpsService(
                 completeResponseCount = it.completeResponseCount.toInt(),
                 userResponsesCount = it.userResponseCount.toInt()
             )
+        }
+    }
+
+    private fun removeUnusedResponseData(surveyId: UUID, responseId: UUID, values: Map<String, Any>) {
+        val responseFiles = values.mapNotNull {
+            (it.value as? LinkedHashMap<*, *>)?.run {
+                if (containsKey("stored_filename")) {
+                    get("stored_filename") as UUID
+                } else {
+                    null
+                }
+            }
+        }
+        val savedFiles = helper.responseFiles(surveyId, responseId).toSet()
+
+        (responseFiles - savedFiles).forEach { filename ->
+            helper.delete(surveyId, SurveyFolder.Responses(responseId.toString()), filename.toString())
         }
     }
 
@@ -199,20 +217,11 @@ class ResponseOpsService(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun deleteResponse(surveyId: UUID, responseId: UUID) {
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
-        val processedSurvey = designService.getProcessedSurveyByVersion(surveyId, response.version)
-        processedSurvey.validationJsonOutput.schema
-            .filter { it.dataType == ReturnType.FILE }
-            .forEach { responseField ->
-                response.values[responseField.toValueKey()]?.let {
-                    (it as Map<String, String>)["stored_filename"]?.let { storedFileName ->
-                        helper.delete(surveyId, SurveyFolder.Responses(responseId.toString()), storedFileName)
-                    }
-                }
-
-            }
+        helper.responseFiles(surveyId, responseId).forEach { file ->
+            helper.delete(surveyId, SurveyFolder.Responses(responseId.toString()), file.name)
+        }
         responseRepository.delete(response)
     }
 

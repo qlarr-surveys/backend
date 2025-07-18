@@ -146,6 +146,10 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
             } ?: emptyList()
     }
 
+    override fun responseFiles(surveyId: UUID, responseId: UUID): List<FileInfo> {
+        return surveyFiles(surveyId, SurveyFolder.Responses(responseId.toString()), null, null)
+    }
+
     override fun cloneResources(
         sourceSurveyId: UUID,
         destinationSurveyId: UUID

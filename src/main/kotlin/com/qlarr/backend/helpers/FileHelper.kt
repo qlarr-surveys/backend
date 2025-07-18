@@ -48,6 +48,11 @@ interface FileHelper {
         dateFrom: LocalDateTime? = null
     ): List<FileInfo>
 
+    fun responseFiles(
+        surveyId: UUID,
+        responseId: UUID
+    ): List<FileInfo>
+
     fun cloneResources(sourceSurveyId: UUID, destinationSurveyId: UUID)
 
     fun copyDesign(
