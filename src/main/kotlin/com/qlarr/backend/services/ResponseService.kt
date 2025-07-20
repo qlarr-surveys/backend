@@ -100,19 +100,20 @@ class ResponseService(
             .setHeader(*colNames.toTypedArray())
             .build()
 
-        val printer = CSVPrinter(sw, csvFormat)
-        values.forEach {
-            mutableListOf<Any?>(
-                it.id,
-                it.preview,
-                it.version,
-                it.startDate,
-                it.submitDate,
-                it.lang
-            ).apply {
-                addAll(it.values.values)
-            }.let { list ->
-                printer.printRecord(list)
+        CSVPrinter(sw, csvFormat).use { printer ->
+            values.forEach {
+                mutableListOf<Any?>(
+                    it.id,
+                    it.preview,
+                    it.version,
+                    it.startDate,
+                    it.submitDate,
+                    it.lang
+                ).apply {
+                    addAll(it.values.values)
+                }.let { list ->
+                    printer.printRecord(list)
+                }
             }
         }
         return sw.buffer.toString().toByteArray()
@@ -218,19 +219,20 @@ class ResponseService(
             .setHeader(*finalColNames.toTypedArray())
             .build()
 
-        val printer = CSVPrinter(sw, csvFormat)
-        values.forEach {
-            mutableListOf<Any?>(
-                it.id,
-                it.preview,
-                it.version,
-                it.startDate,
-                it.submitDate,
-                it.lang
-            ).apply {
-                addAll(it.values.values)
-            }.let { list ->
-                printer.printRecord(list)
+        CSVPrinter(sw, csvFormat).use { printer ->
+            values.forEach {
+                mutableListOf<Any?>(
+                    it.id,
+                    it.preview,
+                    it.version,
+                    it.startDate,
+                    it.submitDate,
+                    it.lang
+                ).apply {
+                    addAll(it.values.values)
+                }.let { list ->
+                    printer.printRecord(list)
+                }
             }
         }
 
