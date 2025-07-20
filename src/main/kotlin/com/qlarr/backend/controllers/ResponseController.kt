@@ -42,7 +42,7 @@ class ResponseController(
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/export")
+    @GetMapping("/survey/{surveyId}/response/export/csv")
     fun exportResponses(
         @PathVariable surveyId: UUID,
         @RequestParam("db_values") dbValues: Boolean?,
