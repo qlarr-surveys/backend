@@ -91,5 +91,30 @@ class ResponseController(
                 .body(result)
     }
 
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/export/ods")
+    fun exportResponsesOdf(
+        @PathVariable surveyId: UUID,
+        @RequestParam("db_values") dbValues: Boolean?,
+        @RequestParam complete: Boolean?,
+        @RequestParam timezone: String
+    ): ResponseEntity<ByteArray> {
+
+        val clientZoneId = try {
+            ZoneId.of(timezone)
+        } catch (e: Exception) {
+            throw UnrecognizedZoneException(timezone)
+        }
+
+        val result = if (dbValues != false)
+            responseService.exportResponsesOdf(surveyId, complete, clientZoneId)
+        else
+            responseService.exportTextResponsesOdf(surveyId, complete, clientZoneId)
+        return ResponseEntity.ok()
+            .header(CONTENT_TYPE, "application/vnd.oasis.opendocument.spreadsheet")
+            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.ods\"")
+            .body(result)
+    }
+
 
 }
