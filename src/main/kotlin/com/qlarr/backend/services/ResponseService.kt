@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 import java.time.ZoneId
 import java.util.*
+import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 
@@ -271,7 +272,7 @@ class ResponseService(
 
                                 val zipEntryName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
 
-                                val entry = java.util.zip.ZipEntry(zipEntryName)
+                                val entry = ZipEntry(zipEntryName)
                                 zip.putNextEntry(entry)
 
                                 fileDownload.inputStream.use { inputStream ->
