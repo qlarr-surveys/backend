@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders.CONTENT_LENGTH
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 import java.time.ZoneId
@@ -253,17 +254,13 @@ class ResponseService(
         val zipBytes = ByteArrayOutputStream().use { zipStream ->
             ZipOutputStream(zipStream).use { zip ->
 
-                val filenameCounters = mutableMapOf<String, Int>()
-
                 responses.forEach { responseWithSurveyor ->
                     val response = responseWithSurveyor.response
 
-                    // Extract file references from response values
                     response.values.forEach { (questionId, value) ->
                         if (value is Map<*, *> && value.containsKey("stored_filename")) {
-                            val fileInfo = value as Map<String, Any>
-                            val storedFilename = fileInfo["stored_filename"] as String
-                            val originalFilename = fileInfo["filename"] as String
+                            val storedFilename = value["stored_filename"] as String
+                            val originalFilename = value["filename"] as String
 
                             try {
                                 val fileDownload = fileHelper.download(
@@ -272,37 +269,7 @@ class ResponseService(
                                     storedFilename
                                 )
 
-                                // Get file extension from content type
-                                val contentType =
-                                    fileDownload.objectMetadata["Content-Type"] ?: "application/octet-stream"
-                                val extension = getExtensionFromContentType(contentType)
-
-                                // Create unique filename
-                                var zipEntryName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
-                                if (!zipEntryName.endsWith(extension)) {
-                                    zipEntryName += extension
-                                }
-
-                                // Handle duplicates
-                                val baseName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
-                                val counter = filenameCounters.getOrPut(baseName) { 0 } + 1
-                                filenameCounters[baseName] = counter
-
-                                if (counter == 1) {
-                                    // First occurrence, use original name
-                                    if (!zipEntryName.endsWith(extension)) {
-                                        zipEntryName += extension
-                                    }
-                                } else {
-                                    // Duplicate, add counter
-                                    val nameWithoutExt = baseName.substringBeforeLast(".")
-                                    val ext = baseName.substringAfterLast(".", "")
-                                    zipEntryName =
-                                        if (ext.isNotEmpty()) "$nameWithoutExt($counter).$ext" else "$baseName($counter)"
-                                    if (!zipEntryName.endsWith(extension)) {
-                                        zipEntryName += extension
-                                    }
-                                }
+                                val zipEntryName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
 
                                 val entry = java.util.zip.ZipEntry(zipEntryName)
                                 zip.putNextEntry(entry)
@@ -326,7 +293,7 @@ class ResponseService(
             .header(CONTENT_TYPE, "application/zip")
             .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-files.zip\"")
             .header(CONTENT_LENGTH, zipBytes.size.toString())
-            .body(InputStreamResource(java.io.ByteArrayInputStream(zipBytes)))
+            .body(InputStreamResource(ByteArrayInputStream(zipBytes)))
     }
 
     companion object {
@@ -334,34 +301,6 @@ class ResponseService(
         const val PAGE = 1
 
         val ADDITIONAL_COL_NAMES = listOf("id", "preview", "version", "start_date", "submit_date", "Lang")
-
-        private fun getExtensionFromContentType(contentType: String): String {
-            return when (contentType.lowercase()) {
-                "image/jpeg", "image/jpg" -> ".jpg"
-                "image/png" -> ".png"
-                "image/gif" -> ".gif"
-                "image/webp" -> ".webp"
-                "image/bmp" -> ".bmp"
-                "image/tiff" -> ".tiff"
-                "application/pdf" -> ".pdf"
-                "text/plain" -> ".txt"
-                "text/csv" -> ".csv"
-                "application/vnd.ms-excel" -> ".xls"
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> ".xlsx"
-                "application/vnd.ms-powerpoint" -> ".ppt"
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> ".pptx"
-                "application/msword" -> ".doc"
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> ".docx"
-                "video/mp4" -> ".mp4"
-                "video/avi" -> ".avi"
-                "video/mov" -> ".mov"
-                "video/wmv" -> ".wmv"
-                "audio/mpeg" -> ".mp3"
-                "audio/wav" -> ".wav"
-                "audio/ogg" -> ".ogg"
-                else -> ""
-            }
-        }
     }
 
 }
