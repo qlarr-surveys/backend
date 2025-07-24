@@ -53,25 +53,27 @@ class ResponseOpsController(
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
-    @PostMapping("/survey/{surveyId}/offline/response/upload/{fileName}")
+    @PostMapping("/survey/{surveyId}/offline/response/{responseId}/upload/{fileName}")
     fun uploadOfflineResponseFile(
             request: HttpServletRequest,
             @PathVariable fileName: String,
             @PathVariable surveyId: UUID,
+            @PathVariable responseId: UUID,
             @RequestPart file: MultipartFile
     ): ResponseEntity<ResponseUploadFile> {
-        val result = responseOpsService.uploadOfflineResponseFile(surveyId, fileName, file)
+        val result = responseOpsService.uploadOfflineResponseFile(surveyId, responseId, fileName, file)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
-    @PostMapping("/survey/{surveyId}/offline/response/upload/{filename}/exists")
+    @PostMapping("/survey/{surveyId}/offline/response/{responseId}/upload/{filename}/exists")
     fun isOfflineFileUploaded(
             request: HttpServletRequest,
             @PathVariable surveyId: UUID,
+            @PathVariable responseId: UUID,
             @PathVariable filename: String
     ): ResponseEntity<Boolean> {
-        val result = responseOpsService.isOfflineFileAlreadyUploaded(surveyId, filename)
+        val result = responseOpsService.isOfflineFileAlreadyUploaded(surveyId, responseId, filename)
         return ResponseEntity(result, HttpStatus.OK)
     }
 
@@ -87,13 +89,14 @@ class ResponseOpsController(
         return ResponseEntity(count, HttpStatus.OK)
     }
 
-    @GetMapping("/survey/{surveyId}/response/attach/{filename}")
+    @GetMapping("/survey/{surveyId}/response/{responseId}/attach/{filename}")
     fun getResponseFile(
             request: HttpServletRequest,
             @PathVariable surveyId: UUID,
+            @PathVariable responseId: UUID,
             @PathVariable filename: UUID
     ): ResponseEntity<InputStreamResource> {
-        return responseOpsService.downloadFile(request.serverName, surveyId, filename)
+        return responseOpsService.downloadFile(request.serverName, surveyId, responseId, filename)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")

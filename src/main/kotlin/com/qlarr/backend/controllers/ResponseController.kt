@@ -1,14 +1,17 @@
 package com.qlarr.backend.controllers
 
 import com.qlarr.backend.api.response.ResponsesDto
-import com.qlarr.backend.api.user.*
 import com.qlarr.backend.exceptions.UnrecognizedZoneException
 import com.qlarr.backend.services.ResponseService
+import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.ZoneId
 import java.util.*
 
@@ -62,5 +65,13 @@ class ResponseController(
                 .header(CONTENT_TYPE, "text/csv")
                 .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.csv\"")
                 .body(result)
+    }
+
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/files/download")
+    fun bulkDownloadResponseFiles(
+        @PathVariable surveyId: UUID,
+    ): ResponseEntity<InputStreamResource> {
+        return responseService.bulkDownloadResponses(surveyId)
     }
 }

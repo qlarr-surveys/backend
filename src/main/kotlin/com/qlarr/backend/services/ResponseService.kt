@@ -4,6 +4,7 @@ import com.qlarr.backend.api.response.ResponseDto
 import com.qlarr.backend.api.response.ResponsesDto
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.expressionmanager.SurveyProcessor
+import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.ResponseMapper
 import com.qlarr.backend.mappers.valueNames
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
@@ -12,12 +13,20 @@ import com.qlarr.surveyengine.ext.splitToComponentCodes
 import com.qlarr.surveyengine.model.ReservedCode
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.springframework.core.io.InputStreamResource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpHeaders.CONTENT_LENGTH
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.StringWriter
 import java.time.ZoneId
 import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 
 @Service
@@ -25,6 +34,7 @@ class ResponseService(
     private val responseRepository: ResponseRepository,
     private val designService: DesignService,
     private val responseMapper: ResponseMapper,
+    private val fileHelper: FileHelper,
 ) {
     private fun getResponsesPage(
         surveyId: UUID,
@@ -232,6 +242,59 @@ class ResponseService(
             }
         }
         return sw.buffer.toString().toByteArray()
+    }
+
+    fun bulkDownloadResponses(
+        surveyId: UUID,
+    ): ResponseEntity<InputStreamResource> {
+        val responses = getResponsesPage(surveyId, true, null, false)
+        if (responses.isEmpty) {
+            return ResponseEntity.noContent().build()
+        }
+
+        val zipBytes = ByteArrayOutputStream().use { zipStream ->
+            ZipOutputStream(zipStream).use { zip ->
+
+                responses.forEach { responseWithSurveyor ->
+                    val response = responseWithSurveyor.response
+
+                    response.values.forEach { (questionId, value) ->
+                        if (value is Map<*, *> && value.containsKey("stored_filename")) {
+                            val storedFilename = value["stored_filename"] as String
+                            val originalFilename = value["filename"] as String
+
+                            try {
+                                val fileDownload = fileHelper.download(
+                                    surveyId,
+                                    com.qlarr.backend.common.SurveyFolder.Responses(response.id.toString()),
+                                    storedFilename
+                                )
+
+                                val zipEntryName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
+
+                                val entry = ZipEntry(zipEntryName)
+                                zip.putNextEntry(entry)
+
+                                fileDownload.inputStream.use { inputStream ->
+                                    inputStream.copyTo(zip)
+                                }
+
+                                zip.closeEntry()
+                            } catch (e: Exception) {
+                                println("Error downloading file $storedFilename for response ${response.id}: ${e.message}")
+                            }
+                        }
+                    }
+                }
+            }
+            zipStream.toByteArray()
+        }
+
+        return ResponseEntity.ok()
+            .header(CONTENT_TYPE, "application/zip")
+            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-files.zip\"")
+            .header(CONTENT_LENGTH, zipBytes.size.toString())
+            .body(InputStreamResource(ByteArrayInputStream(zipBytes)))
     }
 
     companion object {

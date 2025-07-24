@@ -30,9 +30,9 @@ class FileSystemHelperTest {
         val surveyId = UUID.randomUUID()
         val fileName = "test.png"
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, mock, "", fileName)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, mock, "", fileName)
 
-        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue
+        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.Resources, fileName)).isTrue
     }
 
     @Test
@@ -41,10 +41,10 @@ class FileSystemHelperTest {
         val fileName = "test.txt"
         val text = "TEST123"
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, text, fileName)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, text, fileName)
 
-        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, fileName)).isTrue
-        assertThat(fileSystemHelper.getText(surveyId, SurveyFolder.RESOURCES, fileName)).isEqualTo(text)
+        assertThat(fileSystemHelper.doesFileExists(surveyId, SurveyFolder.Resources, fileName)).isTrue
+        assertThat(fileSystemHelper.getText(surveyId, SurveyFolder.Resources, fileName)).isEqualTo(text)
     }
 
     @Test
@@ -52,7 +52,7 @@ class FileSystemHelperTest {
         val surveyId = UUID.randomUUID()
         val fileName = "test.txt"
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", fileName)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST123", fileName)
 
         val resources = fileSystemHelper.listSurveyResources(surveyId)
 
@@ -64,8 +64,8 @@ class FileSystemHelperTest {
     fun filerSurveyResources_should_notFilterAnyFile_when_parametersAreNull() {
         val surveyId = UUID.randomUUID()
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", "test1.txt")
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST321", "test2.txt")
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST123", "test1.txt")
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST321", "test2.txt")
 
         val resources = fileSystemHelper.surveyResourcesFiles(surveyId)
 
@@ -77,7 +77,7 @@ class FileSystemHelperTest {
         val surveyId = UUID.randomUUID()
         val fileName = "test.txt"
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", fileName)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST123", fileName)
 
         val resources = fileSystemHelper.surveyResourcesFiles(surveyId, files = listOf(fileName))
 
@@ -89,7 +89,7 @@ class FileSystemHelperTest {
     fun filerSurveyResources_should_filterByLastModifiedTimestamp() {
         val surveyId = UUID.randomUUID()
 
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", "test.txt")
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST123", "test.txt")
 
         val result1 = fileSystemHelper.surveyResourcesFiles(surveyId, dateFrom = LocalDateTime.now().minusHours(1))
         val result2 = fileSystemHelper.surveyResourcesFiles(surveyId, dateFrom = LocalDateTime.now().plusHours(1))
@@ -105,8 +105,8 @@ class FileSystemHelperTest {
         val fileName2 = "test2.txt"
 
         // prepare files for cloning
-        fileSystemHelper.upload(sourceSurveyId, SurveyFolder.RESOURCES, "TEST123", fileName1)
-        fileSystemHelper.upload(sourceSurveyId, SurveyFolder.RESOURCES, "TEST321", fileName2)
+        fileSystemHelper.upload(sourceSurveyId, SurveyFolder.Resources, "TEST123", fileName1)
+        fileSystemHelper.upload(sourceSurveyId, SurveyFolder.Resources, "TEST321", fileName2)
 
         val destinationSurveyId = UUID.randomUUID()
 
@@ -125,11 +125,11 @@ class FileSystemHelperTest {
         val filename = "test1.txt"
 
         // create survey folder with some files to delete
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, "TEST123", filename)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, "TEST123", filename)
 
         fileSystemHelper.deleteSurveyFiles(surveyId)
 
-        val doesExist = fileSystemHelper.doesFileExists(surveyId, SurveyFolder.RESOURCES, filename)
+        val doesExist = fileSystemHelper.doesFileExists(surveyId, SurveyFolder.Resources, filename)
 
         assertThat(doesExist).isFalse
         assertThat(File("$rootDir/$surveyId").exists()).isFalse
@@ -142,9 +142,9 @@ class FileSystemHelperTest {
         val text = "TEST123"
 
         // create survey folder with some files to delete
-        fileSystemHelper.upload(surveyId, SurveyFolder.RESOURCES, text, filename)
+        fileSystemHelper.upload(surveyId, SurveyFolder.Resources, text, filename)
 
-        val inputStream = fileSystemHelper.download(surveyId, SurveyFolder.RESOURCES, filename)
+        val inputStream = fileSystemHelper.download(surveyId, SurveyFolder.Resources, filename)
 
         val fileContent = inputStream.inputStream.use { stream -> String(stream.readAllBytes()) }
 

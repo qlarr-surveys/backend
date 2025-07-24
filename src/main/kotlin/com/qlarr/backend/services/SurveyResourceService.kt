@@ -38,14 +38,14 @@ class SurveyResourceService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
-        helper.upload(surveyId, SurveyFolder.RESOURCES, file, mimeType, filename)
+        helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, filename)
         return ResponseEntity.ok().body(FileInfo(filename, file.size, nowUtc()))
     }
 
 
     fun downloadResource(serverName: String, surveyId: UUID, fileName: String): ResponseEntity<InputStreamResource> {
         surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
-        val response = helper.download(surveyId, SurveyFolder.RESOURCES, fileName)
+        val response = helper.download(surveyId, SurveyFolder.Resources, fileName)
         return ResponseEntity.ok()
                 .header(CONTENT_TYPE, response.objectMetadata["Content-Type"]!!)
                 .header(CONTENT_LENGTH, response.objectMetadata["Content-Length"]!!)
@@ -61,7 +61,7 @@ class SurveyResourceService(
             }
         } ?: throw SurveyNotFoundException()
         try {
-            helper.delete(surveyId, SurveyFolder.RESOURCES, fileName)
+            helper.delete(surveyId, SurveyFolder.Resources, fileName)
             return ResponseEntity.ok().body("Survey resource deleted Successfully")
         } catch (e: ResourceNotFoundException) {
             throw ResourceNotFoundException()
