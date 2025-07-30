@@ -208,7 +208,7 @@ class DesignService(
     }
 
     private fun cleanUnusedResources(surveyId: UUID, designResourceList: Set<String>) {
-        helper.surveyResourcesFiles(surveyId).forEach { file ->
+        helper.listSurveyResources(surveyId).forEach { file ->
             if (!file.name.endsWith("metadata") && !designResourceList.contains(file.name)) {
                 try {
                     helper.delete(surveyId, SurveyFolder.RESOURCES, file.name)
