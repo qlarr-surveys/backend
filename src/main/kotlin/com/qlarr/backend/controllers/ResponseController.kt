@@ -43,12 +43,12 @@ class ResponseController(
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/export")
+    @GetMapping("/survey/{surveyId}/response/export/csv")
     fun exportResponses(
-            @PathVariable surveyId: UUID,
-            @RequestParam("db_values") dbValues: Boolean?,
-            @RequestParam complete: Boolean?,
-            @RequestParam timezone: String
+        @PathVariable surveyId: UUID,
+        @RequestParam("db_values") dbValues: Boolean?,
+        @RequestParam complete: Boolean?,
+        @RequestParam timezone: String
     ): ResponseEntity<ByteArray> {
 
         val clientZoneId = try {
@@ -62,9 +62,59 @@ class ResponseController(
         else
             responseService.exportTextResponses(surveyId, complete, clientZoneId)
         return ResponseEntity.ok()
-                .header(CONTENT_TYPE, "text/csv")
-                .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.csv\"")
+            .header(CONTENT_TYPE, "text/csv")
+            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.csv\"")
+            .body(result)
+    }
+
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/export/xlsx")
+    fun exportResponsesXlsx(
+            @PathVariable surveyId: UUID,
+            @RequestParam("db_values") dbValues: Boolean?,
+            @RequestParam complete: Boolean?,
+            @RequestParam timezone: String
+    ): ResponseEntity<ByteArray> {
+
+        val clientZoneId = try {
+            ZoneId.of(timezone)
+        } catch (e: Exception) {
+            throw UnrecognizedZoneException(timezone)
+        }
+
+        val result = if (dbValues != false)
+            responseService.exportResponsesXlsx(surveyId, complete, clientZoneId)
+        else
+            responseService.exportTextResponsesXlsx(surveyId, complete, clientZoneId)
+        return ResponseEntity.ok()
+            .header(CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.xlsx\"")
                 .body(result)
+    }
+
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/export/ods")
+    fun exportResponsesOdf(
+        @PathVariable surveyId: UUID,
+        @RequestParam("db_values") dbValues: Boolean?,
+        @RequestParam complete: Boolean?,
+        @RequestParam timezone: String
+    ): ResponseEntity<ByteArray> {
+
+        val clientZoneId = try {
+            ZoneId.of(timezone)
+        } catch (e: Exception) {
+            throw UnrecognizedZoneException(timezone)
+        }
+
+        val result = if (dbValues != false)
+            responseService.exportResponsesOdf(surveyId, complete, clientZoneId)
+        else
+            responseService.exportTextResponsesOdf(surveyId, complete, clientZoneId)
+        return ResponseEntity.ok()
+            .header(CONTENT_TYPE, "application/vnd.oasis.opendocument.spreadsheet")
+            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.ods\"")
+            .body(result)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
