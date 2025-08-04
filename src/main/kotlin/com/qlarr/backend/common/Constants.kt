@@ -7,10 +7,10 @@ import java.time.ZoneId
 const val DATE_TIME_UTC_FORMAT = "yyyy-MM-dd HH:mm:ss"
 const val RECENT_LOGIN_SPAN = 10 * 60 * 1000
 
-enum class SurveyFolder(val path: String) {
-    RESPONSES("responses"),
-    RESOURCES("resources"),
-    DESIGN("design")
+sealed class SurveyFolder(val path: String) {
+    data class Responses(private val responseId: String) : SurveyFolder("responses/${responseId}")
+    data object Resources : SurveyFolder("resources")
+    data object Design : SurveyFolder("design")
 }
 
 

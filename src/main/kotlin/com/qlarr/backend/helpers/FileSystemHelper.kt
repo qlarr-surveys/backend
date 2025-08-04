@@ -13,12 +13,10 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile
-import org.springframework.web.servlet.function.ServerResponse.async
 import java.io.*
 import java.net.URLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.LocalDateTime
@@ -124,7 +122,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         files: List<String>?,
         dateFrom: LocalDateTime?
     ): List<FileInfo> {
-        return surveyFiles(surveyId, SurveyFolder.RESOURCES, files, dateFrom)
+        return surveyFiles(surveyId, SurveyFolder.Resources, files, dateFrom)
     }
 
     private fun surveyFiles(
@@ -153,16 +151,41 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
             } ?: emptyList()
     }
 
+    override fun responseFiles(surveyId: UUID, responseId: UUID): List<FileInfo> {
+        return surveyFiles(surveyId, SurveyFolder.Responses(responseId.toString()), null, null)
+    }
+
+    override fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>) {
+        val responseFiles = values.mapNotNull {
+            (it.value as? LinkedHashMap<*, *>)?.run {
+                if (containsKey("stored_filename")) {
+                    get("stored_filename").toString()
+                } else {
+                    null
+                }
+            }
+        }.toSet()
+
+        val savedFiles = responseFiles(surveyId, responseId)
+            .mapNotNull { file ->
+                file.name.takeUnless { it.endsWith(METADATA_POSTFIX) }
+            }
+
+        (savedFiles - responseFiles).forEach { filename ->
+            delete(surveyId, SurveyFolder.Responses(responseId.toString()), filename)
+        }
+    }
+
     override fun cloneResources(
         sourceSurveyId: UUID,
         destinationSurveyId: UUID
     ) {
-        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.RESOURCES)
+        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.Resources)
         val sourceDir = File(sourceFolderPath)
         if (!sourceDir.exists())
             return
 
-        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.RESOURCES)
+        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.Resources)
         val destinationDir = File(destinationFolderPath)
 
         FileUtils.copyDirectory(sourceDir, destinationDir)
@@ -174,8 +197,8 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         sourceFileName: String,
         newFileName: String
     ) {
-        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.DESIGN)
-        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.DESIGN)
+        val sourceFolderPath = buildFolderPath(sourceSurveyId, SurveyFolder.Design)
+        val destinationFolderPath = buildFolderPath(destinationSurveyId, SurveyFolder.Design)
 
         val sourceFile = File("$sourceFolderPath/$sourceFileName")
         val destinationFile = File("$destinationFolderPath/$newFileName")
@@ -251,11 +274,11 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         val zipOutputStream = ZipOutputStream(bufferedOutputStream)
 
         zipOutputStream.use { zipOut ->
-            if (isFolderNotEmpty(surveyId, SurveyFolder.RESOURCES)) {
-                zipFolder(surveyId, SurveyFolder.RESOURCES, zipOut)
+            if (isFolderNotEmpty(surveyId, SurveyFolder.Resources)) {
+                zipFolder(surveyId, SurveyFolder.Resources, zipOut)
             }
 
-            val designFile = File(buildFilePath(surveyId, SurveyFolder.DESIGN, designFileName))
+            val designFile = File(buildFilePath(surveyId, SurveyFolder.Design, designFileName))
             if (designFile.exists()) {
                 val designFilePath = "design.json"
                 zipOut.putNextEntry(ZipEntry(designFilePath))
@@ -308,7 +331,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                             }
                             uploadTasks.add {
                                 tempFile.inputStream().use { fileInput ->
-                                    unzipFileToFileSystem(newId, SurveyFolder.RESOURCES, fileInput, fileName, fileName)
+                                    unzipFileToFileSystem(newId, SurveyFolder.Resources, fileInput, fileName, fileName)
                                 }
                             }
                         } else if (fileName == "design.json") {
@@ -321,7 +344,7 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
                                 tempFile.inputStream().use { fileInput ->
                                     unzipFileToFileSystem(
                                         newId,
-                                        SurveyFolder.DESIGN,
+                                        SurveyFolder.Design,
                                         fileInput,
                                         getMimeType(fileName),
                                         "1"
@@ -373,13 +396,14 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         var totalBytes = 0L
         val buffer = ByteArray(8192) // 8KB buffer
 
-        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING).use { outputStream ->
-            var bytesRead: Int
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                totalBytes += bytesRead
+        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+            .use { outputStream ->
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                    totalBytes += bytesRead
+                }
             }
-        }
 
         return totalBytes
     }
