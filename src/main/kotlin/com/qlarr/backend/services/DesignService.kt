@@ -2,7 +2,6 @@ package com.qlarr.backend.services
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.qlarr.backend.api.design.DesignDto
 import com.qlarr.backend.api.offline.DesignDiffDto
 import com.qlarr.backend.api.offline.PublishInfo
@@ -21,10 +20,10 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.surveyengine.ext.JsonExt
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.IOException
 import java.util.*
 
 @Service
@@ -153,6 +152,11 @@ class DesignService(
                 )
             )
         }
+
+        val newJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
+        val newValidationJsonOutput =
+            objectMapper.readValue(newJson, ValidationJsonOutput::class.java)
+
         // This is the first time to publish ever
         val saved = if (latestPublished == null) {
             latestVersion.copy(
@@ -165,9 +169,7 @@ class DesignService(
             val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublished.version.toString())
             val oldComponentIndex =
                 objectMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
-            val newJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
-            val newComponentIndex =
-                objectMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
+            val newComponentIndex = newValidationJsonOutput.componentIndexList
             val newCodes = newComponentIndex.map { it.code }
             val oldCodes = oldComponentIndex.map { it.code }
             if (!newCodes.containsAll(oldCodes)) {
@@ -195,7 +197,26 @@ class DesignService(
             }
         }
         versionRepository.save(saved)
+        val resources = if (survey.image != null) {
+            newValidationJsonOutput.resources() + survey.image
+        } else {
+            newValidationJsonOutput.resources()
+        }
+        cleanUnusedResources(surveyId, resources.toSet())
+
         return versionMapper.toDto(saved, survey.status)
+    }
+
+    private fun cleanUnusedResources(surveyId: UUID, designResourceList: Set<String>) {
+        helper.listSurveyResources(surveyId).forEach { file ->
+            if (!file.name.endsWith("metadata") && !designResourceList.contains(file.name)) {
+                try {
+                    helper.delete(surveyId, SurveyFolder.RESOURCES, file.name)
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     fun offlineDesignDiff(surveyId: UUID, publishInfo: PublishInfo): DesignDiffDto {
