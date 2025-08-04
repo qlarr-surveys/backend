@@ -31,7 +31,7 @@ fun validateType(value: Any, dataType: ReturnType): Boolean {
         ReturnType.String -> value is String
         ReturnType.Double -> value is Number
         ReturnType.Int -> value is Int
-        ReturnType.List -> value is JSONArray
+        ReturnType.List -> value is JSONArray || value is List<*>
         ReturnType.File,
         ReturnType.Map -> value is Map<*,*>
     }
