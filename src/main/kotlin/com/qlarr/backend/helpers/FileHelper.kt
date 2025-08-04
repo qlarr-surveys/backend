@@ -48,6 +48,11 @@ interface FileHelper {
         dateFrom: LocalDateTime? = null
     ): List<FileInfo>
 
+    fun responseFiles(
+        surveyId: UUID,
+        responseId: UUID
+    ): List<FileInfo>
+
     fun cloneResources(sourceSurveyId: UUID, destinationSurveyId: UUID)
 
     fun copyDesign(
@@ -73,6 +78,8 @@ interface FileHelper {
         onSurveyData: (String) -> SurveyDTO,
         onDesign: () -> Unit
     )
+
+    fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>)
 
 }
 

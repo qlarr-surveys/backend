@@ -3,6 +3,7 @@ package com.qlarr.backend.controllers
 import com.qlarr.backend.api.response.ResponsesDto
 import com.qlarr.backend.exceptions.UnrecognizedZoneException
 import com.qlarr.backend.services.ResponseService
+import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -116,5 +117,11 @@ class ResponseController(
             .body(result)
     }
 
-
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/files/download")
+    fun bulkDownloadResponseFiles(
+        @PathVariable surveyId: UUID,
+    ): ResponseEntity<InputStreamResource> {
+        return responseService.bulkDownloadResponses(surveyId)
+    }
 }

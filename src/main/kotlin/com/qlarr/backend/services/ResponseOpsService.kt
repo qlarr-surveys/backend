@@ -12,8 +12,9 @@ import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.surveyengine.model.*
-import com.qlarr.surveyengine.model.exposed.*
+import com.qlarr.surveyengine.model.exposed.NavigationDirection
+import com.qlarr.surveyengine.model.exposed.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.SurveyMode
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
@@ -54,7 +55,7 @@ class ResponseOpsService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
-        helper.upload(surveyId, SurveyFolder.RESPONSES, file, mimeType, fileName)
+        helper.upload(surveyId, SurveyFolder.Responses(responseId.toString()), file, mimeType, fileName)
         val responseUploadFile = ResponseUploadFile(
             file.originalFilename!!, fileName, file.size, file.contentType
                 ?: ""
@@ -67,6 +68,7 @@ class ResponseOpsService(
 
     fun uploadOfflineResponseFile(
         surveyId: UUID,
+        responseId: UUID,
         filename: String,
         file: MultipartFile
     ): ResponseUploadFile {
@@ -77,15 +79,16 @@ class ResponseOpsService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
-        helper.upload(surveyId, SurveyFolder.RESPONSES, file, mimeType, filename)
+        helper.upload(surveyId, SurveyFolder.Responses(responseId.toString()), file, mimeType, filename)
         return ResponseUploadFile(filename, filename, file.size, file.contentType ?: "")
     }
 
     fun isOfflineFileAlreadyUploaded(
         surveyId: UUID,
+        responseId: UUID,
         filename: String
     ): Boolean {
-        return helper.doesFileExists(surveyId, SurveyFolder.RESPONSES, filename)
+        return helper.doesFileExists(surveyId, SurveyFolder.Responses(responseId.toString()), filename)
     }
 
     fun uploadOfflineSurveyResponse(
@@ -134,6 +137,8 @@ class ResponseOpsService(
             values = uploadResponseRequestData.values
         )
         responseRepository.save(responseEntity)
+        helper.deleteUnusedResponseFiles(surveyId, responseId, uploadResponseRequestData.values)
+
         return responseRepository.responseCount(
             userId = userUtils.currentUserId(),
             surveyId = surveyId
@@ -145,13 +150,13 @@ class ResponseOpsService(
         }
     }
 
-
     fun downloadFile(
         serverName: String,
         surveyId: UUID,
+        responseId: UUID,
         filename: UUID
     ): ResponseEntity<InputStreamResource> {
-        val file = helper.download(surveyId, SurveyFolder.RESPONSES, filename.toString())
+        val file = helper.download(surveyId, SurveyFolder.Responses(responseId.toString()), filename.toString())
         return ResponseEntity.ok()
             .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
             .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
@@ -172,7 +177,11 @@ class ResponseOpsService(
             && questionValue.containsKey("stored_filename")
         ) {
             val file =
-                helper.download(surveyId, SurveyFolder.RESPONSES, questionValue["stored_filename"] as String)
+                helper.download(
+                    surveyId,
+                    SurveyFolder.Responses(responseId.toString()),
+                    questionValue["stored_filename"] as String
+                )
             val customFileName = "${response.surveyResponseIndex}-$questionId-${questionValue["filename"]}"
             return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
@@ -190,20 +199,11 @@ class ResponseOpsService(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun deleteResponse(surveyId: UUID, responseId: UUID) {
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
-        val processedSurvey = designService.getProcessedSurveyByVersion(surveyId, response.version)
-        processedSurvey.validationJsonOutput.schema
-            .filter { it.dataType == ReturnType.File }
-            .forEach { responseField ->
-                response.values[responseField.toValueKey()]?.let {
-                    (it as Map<String, String>)["stored_filename"]?.let { storedFileName ->
-                        helper.delete(surveyId, SurveyFolder.RESPONSES, storedFileName)
-                    }
-                }
-
-            }
+        helper.responseFiles(surveyId, responseId).forEach { file ->
+            helper.delete(surveyId, SurveyFolder.Responses(responseId.toString()), file.name)
+        }
         responseRepository.delete(response)
     }
 

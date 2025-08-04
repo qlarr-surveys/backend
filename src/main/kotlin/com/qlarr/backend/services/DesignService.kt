@@ -2,7 +2,6 @@ package com.qlarr.backend.services
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.qlarr.backend.api.design.DesignDto
 import com.qlarr.backend.api.offline.DesignDiffDto
 import com.qlarr.backend.api.offline.PublishInfo
@@ -21,10 +20,10 @@ import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
-import com.qlarr.surveyengine.ext.JsonExt
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.IOException
 import java.util.*
 
 @Service
@@ -63,7 +62,7 @@ class DesignService(
             SurveyProcessor.process(design, savedDesign)
         }
         if (latestPublishedVersion != null) {
-            val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublishedVersion.version.toString())
+            val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublishedVersion.version.toString())
             val oldCodes =
                 objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
                     .componentIndexList.map { it.code }
@@ -74,7 +73,7 @@ class DesignService(
         }
         helper.upload(
             surveyId,
-            SurveyFolder.DESIGN,
+            SurveyFolder.Design,
             objectMapper.writeValueAsString(validationJsonOutput),
             versionToSave.toString()
         )
@@ -115,7 +114,7 @@ class DesignService(
         } else {
             versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
         }
-        val json = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
+        val json = helper.getText(surveyId, SurveyFolder.Design, latestVersion.version.toString())
         val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
 
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
@@ -124,7 +123,7 @@ class DesignService(
     fun getProcessedSurveyByVersion(surveyId: UUID, version: Int): ProcessedSurvey {
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val latestVersion = versionRepository.findBySurveyIdAndVersion(surveyId, version) ?: throw DesignException()
-        val json = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
+        val json = helper.getText(surveyId, SurveyFolder.Design, latestVersion.version.toString())
         val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
     }
@@ -153,6 +152,11 @@ class DesignService(
                 )
             )
         }
+
+        val newJson = helper.getText(surveyId, SurveyFolder.Design, latestVersion.version.toString())
+        val newValidationJsonOutput =
+            objectMapper.readValue(newJson, ValidationJsonOutput::class.java)
+
         // This is the first time to publish ever
         val saved = if (latestPublished == null) {
             latestVersion.copy(
@@ -162,12 +166,10 @@ class DesignService(
                 lastModified = nowUtc()
             )
         } else {
-            val oldJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestPublished.version.toString())
+            val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublished.version.toString())
             val oldComponentIndex =
                 objectMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
-            val newJson = helper.getText(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
-            val newComponentIndex =
-                objectMapper.readValue(newJson, ValidationJsonOutput::class.java).componentIndexList
+            val newComponentIndex = newValidationJsonOutput.componentIndexList
             val newCodes = newComponentIndex.map { it.code }
             val oldCodes = oldComponentIndex.map { it.code }
             if (!newCodes.containsAll(oldCodes)) {
@@ -178,8 +180,8 @@ class DesignService(
             if (oldComponentIndex == newComponentIndex) {
                 responseRepository.changeVersion(surveyId, latestVersion.version, latestPublished.version)
                 versionRepository.delete(latestVersion)
-                helper.delete(surveyId, SurveyFolder.DESIGN, latestVersion.version.toString())
-                helper.upload(surveyId, SurveyFolder.DESIGN, newJson, latestPublished.version.toString())
+                helper.delete(surveyId, SurveyFolder.Design, latestVersion.version.toString())
+                helper.upload(surveyId, SurveyFolder.Design, newJson, latestPublished.version.toString())
                 latestPublished.copy(
                     published = true,
                     subVersion = latestPublished.subVersion + 1,
@@ -195,7 +197,26 @@ class DesignService(
             }
         }
         versionRepository.save(saved)
+        val resources = if (survey.image != null) {
+            newValidationJsonOutput.resources() + survey.image
+        } else {
+            newValidationJsonOutput.resources()
+        }
+        cleanUnusedResources(surveyId, resources.toSet())
+
         return versionMapper.toDto(saved, survey.status)
+    }
+
+    private fun cleanUnusedResources(surveyId: UUID, designResourceList: Set<String>) {
+        helper.listSurveyResources(surveyId).forEach { file ->
+            if (!file.name.endsWith("metadata") && !designResourceList.contains(file.name)) {
+                try {
+                    helper.delete(surveyId, SurveyFolder.Resources, file.name)
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     fun offlineDesignDiff(surveyId: UUID, publishInfo: PublishInfo): DesignDiffDto {
@@ -208,7 +229,7 @@ class DesignService(
         return if (publishedVersion.version == publishInfo.version && publishedVersion.subVersion == publishInfo.subVersion) {
             DesignDiffDto(publishInfo = publishInfo)
         } else {
-            val json = helper.getText(surveyId, SurveyFolder.DESIGN, publishedVersion.version.toString())
+            val json = helper.getText(surveyId, SurveyFolder.Design, publishedVersion.version.toString())
             val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
             val resources = validationJsonOutput.resources()
             val files = helper.surveyResourcesFiles(surveyId, resources, publishInfo.lastModified)
