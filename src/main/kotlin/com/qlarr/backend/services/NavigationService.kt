@@ -40,7 +40,7 @@ class NavigationService(
             throw SurveyIsNotActiveException()
         } else if (!processedSurvey.latestVersion.valid) {
             throw SurveyDesignWithErrorException
-        } else if (!surveyNavigationData.allowIncomplete && navigationDirection is NavigationDirection.Resume) {
+        } else if (!preview && !surveyNavigationData.allowIncomplete && navigationDirection is NavigationDirection.Resume) {
             throw ResumeNotAllowed()
         } else if (!surveyNavigationData.allowJump && navigationDirection is NavigationDirection.Jump) {
             throw JumpNotAllowed()

@@ -35,7 +35,7 @@ data class ValidationJsonOutput(
         )
     }
 
-    fun stringified() = objectMapper.writeValueAsString(this)
+    fun stringified():String = objectMapper.writeValueAsString(this)
 
     fun availableLangByCode(code: String?): SurveyLang {
         val defaultLang = defaultSurveyLang()
