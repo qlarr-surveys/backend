@@ -4,7 +4,6 @@ import com.qlarr.backend.mappers.NavigationIndexConverter
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.annotations.UuidGenerator
 import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
 import java.util.*
@@ -13,9 +12,7 @@ import java.util.*
 @Table(name = "responses")
 data class SurveyResponseEntity(
         @Id
-        @GeneratedValue
-        @UuidGenerator
-        val id: UUID? = null,
+        val id: UUID,
 
         @Column(name = "survey_id")
         val surveyId: UUID,

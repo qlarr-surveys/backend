@@ -50,6 +50,7 @@ class RunSurveyService(
         )
 
         val responseEntity = SurveyResponseEntity(
+            id = UUID.randomUUID(),
             surveyId = surveyId,
             lang = result.lang.code,
             values = result.navigationJsonOutput.toSave,
