@@ -65,8 +65,12 @@ class DesignService(
             val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublishedVersion.version.toString())
             val oldCodes =
                 objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
-                    .componentIndexList.map { it.code }
-            val newCodes = validationJsonOutput.componentIndexList.map { it.code }
+                    .componentIndexList
+                    .map { it.code }
+                    .filter { !it.startsWith("G") }
+            val newCodes = validationJsonOutput.componentIndexList
+                .map { it.code }
+                .filter { !it.startsWith("G") }
             if (!newCodes.containsAll(oldCodes)) {
                 throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
             }
