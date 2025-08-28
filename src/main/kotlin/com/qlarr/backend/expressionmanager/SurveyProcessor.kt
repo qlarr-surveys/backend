@@ -13,7 +13,6 @@ import com.qlarr.surveyengine.model.exposed.NavigationMode
 import com.qlarr.surveyengine.model.exposed.SurveyMode
 import com.qlarr.surveyengine.scriptengine.getNavigate
 import com.qlarr.surveyengine.scriptengine.getValidate
-import com.qlarr.surveyengine.usecase.MaskedValuesUseCase
 import com.qlarr.surveyengine.usecase.NavigationUseCaseWrapper
 import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 
@@ -21,7 +20,6 @@ object SurveyProcessor {
 
     private val scriptEngineNavigate = getNavigate()
     private val scriptEngineValidate = getValidate()
-
 
 
     fun process(stateObj: ObjectNode, savedDesign: ObjectNode): ValidationJsonOutput {
@@ -59,17 +57,23 @@ object SurveyProcessor {
             skipInvalid = skipInvalid,
             surveyMode = surveyMode
         )
-        val navigationJsonOutput = objectMapper.readValue(useCase.navigate(scriptEngineNavigate), jacksonTypeRef<NavigationJsonOutput>())
+        val navigationJsonOutput =
+            objectMapper.readValue(useCase.navigate(scriptEngineNavigate), jacksonTypeRef<NavigationJsonOutput>())
         return navigationJsonOutput
     }
 
-    fun maskedValues(
-        validationJsonOutput: ValidationJsonOutput,
-        values: Map<String, Any>
-    ): Map<String, Any> {
-        val useCase = MaskedValuesUseCase(
-            validationJsonOutput.stringified(),
-        )
-        return useCase.navigate(scriptEngineNavigate, objectMapper.writeValueAsString(values))
+
+    fun maskedValues(values: Map<String, Any>): Map<String, Any> {
+        return buildMap {
+            values.forEach { (key, _) ->
+                if (key.endsWith(".value")) {
+                    val prefix = key.substringBeforeLast(".value")
+                    val maskedKey = "$prefix.masked_value"
+                    values[maskedKey]?.let { maskedValue ->
+                        put(maskedKey, maskedValue)
+                    }
+                }
+            }
+        }
     }
 }

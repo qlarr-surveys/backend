@@ -162,9 +162,7 @@ class ResponseService(
             }
         }
         val values: List<ResponseDto> = responses.toList().map { responseEntity ->
-            val version = versions.first { it.latestVersion.version == responseEntity.response.version }
             val maskedValues = SurveyProcessor.maskedValues(
-                validationJsonOutput = version.validationJsonOutput,
                 values = responseEntity.response.values,
             )
             responseMapper.toDto(responseEntity, valueNames, maskedValues)
@@ -215,9 +213,7 @@ class ResponseService(
             addAll(colNames)
         }
         val values: List<ResponseDto> = responses.toList().map { responseEntity ->
-            val version = versions.first { it.latestVersion.version == responseEntity.response.version }
             val maskedValues = SurveyProcessor.maskedValues(
-                version.validationJsonOutput,
                 values = responseEntity.response.values
 
             )
@@ -344,9 +340,7 @@ class ResponseService(
             addAll(colNames)
         }
         val values: List<ResponseDto> = responses.toList().map { responseEntity ->
-            val version = versions.first { it.latestVersion.version == responseEntity.response.version }
             val maskedValues = SurveyProcessor.maskedValues(
-                version.validationJsonOutput,
                 values = responseEntity.response.values
             )
             responseMapper.toDto(responseEntity, valueNames, maskedValues, clientZoneId)
@@ -490,9 +484,7 @@ class ResponseService(
             addAll(colNames)
         }
         val values: List<ResponseDto> = responses.toList().map { responseEntity ->
-            val version = versions.first { it.latestVersion.version == responseEntity.response.version }
             val maskedValues = SurveyProcessor.maskedValues(
-                version.validationJsonOutput,
                 values = responseEntity.response.values
             )
             responseMapper.toDto(responseEntity, valueNames, maskedValues, clientZoneId)

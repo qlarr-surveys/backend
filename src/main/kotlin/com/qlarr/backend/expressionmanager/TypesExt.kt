@@ -1,6 +1,5 @@
 package com.qlarr.backend.expressionmanager
 
-import com.qlarr.backend.exceptions.WrongColumnException
 import com.qlarr.backend.exceptions.WrongValueType
 import com.qlarr.surveyengine.model.exposed.ResponseField
 import com.qlarr.surveyengine.model.exposed.ReturnType
@@ -9,11 +8,13 @@ import org.json.JSONObject
 
 
 fun Map<String, Any>.validateSchema(responsesSchema: List<ResponseField>) {
-    forEach { entry ->
-        val responseField = responsesSchema.firstOrNull { it.toValueKey() == entry.key }
-        if (responseField == null) {
-            throw WrongColumnException(entry.key)
-        } else if (!validateType(entry.value, responseField.dataType)) {
+    val dependents = responsesSchema.map { it.toValueKey() }
+    val valuesMap = filterKeys { key->
+        dependents.contains(key)
+    }
+    valuesMap.forEach { entry ->
+        val responseField = responsesSchema.first { it.toValueKey() == entry.key }
+        if (!validateType(entry.value, responseField.dataType)) {
             throw WrongValueType(
                 columnName = entry.key,
                 expectedClassName = expectedType(responseField.dataType),
