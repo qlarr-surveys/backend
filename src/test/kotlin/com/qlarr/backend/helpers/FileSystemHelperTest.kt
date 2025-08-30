@@ -16,7 +16,7 @@ import java.util.*
 class FileSystemHelperTest {
 
     private val rootDir = "src/test/resources/root"
-    private val fileSystemHelper: FileHelper = FileSystemHelper(FileSystemProperties(rootDir))
+    private val fileSystemHelper: FileHelper = FileSystemHelper(FileSystemProperties(rootDir), MediaOptimizer())
 
     @AfterEach
     fun setUp() {

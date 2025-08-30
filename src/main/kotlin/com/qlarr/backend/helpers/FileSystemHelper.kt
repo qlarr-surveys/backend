@@ -3,6 +3,7 @@ package com.qlarr.backend.helpers
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
+import com.qlarr.backend.exceptions.FileTooBigException
 import com.qlarr.backend.exceptions.ResourceNotFoundException
 import com.qlarr.backend.properties.FileSystemProperties
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.io.*
 import java.net.URLConnection
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.Instant
@@ -26,8 +28,12 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+
 @Component
-class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) : FileHelper {
+class FileSystemHelper(
+    private val fileSystemProperties: FileSystemProperties,
+    private val mediaOptimizer: MediaOptimizer
+) : FileHelper {
 
     override fun uploadUnzippedFile(
         surveyId: UUID,
@@ -49,14 +55,39 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         contentType: String,
         filename: String
     ) {
-        val path = buildFilePath(surveyId, surveyFolder, filename)
+        val outputPath = Path.of(buildFilePath(surveyId, surveyFolder, filename))
         if (file.isEmpty) {
             throw ResourceNotFoundException()
         }
+        when {
+            mediaOptimizer.isJpeg(contentType) -> {
+                val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
+                saveToFile(file.inputStream, tempPath)
+                val outputFile = mediaOptimizer.optimizeImage(File(tempPath).inputStream(), outputPath)
+                saveMetadata(outputPath.toFile(), MediaOptimizer.JPEG_CONTENT_TYPE, outputFile.length())
 
-        val byteStream = file.inputStream
-        saveToFile(byteStream, path)
-        saveMetadata(File(path), contentType, file.size)
+                File(tempPath).delete()
+            }
+
+            mediaOptimizer.isMp4(contentType) -> {
+                val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
+                saveToFile(file.inputStream, tempPath)
+                val outputFile = mediaOptimizer.optimizeMp4(tempPath, outputPath)
+                saveMetadata(outputFile, contentType, outputFile.length())
+
+                File(tempPath).delete()
+            }
+
+            else -> {
+                if (file.size < 10 * 1024 * 1024) {
+                    val byteStream = file.inputStream
+                    saveToFile(byteStream, outputPath)
+                    saveMetadata(outputPath.toFile(), contentType, file.size)
+                } else {
+                    throw FileTooBigException()
+                }
+            }
+        }
     }
 
     private fun generateETagUsingMetadata(file: File): String {
@@ -390,13 +421,16 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
         .takeIf { it.size >= 2 }?.let { it[0] }
 
     private fun saveToFile(inputStream: InputStream, path: String): Long {
-        val typedPath = Paths.get(path)
-        Files.createDirectories(typedPath.parent)
+        return saveToFile(inputStream, Path.of(path))
+    }
+
+    private fun saveToFile(inputStream: InputStream, path: Path): Long {
+        Files.createDirectories(path.parent)
 
         var totalBytes = 0L
         val buffer = ByteArray(8192) // 8KB buffer
 
-        Files.newOutputStream(typedPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+        Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
             .use { outputStream ->
                 var bytesRead: Int
                 while (inputStream.read(buffer).also { bytesRead = it } != -1) {
@@ -414,8 +448,18 @@ class FileSystemHelper(private val fileSystemProperties: FileSystemProperties) :
     private fun buildFolderPath(surveyId: UUID, surveyFolder: SurveyFolder) =
         "${fileSystemProperties.rootFolder}/$surveyId/${surveyFolder.path}"
 
-
     private fun buildFolderPath(surveyId: UUID) = "${fileSystemProperties.rootFolder}/$surveyId"
+
+    private fun tmpFolderPath(): String {
+        val tmpPath = "${fileSystemProperties.rootFolder}/tmp"
+        val tmpDir = File(tmpPath)
+        if (!tmpDir.exists()) {
+            tmpDir.mkdirs()
+        }
+        return tmpPath
+    }
+
+
 
     fun changeSurveyDirectory(from: String, to: String): Boolean {
         val oldDir = File("${fileSystemProperties.rootFolder}/$from")
