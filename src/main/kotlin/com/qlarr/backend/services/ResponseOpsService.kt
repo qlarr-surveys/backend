@@ -14,6 +14,7 @@ import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
+import com.qlarr.surveyengine.model.exposed.NavigationMode
 import com.qlarr.surveyengine.model.exposed.SurveyMode
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.core.io.InputStreamResource
@@ -116,6 +117,7 @@ class ResponseOpsService(
             lang = uploadResponseRequestData.lang,
             skipInvalid = false,
             processedSurvey = survey.validationJsonOutput.stringified(),
+            navigationMode = survey.survey.navigationData.navigationMode,
             surveyMode = SurveyMode.OFFLINE,
         )
 

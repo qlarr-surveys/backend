@@ -3,6 +3,7 @@ package com.qlarr.backend.api.survey
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.qlarr.backend.common.DATE_TIME_UTC_FORMAT
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import java.time.LocalDateTime
 import java.util.*
 
@@ -23,6 +24,7 @@ data class SurveyDTO(
     val usage: Usage,
     val quota: Int,
     val canLockSurvey: Boolean,
+    val surveyNavigationData: SurveyNavigationData,
 ){
     fun isActive(): Boolean {
         return status == Status.ACTIVE

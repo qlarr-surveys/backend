@@ -3,6 +3,8 @@ package com.qlarr.backend.persistence.entities
 import com.qlarr.backend.api.survey.Status
 import com.qlarr.backend.api.survey.Usage
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.mappers.SurveyNavigationDataConverter
+import com.qlarr.surveyengine.model.exposed.NavigationMode
 import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.*
@@ -41,6 +43,10 @@ data class SurveyEntity(
     @Column(name = "can_lock_survey")
     val canLockSurvey: Boolean,
 
+    @Column(name = "navigation_data")
+    @Convert(converter = SurveyNavigationDataConverter::class)
+    val navigationData: SurveyNavigationData,
+
     val image: String?,
 
     val description: String?,
@@ -70,3 +76,14 @@ interface ResponseCount {
     val completeResponseCount: Long
     val userResponseCount: Long
 }
+
+data class SurveyNavigationData(
+    val navigationMode: NavigationMode = NavigationMode.GROUP_BY_GROUP,
+    val allowPrevious: Boolean = true,
+    val resumeExpiryMillis: Long = TEN_YEARS_MILLIS,
+    val skipInvalid: Boolean = true,
+    val allowIncomplete: Boolean = true,
+    val allowJump: Boolean = true
+)
+
+const val TEN_YEARS_MILLIS = 315360000000L

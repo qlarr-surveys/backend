@@ -3,6 +3,7 @@ package com.qlarr.backend.api.survey
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.qlarr.backend.api.version.VersionDto
 import com.qlarr.backend.common.DATE_TIME_UTC_FORMAT
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import java.time.LocalDateTime
 import java.util.*
 
@@ -25,6 +26,7 @@ data class SimpleSurveyDto(
     val responsesCount: Int,
     val completeResponseCount: Int,
     val latestVersion: VersionDto,
+    val navigationData: SurveyNavigationData = SurveyNavigationData(),
 )
 
 

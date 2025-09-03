@@ -63,7 +63,7 @@ class RunSurveyService(
         val savedResponse = responseRepository.save(responseEntity)
 
         return runMapper.toRunDto(
-            savedResponse.id!!,
+            savedResponse.id,
             result.lang,
             result.additionalLang,
             result.navigationJsonOutput,
@@ -84,6 +84,7 @@ class RunSurveyService(
             surveyId = surveyId,
             response = response,
             navigationLang = navigateRequest.lang,
+            navigationMode = navigateRequest.navigationMode,
             processedSurvey = processedSurvey,
             navigationDirection = navigateRequest.navigationDirection,
             values = response.values.toMutableMap().apply {

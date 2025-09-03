@@ -3,6 +3,7 @@ package com.qlarr.backend.services
 import com.qlarr.backend.api.survey.Status
 import com.qlarr.backend.api.surveyengine.NavigationJsonOutput
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.common.toEpochMilliUtc
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.expressionmanager.SurveyProcessor
@@ -34,13 +35,15 @@ class NavigationService(
         preview: Boolean,
         surveyMode: SurveyMode
     ): NavigationResult {
-        val surveyNavigationData = processedSurvey.validationJsonOutput.surveyNavigationData()
+        val surveyNavigationData = processedSurvey.survey.navigationData
         val survey = processedSurvey.survey
         if (!preview && !survey.isActive()) {
             throw SurveyIsNotActiveException()
         } else if (!processedSurvey.latestVersion.valid) {
             throw SurveyDesignWithErrorException
-        } else if (!preview && !surveyNavigationData.allowIncomplete && navigationDirection is NavigationDirection.Resume) {
+        } else if (!preview && !surveyNavigationData.allowIncomplete
+            && survey.startDate!!.toEpochMilliUtc() - nowUtc().toEpochMilliUtc() > survey.navigationData.resumeExpiryMillis
+        ) {
             throw ResumeNotAllowed()
         } else if (!surveyNavigationData.allowJump && navigationDirection is NavigationDirection.Jump) {
             throw JumpNotAllowed()
@@ -61,7 +64,8 @@ class NavigationService(
             }),
             navigationDirection = navigationDirection,
             navigationIndex = response?.navigationIndex,
-            navigationMode = navigationMode,
+            navigationMode = navigationMode ?: response?.navigationIndex?.navigationMode()
+            ?: survey.navigationData.navigationMode,
             lang = lang.code,
             processedSurvey = processedSurvey.validationJsonOutput.stringified(),
             surveyMode = surveyMode,

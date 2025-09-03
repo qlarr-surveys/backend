@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/DDL/00002-add-fields-to-survey-table.sql
   - include:
       file: db/changelog/DDL/00003-modify-response-table.sql
+  - include:
+      file: db/changelog/DDL/00004-add-nav-data-to-survey-table.sql

@@ -2,7 +2,7 @@ package com.qlarr.backend.mappers
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.configurations.objectMapper
-import com.qlarr.surveyengine.model.*
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import com.qlarr.surveyengine.model.exposed.ResponseField
 import jakarta.persistence.AttributeConverter
@@ -31,6 +31,22 @@ class NavigationIndexConverter :
 
     override fun convertToEntityAttribute(dbData: String): NavigationIndex {
         return objectMapper.readValue(dbData, NavigationIndex::class.java)
+    }
+
+}
+
+
+@Converter
+class SurveyNavigationDataConverter :
+    AttributeConverter<SurveyNavigationData, String> {
+    override fun convertToDatabaseColumn(attribute: SurveyNavigationData): String {
+        return objectMapper.writeValueAsString(attribute)
+    }
+
+    override fun convertToEntityAttribute(dbData: String?): SurveyNavigationData {
+        return dbData?.let {
+            objectMapper.readValue(dbData, SurveyNavigationData::class.java)
+        } ?: SurveyNavigationData()
     }
 
 }

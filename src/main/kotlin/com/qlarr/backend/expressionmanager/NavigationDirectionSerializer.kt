@@ -26,7 +26,6 @@ class NavigationDirectionDeserializer : StdDeserializer<NavigationDirection>(Nav
         return when (objName) {
             "START" -> NavigationDirection.Start
             "RESUME" -> NavigationDirection.Resume
-            "CHANGE_LANGE" -> NavigationDirection.ChangeLange
             "PREV" -> NavigationDirection.Previous
             "JUMP" -> NavigationDirection.Jump(navigationIndex!!)
             "NEXT" -> NavigationDirection.Next

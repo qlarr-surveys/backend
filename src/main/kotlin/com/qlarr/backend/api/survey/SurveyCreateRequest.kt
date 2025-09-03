@@ -2,7 +2,10 @@ package com.qlarr.backend.api.survey
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.qlarr.backend.common.DATE_TIME_UTC_FORMAT
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
+import com.qlarr.backend.persistence.entities.TEN_YEARS_MILLIS
 import com.qlarr.surveyengine.model.SurveyLang
+import com.qlarr.surveyengine.model.exposed.NavigationMode
 import java.time.LocalDateTime
 
 data class SurveyCreateRequest(
@@ -22,4 +25,10 @@ data class EditSurveyRequest(
     val quota: Int? = null,
     val description: String? = null,
     val image: String? = null,
+    val navigationMode: NavigationMode? = null,
+    val allowPrevious: Boolean? = null,
+    val resumeExpiryMillis: Long? = null,
+    val skipInvalid: Boolean? = null,
+    val allowIncomplete: Boolean? = null,
+    val allowJump: Boolean? = null,
 )

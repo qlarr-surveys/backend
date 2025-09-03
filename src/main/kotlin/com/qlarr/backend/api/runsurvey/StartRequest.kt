@@ -13,6 +13,7 @@ data class StartRequest(
 data class NavigateRequest(
     val responseId: UUID,
     val lang: String? = null,
+    val navigationMode: NavigationMode? = null,
     val navigationDirection: NavigationDirection,
     val values: Map<String, Any> = mapOf()
 )

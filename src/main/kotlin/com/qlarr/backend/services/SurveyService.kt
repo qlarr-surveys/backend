@@ -9,6 +9,7 @@ import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.SurveyMapper
 import com.qlarr.backend.persistence.entities.SurveyEntity
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import com.qlarr.backend.persistence.entities.SurveyResponseCount
 import com.qlarr.backend.persistence.entities.VersionEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
@@ -101,6 +102,14 @@ class SurveyService(
             canLockSurvey = editSurveyRequest.canLockSurvey ?: survey.canLockSurvey,
             description = editSurveyRequest.description ?: survey.description,
             image = editSurveyRequest.image ?: survey.image,
+            navigationData = SurveyNavigationData(
+                navigationMode = editSurveyRequest.navigationMode ?: survey.navigationData.navigationMode,
+                allowPrevious = editSurveyRequest.allowPrevious ?: survey.navigationData.allowPrevious,
+                resumeExpiryMillis = editSurveyRequest.resumeExpiryMillis ?: survey.navigationData.resumeExpiryMillis,
+                skipInvalid = editSurveyRequest.skipInvalid ?: survey.navigationData.skipInvalid,
+                allowIncomplete = editSurveyRequest.allowIncomplete ?: survey.navigationData.allowIncomplete,
+                allowJump = editSurveyRequest.allowJump ?: survey.navigationData.allowJump
+            )
         )
         if (newSurvey.startDate != null
             && newSurvey.endDate != null && newSurvey.startDate.isAfter(newSurvey.endDate)
@@ -276,7 +285,8 @@ class SurveyService(
                     quota = -1,
                     canLockSurvey = false,
                     image = simpleSurveyDto.image,
-                    description = simpleSurveyDto.description
+                    description = simpleSurveyDto.description,
+                    navigationData = simpleSurveyDto.navigationData,
                 )
             )
         } catch (exception: DataIntegrityViolationException) {

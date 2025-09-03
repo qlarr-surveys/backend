@@ -2,6 +2,7 @@ package com.qlarr.backend.common
 
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 
 const val DATE_TIME_UTC_FORMAT = "yyyy-MM-dd HH:mm:ss"
@@ -25,4 +26,8 @@ fun LocalDateTime.utcToLocalTZ(zoneId: ZoneId?): LocalDateTime {
         zonedDateTimeInTargetZone.toLocalDateTime()
     }
 }
+
+fun LocalDateTime.toEpochMilli(zoneOffset: ZoneOffset) = this.toInstant(zoneOffset).toEpochMilli()
+fun LocalDateTime.toEpochMilliUtc() = this.toInstant(ZoneOffset.UTC).toEpochMilli()
+
 

@@ -11,6 +11,7 @@ import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.SurveyMapper
 import com.qlarr.backend.mappers.VersionMapper
 import com.qlarr.backend.persistence.entities.SurveyEntity
+import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
@@ -135,6 +136,7 @@ class SurveyServiceTest {
                 endDate = null,
                 description = null,
                 image = null,
+            navigationData = SurveyNavigationData()
         )
     }
 
