@@ -9,4 +9,3 @@ class ResponseAlreadySyncedException : Throwable()
 
 class UnrecognizedZoneException(val zone:String) : Throwable()
 class InvalidQuestionId : Throwable()
-class FileTooBigException : Throwable("Uploaded file is too big")

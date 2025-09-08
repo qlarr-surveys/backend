@@ -3,7 +3,6 @@ package com.qlarr.backend.helpers
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
-import com.qlarr.backend.exceptions.FileTooBigException
 import com.qlarr.backend.exceptions.ResourceNotFoundException
 import com.qlarr.backend.properties.FileSystemProperties
 import kotlinx.coroutines.Dispatchers
@@ -53,39 +52,35 @@ class FileSystemHelper(
         surveyFolder: SurveyFolder,
         file: MultipartFile,
         contentType: String,
-        filename: String
+        filename: String,
     ) {
         val outputPath = Path.of(buildFilePath(surveyId, surveyFolder, filename))
         if (file.isEmpty) {
             throw ResourceNotFoundException()
         }
+        val reduceSize = surveyFolder is SurveyFolder.Resources
         when {
-            mediaOptimizer.isJpeg(contentType) -> {
+            reduceSize && mediaOptimizer.isSupportedImage(contentType) -> {
                 val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
                 saveToFile(file.inputStream, tempPath)
-                val outputFile = mediaOptimizer.optimizeImage(File(tempPath).inputStream(), outputPath)
-                saveMetadata(outputPath.toFile(), MediaOptimizer.JPEG_CONTENT_TYPE, outputFile.length())
-
+                val outputFile = mediaOptimizer.optimizeImage(File(tempPath).inputStream(), outputPath, contentType)
+                saveMetadata(outputPath.toFile(), contentType, outputFile.length())
                 File(tempPath).delete()
             }
 
-            mediaOptimizer.isMp4(contentType) -> {
+            reduceSize && mediaOptimizer.isVideoContentType(contentType) -> {
                 val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
                 saveToFile(file.inputStream, tempPath)
-                val outputFile = mediaOptimizer.optimizeMp4(tempPath, outputPath)
+                val outputFile = mediaOptimizer.optimizeVideo(tempPath, outputPath)
                 saveMetadata(outputFile, contentType, outputFile.length())
 
                 File(tempPath).delete()
             }
 
             else -> {
-                if (file.size < 10 * 1024 * 1024) {
-                    val byteStream = file.inputStream
-                    saveToFile(byteStream, outputPath)
-                    saveMetadata(outputPath.toFile(), contentType, file.size)
-                } else {
-                    throw FileTooBigException()
-                }
+                val byteStream = file.inputStream
+                saveToFile(byteStream, outputPath)
+                saveMetadata(outputPath.toFile(), contentType, file.size)
             }
         }
     }
@@ -458,7 +453,6 @@ class FileSystemHelper(
         }
         return tmpPath
     }
-
 
 
     fun changeSurveyDirectory(from: String, to: String): Boolean {

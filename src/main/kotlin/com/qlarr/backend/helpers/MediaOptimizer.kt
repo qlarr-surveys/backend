@@ -4,6 +4,7 @@ import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
+import net.bramp.ffmpeg.probe.FFmpegStream
 import org.springframework.stereotype.Component
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -21,25 +22,48 @@ import javax.imageio.ImageWriteParam
 @Component
 class MediaOptimizer {
 
-    fun optimizeImage(inputStream: InputStream, outputPath: Path): File {
+    fun optimizeImage(inputStream: InputStream, outputPath: Path, contentType: String): File {
         val originalImage = ImageIO.read(inputStream) ?: throw IllegalArgumentException("Could not read image")
 
         val (newWidth, newHeight) = calculateDimensions(originalImage.width, originalImage.height)
 
-        val resizedImage = BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB)
+        val resizedImage = BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB)
         resizedImage.createGraphics().apply {
             setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
             drawImage(originalImage, 0, 0, newWidth, newHeight, null)
             dispose()
         }
 
+        val outFormat = when (contentType.lowercase()) {
+            "image/jpeg", "image/jpg" -> "jpeg"
+            "image/png" -> "png"
+            else -> throw IllegalArgumentException("Unsupported image type: $contentType")
+        }
+
         Files.createDirectories(outputPath.parent)
         Files.newOutputStream(outputPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
             .use { outputStream ->
-                val writer = ImageIO.getImageWritersByFormatName("jpeg").next()
+                val writer = ImageIO.getImageWritersByFormatName(outFormat).asSequence().firstOrNull()
+                    ?: throw IllegalArgumentException("No ImageWriter for format: $outFormat")
                 val writeParam = writer.defaultWriteParam.apply {
-                    compressionMode = ImageWriteParam.MODE_EXPLICIT
-                    compressionQuality = JPEG_QUALITY
+                    when (outFormat) {
+                        "jpeg" -> {
+                            compressionMode = ImageWriteParam.MODE_EXPLICIT
+                            compressionQuality = JPEG_QUALITY
+                            try {
+                                setProgressiveMode(ImageWriteParam.MODE_DEFAULT)
+                            } catch (_: Exception) {
+                            }
+                        }
+
+                        "png" -> {
+                            try {
+                                compressionMode = ImageWriteParam.MODE_EXPLICIT
+                                compressionQuality = PNG_COMPRESSION
+                            } catch (_: Exception) {
+                            }
+                        }
+                    }
                 }
 
                 ImageIO.createImageOutputStream(outputStream).use { imageOutputStream ->
@@ -51,16 +75,17 @@ class MediaOptimizer {
         return outputPath.toFile()
     }
 
-    fun optimizeMp4(inputPath: String, outputPath: Path): File {
+    fun optimizeVideo(inputPath: String, outputPath: Path): File {
         Files.createDirectories(outputPath.parent)
 
-        val tmp = Files.createTempFile(outputPath.parent, outputPath.fileName.toString(), ".tmp")
+        val tmp = Files.createTempFile(Path.of(inputPath).parent, null, ".mp4")
 
         try {
             val ffmpeg = FFmpeg()
             val ffprobe = FFprobe()
 
             val filter = "scale=w='min(1920,iw)':h='min(1920,ih)':force_original_aspect_ratio=decrease,format=yuv420p"
+            val hasAudio = ffprobe.probe(inputPath).streams.any { it.codec_type == FFmpegStream.CodecType.AUDIO }
 
             val builder = FFmpegBuilder()
                 .setInput(inputPath)
@@ -72,10 +97,17 @@ class MediaOptimizer {
                 .addExtraArgs("-crf", "22")
                 .addExtraArgs("-preset", "medium")
                 .addExtraArgs("-movflags", "+faststart")
-                .setAudioCodec("aac")
-                .setAudioBitRate(128_000)
-                .addExtraArgs("-ac", "2")
-                .addExtraArgs("-ar", "48000")
+                .addExtraArgs("-report")
+                .apply {
+                    if (hasAudio) {
+                        setAudioCodec("aac")
+                        setAudioBitRate(128_000)
+                        addExtraArgs("-ac", "2")
+                        addExtraArgs("-ar", "48000")
+                    } else {
+                        disableAudio()
+                    }
+                }
                 .done()
 
             val executor = FFmpegExecutor(ffmpeg, ffprobe)
@@ -107,17 +139,22 @@ class MediaOptimizer {
         }
     }
 
-    fun isJpeg(contentType: String): Boolean {
-        return contentType.contains("image/jpeg")
+    fun isSupportedImage(contentType: String): Boolean {
+        return when (contentType.lowercase()) {
+            "image/jpeg", "image/jpg",
+            "image/png" -> true
+
+            else -> false
+        }
     }
 
-    fun isMp4(contentType: String): Boolean {
-        return contentType.contains("video/mp4")
-    }
+    fun isVideoContentType(contentType: String?): Boolean =
+        contentType?.lowercase()?.startsWith("video/") == true
 
     companion object {
         const val MAX_DIMENSION = 1920
-        const val JPEG_CONTENT_TYPE = "image/jpeg"
-        const val JPEG_QUALITY = 0.8f
+        private const val JPEG_QUALITY = 0.80f
+        private const val WEBP_QUALITY = 0.75f
+        private const val PNG_COMPRESSION = 0.90f
     }
 }
