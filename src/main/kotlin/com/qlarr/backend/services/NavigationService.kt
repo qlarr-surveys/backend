@@ -42,7 +42,7 @@ class NavigationService(
         } else if (!processedSurvey.latestVersion.valid) {
             throw SurveyDesignWithErrorException
         } else if (!preview && !surveyNavigationData.allowIncomplete
-            && survey.startDate!!.toEpochMilliUtc() - nowUtc().toEpochMilliUtc() > survey.navigationData.resumeExpiryMillis
+            && timeSinceStartMillis(survey) > survey.navigationData.resumeExpiryMillis
         ) {
             throw ResumeNotAllowed()
         } else if (!surveyNavigationData.allowJump && navigationDirection is NavigationDirection.Jump) {
@@ -118,3 +118,7 @@ data class NavigationResult(
     val lang: SurveyLang,
     val additionalLang: List<SurveyLang>
 )
+
+fun timeSinceStartMillis(survey: SurveyEntity): Long = survey.startDate?.let {
+    it.toEpochMilliUtc() - nowUtc().toEpochMilliUtc()
+} ?: 0

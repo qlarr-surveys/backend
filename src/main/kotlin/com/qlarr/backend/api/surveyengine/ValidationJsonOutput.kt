@@ -9,9 +9,7 @@ import com.qlarr.surveyengine.ext.JsonExt
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.StringImpactMap
 import com.qlarr.surveyengine.model.SurveyLang
-import com.qlarr.surveyengine.model.exposed.NavigationMode
 import com.qlarr.surveyengine.model.exposed.ResponseField
-import com.qlarr.surveyengine.usecase.SurveyNavigationData
 
 data class ValidationJsonOutput(
     val survey: ObjectNode = JsonNodeFactory.instance.objectNode(),
@@ -25,17 +23,8 @@ data class ValidationJsonOutput(
         objectMapper.readTree(JsonExt.flatObject(survey.toString())) as ObjectNode,
         componentIndexList
     )
-    fun surveyNavigationData(): SurveyNavigationData {
-        return SurveyNavigationData(
-            allowJump = survey.get("allowJump")?.booleanValue() ?: true,
-            allowPrevious = survey.get("allowPrevious")?.booleanValue() ?: true,
-            skipInvalid = survey.get("skipInvalid")?.booleanValue() ?: true,
-            allowIncomplete = survey.get("allowIncomplete")?.booleanValue() ?: true,
-            navigationMode = NavigationMode.fromString(survey.get("navigationMode")?.textValue())
-        )
-    }
 
-    fun stringified():String = objectMapper.writeValueAsString(this)
+    fun stringified(): String = objectMapper.writeValueAsString(this)
 
     fun availableLangByCode(code: String?): SurveyLang {
         val defaultLang = defaultSurveyLang()
