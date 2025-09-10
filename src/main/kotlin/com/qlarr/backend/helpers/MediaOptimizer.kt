@@ -1,10 +1,15 @@
 package com.qlarr.backend.helpers
 
-import net.bramp.ffmpeg.FFmpeg
-import net.bramp.ffmpeg.FFmpegExecutor
-import net.bramp.ffmpeg.FFprobe
-import net.bramp.ffmpeg.builder.FFmpegBuilder
-import net.bramp.ffmpeg.probe.FFmpegStream
+import org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_AAC
+import org.bytedeco.ffmpeg.global.avcodec.AV_CODEC_ID_H264
+import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_YUV420P
+import org.bytedeco.javacv.FFmpegFrameGrabber
+import org.bytedeco.javacv.FFmpegFrameRecorder
+import org.bytedeco.javacv.Frame
+import org.bytedeco.javacv.OpenCVFrameConverter
+import org.bytedeco.opencv.global.opencv_imgproc.resize
+import org.bytedeco.opencv.opencv_core.Mat
+import org.bytedeco.opencv.opencv_core.Size
 import org.springframework.stereotype.Component
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -12,7 +17,6 @@ import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
@@ -76,53 +80,89 @@ class MediaOptimizer {
     }
 
     fun optimizeVideo(inputPath: String, outputPath: Path): File {
-        Files.createDirectories(outputPath.parent)
+        val outputPathMp4 = Path.of("${outputPath.toString().substringBeforeLast('.')}.mp4")
+        Files.createDirectories(outputPathMp4.parent)
 
-        val tmp = Files.createTempFile(Path.of(inputPath).parent, null, ".mp4")
+        val grabber = FFmpegFrameGrabber(inputPath)
+        val converter = OpenCVFrameConverter.ToMat()
 
         try {
-            val ffmpeg = FFmpeg()
-            val ffprobe = FFprobe()
+            grabber.start()
 
-            val filter = "scale=w='min(1920,iw)':h='min(1920,ih)':force_original_aspect_ratio=decrease,format=yuv420p"
-            val hasAudio = ffprobe.probe(inputPath).streams.any { it.codec_type == FFmpegStream.CodecType.AUDIO }
+            val iw = grabber.imageWidth
+            val ih = grabber.imageHeight
+            if (iw <= 0 || ih <= 0) throw IllegalStateException("Could not read video stream")
 
-            val builder = FFmpegBuilder()
-                .setInput(inputPath)
-                .overrideOutputFiles(true)
-                .addOutput(tmp.toString())
-                .setFormat("mp4")
-                .setVideoCodec("libx264")
-                .setVideoFilter(filter)
-                .addExtraArgs("-crf", "22")
-                .addExtraArgs("-preset", "medium")
-                .addExtraArgs("-movflags", "+faststart")
-                .addExtraArgs("-report")
-                .apply {
-                    if (hasAudio) {
-                        setAudioCodec("aac")
-                        setAudioBitRate(128_000)
-                        addExtraArgs("-ac", "2")
-                        addExtraArgs("-ar", "48000")
-                    } else {
-                        disableAudio()
-                    }
-                }
-                .done()
+            val scale = minOf(1920.0 / iw, 1080.0 / ih, 1.0)
+            fun makeEven(x: Int) = if (x % 2 == 0) x else x - 1
+            val tw = makeEven(Math.round(iw * scale).toInt().coerceAtLeast(2))
+            val th = makeEven(Math.round(ih * scale).toInt().coerceAtLeast(2))
 
-            val executor = FFmpegExecutor(ffmpeg, ffprobe)
-            executor.createJob(builder).run()
+            val hasAudio = grabber.audioChannels > 0
+            val recorder = FFmpegFrameRecorder(outputPathMp4.toFile(), tw, th, if (hasAudio) 2 else 0)
 
-            if (!Files.exists(tmp) || Files.size(tmp) == 0L) {
-                throw IllegalStateException("FFmpeg failed to create output")
+            recorder.format = "mp4"
+            recorder.videoCodec = AV_CODEC_ID_H264
+            recorder.setVideoOption("crf", "22")
+            recorder.setVideoOption("preset", "medium")
+            recorder.setOption("movflags", "+faststart")
+            recorder.pixelFormat = AV_PIX_FMT_YUV420P
+
+            recorder.frameRate = if (grabber.frameRate < 30) grabber.frameRate else 30.0
+            recorder.gopSize = (recorder.frameRate * 2).toInt().coerceAtLeast(24)
+
+            if (hasAudio) {
+                recorder.audioCodec = AV_CODEC_ID_AAC
+                recorder.audioBitrate = 128_000
+                recorder.sampleRate = if (grabber.sampleRate > 0) grabber.sampleRate else 48_000
+                recorder.audioChannels = 2
             }
 
-            Files.move(tmp, outputPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-            return outputPath.toFile()
+            recorder.start()
+
+            var frame: Frame?
+            while (true) {
+                frame = grabber.grab() ?: break
+                when {
+                    frame.image != null -> {
+                        val mat = converter.convertToMat(frame)
+                        val resized = Mat()
+                        // Resize to the precomputed exact target size (keeps AR by construction)
+                        resize(mat, resized, Size(tw, th))
+                        val out = converter.convert(resized)
+                        recorder.record(out)
+                        resized.release()
+                        mat.release()
+                    }
+
+                    frame.samples != null && hasAudio -> {
+                        // Pass audio through
+                        recorder.record(frame)
+                    }
+
+                    else -> {
+                        // ignore other frame types
+                    }
+                }
+            }
+
+            recorder.stop()
+            recorder.release()
+
+            if (!Files.exists(outputPathMp4) || Files.size(outputPathMp4) == 0L) {
+                throw IllegalStateException("Encoding failed to produce output")
+            }
+
+            return outputPathMp4.toFile()
         } finally {
-            Files.deleteIfExists(tmp)
+            try {
+                grabber.stop()
+                grabber.release()
+            } catch (_: Throwable) {
+            }
         }
     }
+
 
     private fun calculateDimensions(width: Int, height: Int): Pair<Int, Int> {
         val maxDimension = MAX_DIMENSION
@@ -154,7 +194,7 @@ class MediaOptimizer {
     companion object {
         const val MAX_DIMENSION = 1920
         private const val JPEG_QUALITY = 0.80f
-        private const val WEBP_QUALITY = 0.75f
         private const val PNG_COMPRESSION = 0.90f
+        const val MP4_MIME_TYPE = "video/mp4"
     }
 }

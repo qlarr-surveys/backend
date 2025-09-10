@@ -53,34 +53,36 @@ class FileSystemHelper(
         file: MultipartFile,
         contentType: String,
         filename: String,
-    ) {
+    ): String {
         val outputPath = Path.of(buildFilePath(surveyId, surveyFolder, filename))
         if (file.isEmpty) {
             throw ResourceNotFoundException()
         }
         val reduceSize = surveyFolder is SurveyFolder.Resources
-        when {
+        return when {
             reduceSize && mediaOptimizer.isSupportedImage(contentType) -> {
                 val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
                 saveToFile(file.inputStream, tempPath)
                 val outputFile = mediaOptimizer.optimizeImage(File(tempPath).inputStream(), outputPath, contentType)
                 saveMetadata(outputPath.toFile(), contentType, outputFile.length())
                 File(tempPath).delete()
+                outputFile.name
             }
 
             reduceSize && mediaOptimizer.isVideoContentType(contentType) -> {
                 val tempPath = "${tmpFolderPath()}/temp_${System.currentTimeMillis()}_${filename}"
                 saveToFile(file.inputStream, tempPath)
                 val outputFile = mediaOptimizer.optimizeVideo(tempPath, outputPath)
-                saveMetadata(outputFile, contentType, outputFile.length())
-
+                saveMetadata(outputFile, MediaOptimizer.MP4_MIME_TYPE, outputFile.length())
                 File(tempPath).delete()
+                outputFile.name
             }
 
             else -> {
                 val byteStream = file.inputStream
                 saveToFile(byteStream, outputPath)
                 saveMetadata(outputPath.toFile(), contentType, file.size)
+                outputPath.fileName.toString()
             }
         }
     }
@@ -270,9 +272,15 @@ class FileSystemHelper(
         filename: String
     ) {
         val path = buildFilePath(surveyId, surveyFolder, filename)
+        try {
+            FileUtils.delete(File(path + METADATA_POSTFIX))
+        } catch (_: IOException) {
+        }
+        try {
+            FileUtils.delete(File(path))
+        } catch (_: IOException) {
+        }
 
-        FileUtils.delete(File(path + METADATA_POSTFIX))
-        FileUtils.delete(File(path))
     }
 
     fun isFolderNotEmpty(surveyId: UUID, surveyFolder: SurveyFolder): Boolean {
