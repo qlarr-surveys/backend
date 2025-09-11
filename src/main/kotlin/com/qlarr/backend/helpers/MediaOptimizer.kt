@@ -31,17 +31,19 @@ class MediaOptimizer {
 
         val (newWidth, newHeight) = calculateDimensions(originalImage.width, originalImage.height)
 
-        val resizedImage = BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB)
-        resizedImage.createGraphics().apply {
-            setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-            drawImage(originalImage, 0, 0, newWidth, newHeight, null)
-            dispose()
-        }
-
         val outFormat = when (contentType.lowercase()) {
             "image/jpeg", "image/jpg" -> "jpeg"
             "image/png" -> "png"
             else -> throw IllegalArgumentException("Unsupported image type: $contentType")
+        }
+
+        // Use RGB for JPEG, ARGB for PNG
+        val imageType = if (outFormat == "jpeg") BufferedImage.TYPE_INT_RGB else BufferedImage.TYPE_INT_ARGB
+        val resizedImage = BufferedImage(newWidth, newHeight, imageType)
+        resizedImage.createGraphics().apply {
+            setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+            drawImage(originalImage, 0, 0, newWidth, newHeight, null)
+            dispose()
         }
 
         Files.createDirectories(outputPath.parent)
