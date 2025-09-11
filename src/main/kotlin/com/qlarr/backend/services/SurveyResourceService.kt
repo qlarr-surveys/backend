@@ -13,7 +13,8 @@ import com.qlarr.backend.persistence.repositories.SurveyRepository
 import org.springframework.core.io.InputStreamResource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.CacheControl
-import org.springframework.http.HttpHeaders.*
+import org.springframework.http.HttpHeaders.CONTENT_LENGTH
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -48,7 +49,6 @@ class SurveyResourceService(
         return ResponseEntity.ok()
             .header(CONTENT_TYPE, response.objectMetadata["Content-Type"]!!)
             .header(CONTENT_LENGTH, response.objectMetadata["Content-Length"]!!)
-            .header(ACCEPT_RANGES, "bytes")
             .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
             .eTag(response.objectMetadata["eTag"]) // lastModified is also ava
             .body(InputStreamResource(response.inputStream))
