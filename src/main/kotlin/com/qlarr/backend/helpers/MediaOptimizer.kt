@@ -109,9 +109,8 @@ class MediaOptimizer {
             recorder.setVideoOption("preset", "medium")
             recorder.setOption("movflags", "+faststart")
             recorder.pixelFormat = AV_PIX_FMT_YUV420P
-            recorder.frameRate = if (grabber.frameRate < 30) grabber.frameRate else 30.0
-            recorder.gopSize = (recorder.frameRate * 2).toInt().coerceAtLeast(24)
-
+            recorder.frameRate = grabber.frameRate.coerceAtMost(30.0)
+            recorder.gopSize = (recorder.frameRate * 2).toInt()
             recorder.setDisplayRotation(grabber.displayRotation)
 
             if (hasAudio) {
