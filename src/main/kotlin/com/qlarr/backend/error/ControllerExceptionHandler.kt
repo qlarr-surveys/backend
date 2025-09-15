@@ -536,6 +536,15 @@ class ControllerExceptionHandler {
                 HttpStatus.BAD_REQUEST
         )
     }
+
+    @ExceptionHandler
+    fun handleException(exception: FileTooBigException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+            ErrorMessage(exception.message, exception.javaClass.simpleName),
+            HttpStatus.PAYLOAD_TOO_LARGE
+        )
+    }
 }
 
 @ControllerAdvice

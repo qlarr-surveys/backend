@@ -55,6 +55,8 @@ class ResponseOpsService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
+        checkMaxFileSize(file.size, mimeType)
+
         helper.upload(surveyId, SurveyFolder.Responses(responseId.toString()), file, mimeType, fileName)
         val responseUploadFile = ResponseUploadFile(
             file.originalFilename!!, fileName, file.size, file.contentType
@@ -79,8 +81,23 @@ class ResponseOpsService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
+
+        checkMaxFileSize(file.size, mimeType)
+
         helper.upload(surveyId, SurveyFolder.Responses(responseId.toString()), file, mimeType, filename)
         return ResponseUploadFile(filename, filename, file.size, file.contentType ?: "")
+    }
+
+    private fun checkMaxFileSize(size: Long, mimeType: String) {
+        val maxSize = when {
+            mimeType.startsWith("video/") -> 20 * 1024 * 1024
+            mimeType.startsWith("image/") -> 10 * 1024 * 1024
+            else -> 10 * 1024 * 1024
+        }
+
+        if (size > maxSize) {
+            throw FileTooBigException(size, maxSize, mimeType)
+        }
     }
 
     fun isOfflineFileAlreadyUploaded(
