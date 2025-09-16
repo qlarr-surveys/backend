@@ -1,6 +1,9 @@
 package com.qlarr.backend.controllers
 
-import com.qlarr.backend.api.response.ResponsesDto
+import com.qlarr.backend.api.response.ResponseDto
+import com.qlarr.backend.api.response.ResponseFormat
+import com.qlarr.backend.api.response.ResponseStatus
+import com.qlarr.backend.api.response.ResponsesSummaryDto
 import com.qlarr.backend.exceptions.UnrecognizedZoneException
 import com.qlarr.backend.services.ResponseService
 import org.springframework.core.io.InputStreamResource
@@ -17,111 +20,79 @@ import java.util.*
 
 @RestController
 class ResponseController(
-        private val responseService: ResponseService
+    private val responseService: ResponseService
 ) {
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/all")
-    fun getAllResponses(
-            @PathVariable surveyId: UUID,
-            @RequestParam page: Int?,
-            @RequestParam("per_page") perPage: Int?,
-            @RequestParam("db_values") dbValues: Boolean?,
-            @RequestParam surveyor: UUID?,
-            @RequestParam complete: Boolean?
-    ): ResponseEntity<ResponsesDto> {
-        val result = if (dbValues != false) responseService.getAllResponses(
-                surveyId,
-                page,
-                perPage,
-                complete,
-                surveyor
-        ) else responseService.getAllTextResponses(
-                surveyId, page, perPage, complete,
-                surveyor
+    @GetMapping("/response/{responseId}")
+    fun getResponses(
+        @PathVariable responseId: UUID,
+    ): ResponseEntity<ResponseDto> {
+        val result = responseService.getResponse(
+            responseId,
         )
         return ResponseEntity(result, HttpStatus.OK)
     }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/export/csv")
+    @GetMapping("/survey/{surveyId}/response/summary")
+    fun getAllResponses(
+        @PathVariable surveyId: UUID,
+        @RequestParam page: Int?,
+        @RequestParam("per_page") perPage: Int?,
+        @RequestParam surveyor: UUID?,
+        @RequestParam status: String?
+    ): ResponseEntity<ResponsesSummaryDto> {
+        val result = responseService.getSummary(
+            surveyId,
+            page,
+            perPage,
+            ResponseStatus.fromString(status),
+            surveyor,
+        )
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/export/{format}/{from}/{to}")
     fun exportResponses(
         @PathVariable surveyId: UUID,
+        @PathVariable("format") format: String,
+        @PathVariable("from") from: Int,
+        @PathVariable("to") to: Int,
         @RequestParam("db_values") dbValues: Boolean?,
         @RequestParam complete: Boolean?,
         @RequestParam timezone: String
     ): ResponseEntity<ByteArray> {
-
         val clientZoneId = try {
             ZoneId.of(timezone)
         } catch (e: Exception) {
             throw UnrecognizedZoneException(timezone)
         }
 
+        val responseFormat = ResponseFormat.fromString(format)
+
         val result = if (dbValues != false)
-            responseService.exportResponses(surveyId, complete, clientZoneId)
+            responseService.exportResponses(surveyId, complete, clientZoneId, responseFormat, from, to)
         else
-            responseService.exportTextResponses(surveyId, complete, clientZoneId)
+            responseService.exportTextResponses(surveyId, complete, clientZoneId, responseFormat, from, to)
         return ResponseEntity.ok()
-            .header(CONTENT_TYPE, "text/csv")
-            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.csv\"")
+            .header(CONTENT_TYPE, responseFormat.contentType())
+            .header(
+                "Content-Disposition",
+                "attachment; filename=\"$surveyId-responses-export.${responseFormat.name.lowercase()}\""
+            )
             .body(result)
     }
 
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/export/xlsx")
-    fun exportResponsesXlsx(
-            @PathVariable surveyId: UUID,
-            @RequestParam("db_values") dbValues: Boolean?,
-            @RequestParam complete: Boolean?,
-            @RequestParam timezone: String
-    ): ResponseEntity<ByteArray> {
-
-        val clientZoneId = try {
-            ZoneId.of(timezone)
-        } catch (e: Exception) {
-            throw UnrecognizedZoneException(timezone)
-        }
-
-        val result = if (dbValues != false)
-            responseService.exportResponsesXlsx(surveyId, complete, clientZoneId)
-        else
-            responseService.exportTextResponsesXlsx(surveyId, complete, clientZoneId)
-        return ResponseEntity.ok()
-            .header(CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.xlsx\"")
-                .body(result)
-    }
 
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/export/ods")
-    fun exportResponsesOdf(
-        @PathVariable surveyId: UUID,
-        @RequestParam("db_values") dbValues: Boolean?,
-        @RequestParam complete: Boolean?,
-        @RequestParam timezone: String
-    ): ResponseEntity<ByteArray> {
-
-        val clientZoneId = try {
-            ZoneId.of(timezone)
-        } catch (e: Exception) {
-            throw UnrecognizedZoneException(timezone)
-        }
-
-        val result = if (dbValues != false)
-            responseService.exportResponsesOdf(surveyId, complete, clientZoneId)
-        else
-            responseService.exportTextResponsesOdf(surveyId, complete, clientZoneId)
-        return ResponseEntity.ok()
-            .header(CONTENT_TYPE, "application/vnd.oasis.opendocument.spreadsheet")
-            .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-export.ods\"")
-            .body(result)
-    }
-
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
-    @GetMapping("/survey/{surveyId}/response/files/download")
+    @GetMapping("/survey/{surveyId}/response/files/download/{from}/{to}")
     fun bulkDownloadResponseFiles(
         @PathVariable surveyId: UUID,
+        @PathVariable("from") from: Int,
+        @PathVariable("to") to: Int,
+        @RequestParam complete: Boolean?,
     ): ResponseEntity<InputStreamResource> {
-        return responseService.bulkDownloadResponses(surveyId)
+        return responseService.bulkDownloadResponses(surveyId, complete, from, to)
     }
 }

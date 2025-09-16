@@ -86,4 +86,21 @@ data class SurveyNavigationData(
     val allowJump: Boolean = true
 )
 
-const val TEN_YEARS_MILLIS = 315360000000L
+interface ResponseSummaryInterface {
+    val id: UUID
+    val index: Long
+    val surveyId: UUID
+    val surveyor: UUID?
+    val values: Map<String, Any>
+    val startDate: LocalDateTime
+    val submitDate: LocalDateTime?
+    val lang: String
+    val preview: Boolean
+    val disqualified: Boolean?
+    val firstName: String?
+    val lastName: String?
+
+
+}
+
+const val TEN_YEARS_MILLIS = 31536000000L

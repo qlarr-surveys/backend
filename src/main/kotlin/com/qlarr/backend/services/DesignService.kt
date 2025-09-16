@@ -124,6 +124,15 @@ class DesignService(
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
     }
 
+    fun getLatestProcessedSurvey(surveyId: UUID): ProcessedSurvey {
+        val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
+        val latestVersion = versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
+        val json = helper.getText(surveyId, SurveyFolder.Design, latestVersion.version.toString())
+        val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
+
+        return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
+    }
+
     fun getProcessedSurveyByVersion(surveyId: UUID, version: Int): ProcessedSurvey {
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val latestVersion = versionRepository.findBySurveyIdAndVersion(surveyId, version) ?: throw DesignException()

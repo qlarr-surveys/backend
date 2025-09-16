@@ -20,7 +20,9 @@ class RunMapper {
         survey = navigationJsonOutput.survey,
         state = navigationJsonOutput.state,
         navigationIndex = navigationJsonOutput.navigationIndex,
-        responseId,
-        lang,
-        additionalLang)
+        navigationData = surveyEntity.navigationData,
+        responseId = responseId,
+        lang = lang,
+        additionalLang = additionalLang
+    )
 }

@@ -2,6 +2,7 @@ package com.qlarr.backend.mappers
 
 import com.qlarr.backend.api.response.ResponseDto
 import com.qlarr.backend.common.utcToLocalTZ
+import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.services.ResponseWithSurveyorName
 import com.qlarr.surveyengine.model.ReservedCode
 import org.springframework.stereotype.Component
@@ -17,7 +18,7 @@ class ResponseMapper {
         clientZoneId: ZoneId? = null
     ) =
         ResponseDto(
-            id = entity.response.id!!,
+            id = entity.response.id,
             index = entity.response.surveyResponseIndex,
             startDate = entity.response.startDate.utcToLocalTZ(clientZoneId),
             surveyorID = entity.response.surveyor?.toString(),
@@ -37,6 +38,23 @@ class ResponseMapper {
                 }
             }.associate { it.first to it.second })
         )
+
+    fun toDto(
+        entity: SurveyResponseEntity,
+        values: Map<String, Any> = mapOf(),
+    ) =
+        ResponseDto(
+            id = entity.id,
+            index = entity.surveyResponseIndex,
+            startDate = entity.startDate,
+            surveyorID = entity.surveyor?.toString(),
+            surveyorName = null,
+            submitDate = entity.submitDate,
+            lang = entity.lang,
+            preview = entity.preview,
+            version = entity.version,
+            values = LinkedHashMap(values)
+        )
 }
 
 fun List<Map<String, Any>>.valueNames(): List<String> = mutableListOf<String>().apply {
@@ -44,5 +62,9 @@ fun List<Map<String, Any>>.valueNames(): List<String> = mutableListOf<String>().
         addAll(it.keys.toList())
     }
 }.distinct().filter {
+    it.split(".")[1] == "value"
+}
+
+fun Map<String, Any>.valueNames(): List<String> = keys.filter {
     it.split(".")[1] == "value"
 }
