@@ -19,15 +19,13 @@ data class ResponseDto(
 
     val lang: String,
 
-    val values: LinkedHashMap<String, Any?> = linkedMapOf(),
+    val disqualified: Boolean,
 
-    val preview: Boolean,
+    val values: LinkedHashMap<String, Any?> = linkedMapOf(),
 
     val surveyorName: String?,
 
-    val surveyorID: String?,
-
-    val version: Int
+    val surveyorID: String?
 )
 
 
@@ -43,7 +41,8 @@ data class ResponsesSummaryDto(
     val totalCount: Int,
     val totalPages: Int,
     val pageNumber: Int,
-    val responses: List<ResponseSummary> = listOf()
+    val responses: List<ResponseSummary> = listOf(),
+    val canExportFiles: Boolean
 )
 
 data class ResponseCountDto(

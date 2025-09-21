@@ -11,6 +11,7 @@ import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.splitToComponentCodes
 import com.qlarr.surveyengine.model.ReservedCode
+import com.qlarr.surveyengine.model.exposed.ReturnType
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -67,7 +68,7 @@ class ResponseService(
 
 
     private fun exportXlsx(
-        values: List<ResponseDto>,
+        values: List<List<Any?>>,
         colNames: List<String>
     ): ByteArray {
         val workbook = XSSFWorkbook()
@@ -81,18 +82,8 @@ class ResponseService(
 
         values.forEachIndexed { rowIndex, response ->
             val row = sheet.createRow(rowIndex + 1)
-            val rowData = mutableListOf<Any?>(
-                response.id,
-                response.preview,
-                response.version,
-                response.startDate,
-                response.submitDate,
-                response.lang
-            ).apply {
-                addAll(response.values.values)
-            }
 
-            rowData.forEachIndexed { colIndex, value ->
+            response.forEachIndexed { colIndex, value ->
                 val cell = row.createCell(colIndex)
                 when (value) {
                     null -> cell.setCellValue("")
@@ -116,7 +107,7 @@ class ResponseService(
     }
 
     private fun exportOds(
-        values: List<ResponseDto>,
+        values: List<List<Any?>>,
         colNames: List<String>
     ): ByteArray {
         val document = OdfSpreadsheetDocument.newSpreadsheetDocument()
@@ -130,18 +121,7 @@ class ResponseService(
 
         values.forEachIndexed { rowIndex, response ->
             val row = table.getRowByIndex(rowIndex + 1)
-            val rowData = mutableListOf<Any?>(
-                response.id,
-                response.preview,
-                response.version,
-                response.startDate,
-                response.submitDate,
-                response.lang
-            ).apply {
-                addAll(response.values.values)
-            }
-
-            rowData.forEachIndexed { colIndex, value ->
+            response.forEachIndexed { colIndex, value ->
                 val cell = row.getCellByIndex(colIndex)
                 when (value) {
                     null -> cell.stringValue = ""
@@ -163,7 +143,7 @@ class ResponseService(
     }
 
     private fun exportCsv(
-        values: List<ResponseDto>,
+        values: List<List<Any?>>,
         colNames: List<String>
     ): ByteArray {
         val sw = StringWriter()
@@ -172,19 +152,8 @@ class ResponseService(
             .build()
 
         CSVPrinter(sw, csvFormat).use { printer ->
-            values.forEach {
-                mutableListOf<Any?>(
-                    it.id,
-                    it.preview,
-                    it.version,
-                    it.startDate,
-                    it.submitDate,
-                    it.lang
-                ).apply {
-                    addAll(it.values.values)
-                }.let { list ->
-                    printer.printRecord(list)
-                }
+            values.forEach { row ->
+                printer.printRecord(row)
             }
         }
         return sw.buffer.toString().toByteArray()
@@ -203,16 +172,24 @@ class ResponseService(
         if (responses.isEmpty())
             return ByteArray(0)
         val processed = designService.getLatestProcessedSurvey(surveyId)
-        val colNames: List<String> = ADDITIONAL_COL_NAMES.toMutableList().apply {
-            processed.validationJsonOutput.schema.map { it.toValueKey() }
-        }
-        val values: List<ResponseDto> = responses.toList().map { responseEntity ->
-            responseMapper.toDto(entity = responseEntity, valueNames = colNames, clientZoneId = clientZoneId)
+        val colNames: List<String> = processed.validationJsonOutput.schema.map { it.toValueKey() }
+        val finalColNames = ADDITIONAL_COL_NAMES + colNames
+        val values: List<List<Any?>> = responses.toList().map { responseEntity ->
+            mutableListOf(
+                responseEntity.response.surveyResponseIndex,
+                responseEntity.response.id,
+                responseEntity.response.startDate,
+                responseEntity.response.submitDate,
+                responseEntity.response.lang,
+                responseEntity.response.values["Survey.disqualified"] ?: false
+            ).apply {
+                addAll(colNames.map { responseEntity.response.values[it] })
+            }
         }
         return when (responseFormat) {
-            ResponseFormat.CSV -> exportCsv(values, colNames)
-            ResponseFormat.ODS -> exportOds(values, colNames)
-            ResponseFormat.XLSX -> exportXlsx(values, colNames)
+            ResponseFormat.CSV -> exportCsv(values, finalColNames)
+            ResponseFormat.ODS -> exportOds(values, finalColNames)
+            ResponseFormat.XLSX -> exportXlsx(values, finalColNames)
         }
     }
 
@@ -229,6 +206,7 @@ class ResponseService(
         if (responses.isEmpty())
             return ByteArray(0)
         val processed = designService.getLatestProcessedSurvey(surveyId)
+        val indexList = processed.validationJsonOutput.buildCodeIndex()
         val labels = processed.validationJsonOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
 
         val componentsByOrder = processed.validationJsonOutput.componentIndexList.map { it.code }
@@ -238,31 +216,46 @@ class ResponseService(
         val colNames = valueNames.map {
             val names = it.split(".")
             val componentCode = names[0]
-            if (componentCode.splitToComponentCodes().size > 1) {
-                (labels[componentCode.splitToComponentCodes()[0]] ?: componentCode.splitToComponentCodes()[0]) +
-                        "(${labels[names[0]] ?: names[0]}${if (names[1] == ReservedCode.Value.code) "" else "[${names[1]}]"})"
+            val instructionCode = names[1]
+            val componentCodes = componentCode.splitToComponentCodes()
+            // this is an answer, we could add the question code
+            if (componentCodes.size > 1) {
+                val questionCode = componentCodes[0]
+                "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[componentCode]
+                    ?: componentCode)
             } else {
-                "${labels[names[0]] ?: names[0]}${if (names[1] == ReservedCode.Value.code) "" else "[${names[1]}]"}"
-            }
+                "(${indexList[componentCode]}) ${labels[componentCode] ?: ""}"
+            } + if (instructionCode == ReservedCode.Value.code) "" else "[${instructionCode}]"
         }
 
         val finalColNames = ADDITIONAL_COL_NAMES.toMutableList().apply {
             addAll(colNames)
         }
-        val values: List<ResponseDto> = responses.toList().map { responseEntity ->
+        val values: List<List<Any?>> = responses.toList().map { responseEntity ->
             val maskedValues = SurveyProcessor.maskedValues(
                 values = responseEntity.response.values
-
             )
-            responseMapper.toDto(responseEntity, valueNames, maskedValues, clientZoneId)
-
+            mutableListOf(
+                responseEntity.response.surveyResponseIndex,
+                responseEntity.response.id,
+                responseEntity.response.startDate,
+                responseEntity.response.submitDate,
+                responseEntity.response.lang,
+                responseEntity.response.values["Survey.disqualified"] ?: false
+            ).apply {
+                addAll(valueNames.map { valueKey->
+                    val names = valueKey.split(".")
+                        maskedValues["${names[0]}.${ReservedCode.MaskedValue.code}"]?.let {
+                            "$it [${responseEntity.response.values[valueKey]}]"
+                        } ?: responseEntity.response.values[valueKey]
+                })
+            }
         }
         return when (responseFormat) {
             ResponseFormat.CSV -> exportCsv(values, finalColNames)
             ResponseFormat.ODS -> exportOds(values, finalColNames)
             ResponseFormat.XLSX -> exportXlsx(values, finalColNames)
         }
-
     }
 
     fun bulkDownloadResponses(
@@ -327,6 +320,7 @@ class ResponseService(
         perPage: Int?,
         responseStatus: ResponseStatus,
         surveyor: UUID?,
+        confirmFilesExport: Boolean,
     ): ResponsesSummaryDto {
         val pageable = Pageable.ofSize(perPage ?: PER_PAGE).withPage((page ?: PAGE) - 1)
         val responses: Page<ResponseSummaryInterface> = when {
@@ -342,7 +336,12 @@ class ResponseService(
             responses.totalElements.toInt(),
             responses.totalPages,
             responses.pageable.pageNumber + 1,
-            values
+            values,
+            canExportFiles = if (confirmFilesExport) {
+                designService.getLatestProcessedSurvey(surveyId).validationJsonOutput.schema.any {
+                    it.dataType == ReturnType.File
+                }
+            } else false
         )
 
     }
@@ -350,30 +349,54 @@ class ResponseService(
     fun getResponse(responseId: UUID): ResponseDto {
         val response = responseRepository.findByIdOrNull(responseId) ?: throw Exception()
         val processed = designService.getLatestProcessedSurvey(response.surveyId)
+        val indexList = processed.validationJsonOutput.buildCodeIndex()
+        val componentIndexList = processed.validationJsonOutput.componentIndexList
         val labels = processed.validationJsonOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
         val maskedValues = SurveyProcessor.maskedValues(
             values = response.values
         )
         val values = response.values
             .filterKeys { it.split(".")[1] == "value" }
+            .toSortedMap { key1: String, key2: String ->
+                val code1 = key1.split(".")[0]  // Extract component code
+                val code2 = key2.split(".")[0]  // Extract component code
+                componentIndexList.indexOfFirst {
+                    it.code == code1
+                } - componentIndexList.indexOfFirst {
+                    it.code == code2
+                }
+            }
             .mapValues { entry ->
                 maskedValues[entry.key.split(".")[0] + ".masked_value"]?.let {
                     "$it (${entry.value})"
                 } ?: entry.value
-            }
-            .mapKeys { entry ->
-                val componentName = entry.key.split(".")[0]
-                labels[componentName] ?: componentName
+            }.mapKeys { entry ->
+                val names = entry.key.split(".")
+                val componentCode = names[0]
+                val instructionCode = names[1]
+                val componentCodes = componentCode.splitToComponentCodes()
+                // this is an answer, we could add the question code
+                if (componentCodes.size > 1) {
+                    val questionCode = componentCodes[0]
+                    "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[componentCode]
+                        ?: componentCode)
+                } else {
+                    "(${indexList[componentCode]}) ${labels[componentCode] ?: ""}"
+                } + if (instructionCode == ReservedCode.Value.code) "" else "[${instructionCode}]"
             }
 
-        return responseMapper.toDto(response, values)
+        return responseMapper.toDto(
+            disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
+            entity = response,
+            values = values
+        )
     }
 
     companion object {
         const val PER_PAGE = 10
         const val PAGE = 1
 
-        val ADDITIONAL_COL_NAMES = listOf("id", "preview", "version", "start_date", "submit_date", "Lang")
+        private val ADDITIONAL_COL_NAMES = listOf("index", "id", "start_date", "submit_date", "Lang", "disqualified")
     }
 
 }

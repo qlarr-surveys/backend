@@ -19,6 +19,27 @@ data class ValidationJsonOutput(
     val skipMap: Map<String, List<NotSkippedInstructionManifesto>> = mapOf(),
     val script: String = ""
 ) {
+    fun buildCodeIndex(): Map<String, String> = mutableMapOf<String, String>().apply {
+        var groupIndex = 0
+        var questionIndex = 0
+        var currentQuestion = ""
+        componentIndexList
+            .subList(1, componentIndexList.size) // we skip Survey, the first element
+            .forEach {
+            if (it.code.startsWith("G")) {
+                groupIndex++
+                put(it.code, "P$groupIndex")
+            } else if (it.code.startsWith("Q") && !it.code.contains("A")) {
+                currentQuestion = it.code
+                questionIndex++
+                put(it.code, "Q$questionIndex")
+            } else {
+                put(it.code, it.code.replace(currentQuestion, this[currentQuestion]!!))
+            }
+
+        }
+    }
+
     fun toDesignerInput(): DesignerInput = DesignerInput(
         objectMapper.readTree(JsonExt.flatObject(survey.toString())) as ObjectNode,
         componentIndexList

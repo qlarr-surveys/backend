@@ -39,6 +39,7 @@ class ResponseController(
         @PathVariable surveyId: UUID,
         @RequestParam page: Int?,
         @RequestParam("per_page") perPage: Int?,
+        @RequestParam("confirm_files_export") confirmFilesExport: Boolean?,
         @RequestParam surveyor: UUID?,
         @RequestParam status: String?
     ): ResponseEntity<ResponsesSummaryDto> {
@@ -48,6 +49,7 @@ class ResponseController(
             perPage,
             ResponseStatus.fromString(status),
             surveyor,
+            confirmFilesExport ?: false
         )
         return ResponseEntity(result, HttpStatus.OK)
     }
@@ -75,13 +77,17 @@ class ResponseController(
             responseService.exportResponses(surveyId, complete, clientZoneId, responseFormat, from, to)
         else
             responseService.exportTextResponses(surveyId, complete, clientZoneId, responseFormat, from, to)
-        return ResponseEntity.ok()
-            .header(CONTENT_TYPE, responseFormat.contentType())
-            .header(
-                "Content-Disposition",
-                "attachment; filename=\"$surveyId-responses-export.${responseFormat.name.lowercase()}\""
-            )
-            .body(result)
+        return if (result.isEmpty()) {
+            ResponseEntity.noContent().build()
+        } else {
+            ResponseEntity.ok()
+                .header(CONTENT_TYPE, responseFormat.contentType())
+                .header(
+                    "Content-Disposition",
+                    "attachment; filename=\"$surveyId-responses-export.${responseFormat.name.lowercase()}\""
+                )
+                .body(result)
+        }
     }
 
 
