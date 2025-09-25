@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class SurveyResourceService(
-        private val helper: FileHelper,
-        private val surveyRepository: SurveyRepository,
+    private val helper: FileHelper,
+    private val surveyRepository: SurveyRepository,
 ) {
     fun uploadResource(surveyId: UUID, file: MultipartFile): ResponseEntity<FileInfo> {
         surveyRepository.findByIdOrNull(surveyId)?.let { surveyEntity ->
@@ -38,8 +38,8 @@ class SurveyResourceService(
         val mimeType = file.contentType
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
-        helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, filename)
-        return ResponseEntity.ok().body(FileInfo(filename, file.size, nowUtc()))
+        val savedFilename = helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, filename)
+        return ResponseEntity.ok().body(FileInfo(savedFilename, file.size, nowUtc()))
     }
 
 
@@ -47,11 +47,11 @@ class SurveyResourceService(
         surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val response = helper.download(surveyId, SurveyFolder.Resources, fileName)
         return ResponseEntity.ok()
-                .header(CONTENT_TYPE, response.objectMetadata["Content-Type"]!!)
-                .header(CONTENT_LENGTH, response.objectMetadata["Content-Length"]!!)
-                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .eTag(response.objectMetadata["eTag"]) // lastModified is also ava
-                .body(InputStreamResource(response.inputStream))
+            .header(CONTENT_TYPE, response.objectMetadata["Content-Type"]!!)
+            .header(CONTENT_LENGTH, response.objectMetadata["Content-Length"]!!)
+            .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+            .eTag(response.objectMetadata["eTag"]) // lastModified is also ava
+            .body(InputStreamResource(response.inputStream))
     }
 
     fun removeResource(surveyId: UUID, fileName: String): ResponseEntity<Any> {

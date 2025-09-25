@@ -24,8 +24,8 @@ interface FileHelper {
         surveyFolder: SurveyFolder,
         file: MultipartFile,
         contentType: String,
-        filename: String
-    )
+        filename: String,
+    ): String
 
     fun doesFileExists(
         surveyId: UUID,

@@ -60,6 +60,8 @@ dependencies {
     implementation "org.graalvm.js:js:22.3.1"
     implementation "org.graalvm.js:js-scriptengine:22.3.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
+    implementation 'org.bytedeco:javacv-platform:1.5.10'
+
 }
 
 tasks.withType(KotlinCompile).configureEach {
