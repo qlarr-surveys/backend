@@ -1,5 +1,8 @@
 package com.qlarr.backend.services
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.expressionmanager.SurveyProcessor
@@ -10,8 +13,11 @@ import com.qlarr.backend.persistence.entities.ResponseSummaryInterface
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.splitToComponentCodes
+import com.qlarr.surveyengine.model.Dependency
 import com.qlarr.surveyengine.model.ReservedCode
+import com.qlarr.surveyengine.model.ReservedCode.Order
 import com.qlarr.surveyengine.model.exposed.ReturnType
+import com.qlarr.surveyengine.model.sortChildren
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -351,12 +357,14 @@ class ResponseService(
         val processed = designService.getLatestProcessedSurvey(response.surveyId)
         val indexList = processed.validationJsonOutput.buildCodeIndex()
         val componentIndexList = processed.validationJsonOutput.componentIndexList
+            .toMutableList()
+            .sortChildren(response.values)
         val labels = processed.validationJsonOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
         val maskedValues = SurveyProcessor.maskedValues(
             values = response.values
         )
         val values = response.values
-            .filterKeys { it.split(".")[1] == "value" }
+            .filterKeys { it.split(".").last() == "value" }
             .toSortedMap { key1: String, key2: String ->
                 val code1 = key1.split(".")[0]  // Extract component code
                 val code2 = key2.split(".")[0]  // Extract component code

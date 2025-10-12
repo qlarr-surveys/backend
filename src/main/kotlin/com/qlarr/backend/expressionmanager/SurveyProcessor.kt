@@ -65,13 +65,13 @@ object SurveyProcessor {
 
     fun maskedValues(values: Map<String, Any>): Map<String, Any> {
         return buildMap {
-            values.forEach { (key, _) ->
-                if (key.endsWith(".value")) {
-                    val prefix = key.substringBeforeLast(".value")
-                    val maskedKey = "$prefix.masked_value"
-                    values[maskedKey]?.let { maskedValue ->
-                        put(maskedKey, maskedValue)
-                    }
+            values.filterKeys {
+                it.endsWith(".value")
+            }.forEach { (key, _) ->
+                val prefix = key.substringBeforeLast(".value")
+                val maskedKey = "$prefix.masked_value"
+                values[maskedKey]?.let { maskedValue ->
+                    put(maskedKey, maskedValue)
                 }
             }
         }
