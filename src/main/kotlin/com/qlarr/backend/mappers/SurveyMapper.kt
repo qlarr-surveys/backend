@@ -88,7 +88,8 @@ class SurveyMapper(
             latestVersion = versionMapper.toDto(
                 surveyResponseCount.latestVersion,
                 surveyStatus = surveyResponseCount.survey.status
-            )
+            ),
+            navigationData = surveyResponseCount.survey.navigationData
         )
     }
 

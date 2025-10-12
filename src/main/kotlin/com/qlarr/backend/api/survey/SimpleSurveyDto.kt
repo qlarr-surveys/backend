@@ -55,5 +55,6 @@ data class OfflineSurveyDto(
     val surveyQuota: Int,
     val userResponsesCount: Int,
     val completeResponseCount: Int,
-    val latestVersion: VersionDto
+    val latestVersion: VersionDto,
+    val navigationData: SurveyNavigationData = SurveyNavigationData(),
 )
