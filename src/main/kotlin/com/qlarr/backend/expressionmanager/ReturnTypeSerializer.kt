@@ -2,7 +2,9 @@ package com.qlarr.backend.expressionmanager
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.qlarr.surveyengine.model.exposed.ReturnType
@@ -42,16 +44,17 @@ class ReturnTypeDeserializer : StdDeserializer<ReturnType>(ReturnType::class.jav
                     "string" -> ReturnType.String
                     "int" -> ReturnType.Int
                     "double" -> ReturnType.Double
-                    "list" -> ReturnType.List
                     "map" -> ReturnType.Map
                     "date" -> ReturnType.Date
                     "file" -> ReturnType.File
+                    "list" -> ReturnType.List(emptySet())
                     else -> throw IllegalArgumentException("Unknown return type: ${node.asText()}")
                 }
             }
+
             node.isObject -> {
-                val type = node.get("type")?.asText()
-                when (type) {
+                when (val type = node.get("type")?.asText()) {
+                    "list",
                     "enum" -> {
                         val valuesNode = node.get("values")
                             ?: throw IllegalArgumentException("Missing 'values' field for enum type")
@@ -61,11 +64,13 @@ class ReturnTypeDeserializer : StdDeserializer<ReturnType>(ReturnType::class.jav
                         }
 
                         val values = valuesNode.map { it.asText() }.toSet()
-                        ReturnType.Enum(values)
+                        if (type == "enum") ReturnType.Enum(values) else ReturnType.List(values)
                     }
+
                     else -> throw IllegalArgumentException("Unknown object type: $type")
                 }
             }
+
             else -> throw IllegalArgumentException("Expected string or object, got ${node.nodeType}")
         }
     }

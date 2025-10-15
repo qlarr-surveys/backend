@@ -32,7 +32,7 @@ fun validateType(value: Any, dataType: ReturnType): Boolean {
         ReturnType.String -> value is String
         ReturnType.Double -> value is Number
         ReturnType.Int -> value is Int
-        ReturnType.List -> value is JSONArray || value is List<*>
+        is ReturnType.List -> value is JSONArray || value is List<*>
         ReturnType.File,
         ReturnType.Map -> value is Map<*,*>
     }
@@ -46,7 +46,7 @@ fun expectedType(dataType: ReturnType): String {
         ReturnType.String -> String::class.java.name
         ReturnType.Double -> Number::class.java.name
         ReturnType.Int -> Int::class.java.name
-        ReturnType.List -> JSONArray::class.java.name
+        is ReturnType.List -> JSONArray::class.java.name
         ReturnType.File,
         ReturnType.Map -> JSONObject::class.java.name
     }
