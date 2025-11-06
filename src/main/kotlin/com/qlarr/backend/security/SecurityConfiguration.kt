@@ -35,9 +35,9 @@ class SecurityConfiguration(
         http.authorizeHttpRequests { authorize ->
             authorize
                     .requestMatchers(OPTIONS).permitAll()
-                    .requestMatchers(GET, "/swagger-ui/**").permitAll()
-                    .requestMatchers(GET, "/v3/api-docs").permitAll()
-                    .requestMatchers(GET, "/v3/api-docs/**").permitAll()
+//                    .requestMatchers(GET, "/swagger-ui/**").permitAll()
+//                    .requestMatchers(GET, "/v3/api-docs").permitAll()
+//                    .requestMatchers(GET, "/v3/api-docs/**").permitAll()
                     
                     .requestMatchers(POST, "/survey/{surveyId}/run/start").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()

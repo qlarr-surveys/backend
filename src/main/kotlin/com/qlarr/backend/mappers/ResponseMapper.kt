@@ -19,6 +19,7 @@ class ResponseMapper {
             startDate = entity.startDate,
             surveyorID = entity.surveyor?.toString(),
             surveyorName = null,
+            preview = entity.preview,
             submitDate = entity.submitDate,
             lang = entity.lang,
             disqualified = disqualified,

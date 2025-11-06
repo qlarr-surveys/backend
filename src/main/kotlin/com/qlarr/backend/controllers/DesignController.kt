@@ -39,6 +39,18 @@ class DesignController(
         return ResponseEntity(dto, HttpStatus.OK)
     }
 
+    @PostMapping("/survey/{surveyId}/change_code")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
+    fun changeCode(
+            @PathVariable surveyId: UUID,
+            @RequestParam from: String,
+            @RequestParam to: String
+    ): ResponseEntity<DesignDto> {
+
+        val dto = designService.changeCode(surveyId, from, to)
+        return ResponseEntity(dto, HttpStatus.OK)
+    }
+
     @GetMapping("/survey/{surveyId}/design")
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
     fun getDesign(

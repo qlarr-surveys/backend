@@ -84,10 +84,10 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
         "SELECT r.id as id, r.survey_response_index as index, r.survey_id as surveyId, r.surveyor as surveyor, r.start_date as startDate, " +
                 "r.submit_date as submitDate,r.values as values, r.preview as preview, r.lang as lang, " +
                 "CAST((r.values  ->> 'Survey.disqualified') AS boolean) as disqualified, u.first_name as firstName, u.last_name as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.surveyor = :surveyor " +
-                "ORDER BY r.startDate ASC",
+                "FROM responses r " +
+                "LEFT JOIN users u ON r.surveyor = u.id " +
+                "WHERE r.survey_id = :surveyId AND r.surveyor = :surveyor " +
+                "ORDER BY r.start_date ASC",
         nativeQuery = true
     )
     fun summaryBySurveyor(surveyId: UUID, surveyor: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
@@ -96,10 +96,10 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
         "SELECT r.id as id, r.survey_response_index as index, r.survey_id as surveyId, r.surveyor as surveyor, r.start_date as startDate, " +
                 "r.submit_date as submitDate,r.values as values, r.preview as preview, r.lang as lang, " +
                 "CAST((r.values  ->> 'Survey.disqualified') AS boolean) as disqualified, u.first_name as firstName, u.last_name as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.preview = TRUE " +
-                "ORDER BY r.startDate ASC",
+                "FROM responses r " +
+                "LEFT JOIN users u ON r.surveyor = u.id " +
+                "WHERE r.survey_id = :surveyId AND r.preview = TRUE " +
+                "ORDER BY r.start_date ASC",
         nativeQuery = true
     )
     fun previewSummary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
@@ -108,10 +108,10 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
         "SELECT r.id as id, r.survey_response_index as index, r.survey_id as surveyId, r.surveyor as surveyor, r.start_date as startDate, " +
                 "r.submit_date as submitDate,r.values as values, r.preview as preview, r.lang as lang, " +
                 "CAST((r.values  ->> 'Survey.disqualified') AS boolean) as disqualified, u.first_name as firstName, u.last_name as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.preview = FALSE AND r.submitDate IS NOT NULL  " +
-                "ORDER BY r.startDate ASC",
+                "FROM responses r " +
+                "LEFT JOIN users u ON r.surveyor = u.id " +
+                "WHERE r.survey_id = :surveyId AND r.preview = FALSE AND r.submit_date IS NOT NULL  " +
+                "ORDER BY r.start_date ASC",
         nativeQuery = true
     )
     fun completeSummary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
@@ -120,10 +120,10 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
         "SELECT r.id as id, r.survey_response_index as index, r.survey_id as surveyId, r.surveyor as surveyor, r.start_date as startDate, " +
                 "r.submit_date as submitDate,r.values as values, r.preview as preview, r.lang as lang, " +
                 "CAST((r.values  ->> 'Survey.disqualified') AS boolean) as disqualified, u.first_name as firstName, u.last_name as lastName " +
-                "FROM SurveyResponseEntity r " +
-                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
-                "WHERE r.surveyId = :surveyId AND r.preview = FALSE AND r.submitDate IS NULL  " +
-                "ORDER BY r.startDate ASC",
+                "FROM responses r " +
+                "LEFT JOIN users u ON r.surveyor = u.id " +
+                "WHERE r.survey_id = :surveyId AND r.preview = FALSE AND r.submit_date IS NULL  " +
+                "ORDER BY r.start_date ASC",
         nativeQuery = true
     )
     fun incompleteSummary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>

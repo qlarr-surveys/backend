@@ -6,21 +6,26 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.api.surveyengine.NavigationJsonOutput
 import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
 import com.qlarr.backend.configurations.objectMapper
-import com.qlarr.surveyengine.ext.JsonExt
+import com.qlarr.backend.exceptions.DuplicateToCodeException
+import com.qlarr.backend.exceptions.FromCodeNotAvailableException
+import com.qlarr.backend.exceptions.IdenticalFromToCodesException
+import com.qlarr.backend.exceptions.InvalidCodeChangeException
+import com.qlarr.surveyengine.ext.*
+import com.qlarr.surveyengine.model.ReservedCode
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import com.qlarr.surveyengine.model.exposed.NavigationMode
 import com.qlarr.surveyengine.model.exposed.SurveyMode
+import com.qlarr.surveyengine.model.parents
+import com.qlarr.surveyengine.model.toImpactMap
 import com.qlarr.surveyengine.scriptengine.getNavigate
-import com.qlarr.surveyengine.scriptengine.getValidate
+import com.qlarr.surveyengine.usecase.ChangeCodeUseCaseWrapper
 import com.qlarr.surveyengine.usecase.NavigationUseCaseWrapper
 import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 
 object SurveyProcessor {
 
     private val scriptEngineNavigate = getNavigate()
-    private val scriptEngineValidate = getValidate()
-
 
     fun process(stateObj: ObjectNode, savedDesign: ObjectNode): ValidationJsonOutput {
         val flatSurvey = objectMapper.readTree(JsonExt.flatObject(savedDesign.toString())) as ObjectNode
@@ -28,14 +33,63 @@ object SurveyProcessor {
             flatSurvey.set<JsonNode>(it, stateObj.get(it))
         }
         val surveyNode = JsonExt.addChildren(flatSurvey["Survey"].toString(), "Survey", flatSurvey.toString())
-        val useCase = ValidationUseCaseWrapper.create(scriptEngineValidate, surveyNode)
+        val useCase = ValidationUseCaseWrapper.create(surveyNode)
         return objectMapper.readValue(useCase.validate(), jacksonTypeRef<ValidationJsonOutput>())
     }
 
     fun processSample(surveyNode: ObjectNode): ValidationJsonOutput {
-        val useCase = ValidationUseCaseWrapper.create(scriptEngineValidate, surveyNode.toString())
+        val useCase = ValidationUseCaseWrapper.create(surveyNode.toString())
         return objectMapper.readValue(useCase.validate(), jacksonTypeRef<ValidationJsonOutput>())
     }
+
+    private fun wrongType(from: String, to: String): Boolean {
+        val fromSplit = from.splitToComponentCodes()
+        val toSplit = to.splitToComponentCodes()
+
+        return (from.isGroupCode() && !to.isGroupCode())
+                || (to.isGroupCode() && !from.isGroupCode())
+                || (from.isQuestionCode() && !to.isQuestionCode())
+                || (to.isQuestionCode() && !from.isQuestionCode())
+                || (fromSplit.size != toSplit.size)
+                || fromSplit.size > 1 && from.take(fromSplit.size - 1) != to.take(fromSplit.size - 1)
+                || (fromSplit.size > 1 && (!fromSplit.last().isAnswerCode() || !toSplit.last().isAnswerCode()))
+
+    }
+
+    fun changeCode(surveyDesign: String, from: String, to: String): ValidationJsonOutput {
+        val source: ValidationJsonOutput = objectMapper.readValue(surveyDesign, jacksonTypeRef<ValidationJsonOutput>())
+        if (from == to) {
+            throw IdenticalFromToCodesException()
+        } else if (source.componentIndexList.all { it.code != from }) {
+            throw FromCodeNotAvailableException()
+        } else if (source.componentIndexList.any { it.code == to }) {
+            throw DuplicateToCodeException()
+        } else if (wrongType(from, to)) {
+            throw InvalidCodeChangeException()
+        }
+        val useCase = ChangeCodeUseCaseWrapper.create(surveyDesign)
+        val result = objectMapper.readValue(useCase.changeCode(from, to), jacksonTypeRef<ValidationJsonOutput>())
+        val impactMap = result.impactMap.toImpactMap()
+        impactMap.keys.filter { it.componentCode.contains(to) }.map {
+            impactMap[it]!!.filter { it.instructionCode == ReservedCode.ConditionalRelevance.code }
+        }.flatten().forEach {
+            val path =
+                result.componentIndexList.parents(it.componentCode) + it.componentCode.splitToComponentCodes().last()
+            result.survey.changeRelevanceObject(path, from, to)
+        }
+        if (from.isGroupCode() || from.isQuestionCode()) {
+            result.componentIndexList.filter { it.hasSkip() }.forEach { item ->
+                val impactedElementCode = item.code
+                val path =
+                    result.componentIndexList.parents(impactedElementCode) + impactedElementCode.splitToComponentCodes()
+                        .last()
+                result.survey.changeSkipLogicObject(path, from, to)
+            }
+        }
+
+        return result
+    }
+
 
     fun navigate(
         values: String = "{}",

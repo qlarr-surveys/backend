@@ -100,6 +100,56 @@ class DesignService(
         )
     }
 
+    fun changeCode(surveyId: UUID, from: String, to: String): DesignDto {
+        val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
+        if (survey.status == Status.CLOSED) {
+            throw SurveyIsClosedException()
+        }
+        val latestVersion = versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
+        val latestPublishedVersion = versionRepository.findLatestPublishedVersion(surveyId)
+        val versionToSave = if (latestVersion.published) latestVersion.version + 1 else latestVersion.version
+        val subversionToSave = if (latestVersion.published) 1 else latestVersion.subVersion + 1
+        val savedDesign = getProcessedSurveyString(surveyId, false)
+        val validationJsonOutput = SurveyProcessor.changeCode(savedDesign, from, to)
+        if (latestPublishedVersion != null) {
+            val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublishedVersion.version.toString())
+            val oldCodes =
+                objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
+                    .componentIndexList
+                    .map { it.code }
+                    .filter { !it.startsWith("G") }
+            val newCodes = validationJsonOutput.componentIndexList
+                .map { it.code }
+                .filter { !it.startsWith("G") }
+            if (!newCodes.containsAll(oldCodes)) {
+                throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
+            }
+        }
+        helper.upload(
+            surveyId,
+            SurveyFolder.Design,
+            objectMapper.writeValueAsString(validationJsonOutput),
+            versionToSave.toString()
+        )
+        val designerInput = validationJsonOutput.toDesignerInput()
+        val isValid: Boolean = (validationJsonOutput.survey["errors"] as? ArrayNode)?.let { it.size() == 0 } ?: true
+        val versionEntity = latestVersion.copy(
+            published = false,
+            version = versionToSave,
+            surveyId = surveyId,
+            valid = isValid,
+            subVersion = subversionToSave,
+            schema = validationJsonOutput.schema,
+            lastModified = nowUtc()
+        )
+        val saved = versionRepository.save(versionEntity)
+        surveyRepository.save(survey.copy(lastModified = nowUtc()))
+        return DesignDto(
+            designerInput = designerInput,
+            versionDto = versionMapper.toDto(saved, survey.status)
+        )
+    }
+
     fun getDesign(surveyId: UUID): DesignDto {
         val processedSurvey = getProcessedSurvey(surveyId, false)
         val designerInput = processedSurvey.validationJsonOutput.toDesignerInput()
@@ -122,6 +172,15 @@ class DesignService(
         val validationJsonOutput = objectMapper.readValue(json, ValidationJsonOutput::class.java)
 
         return ProcessedSurvey(survey, latestVersion, validationJsonOutput)
+    }
+
+    fun getProcessedSurveyString(surveyId: UUID, published: Boolean): String {
+        val latestVersion = if (published) {
+            versionRepository.findLatestPublishedVersion(surveyId) ?: throw DesignException()
+        } else {
+            versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
+        }
+        return helper.getText(surveyId, SurveyFolder.Design, latestVersion.version.toString())
     }
 
     fun getLatestProcessedSurvey(surveyId: UUID): ProcessedSurvey {
@@ -257,6 +316,8 @@ class DesignService(
             )
         }
     }
+
+
 }
 
 data class ProcessedSurvey(

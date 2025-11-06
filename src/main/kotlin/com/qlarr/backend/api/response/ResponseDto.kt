@@ -19,6 +19,8 @@ data class ResponseDto(
 
     val lang: String,
 
+    val preview: Boolean,
+
     val disqualified: Boolean,
 
     val values: LinkedHashMap<String, Any?> = linkedMapOf(),

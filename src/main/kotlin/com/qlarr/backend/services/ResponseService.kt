@@ -1,8 +1,5 @@
 package com.qlarr.backend.services
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.expressionmanager.SurveyProcessor
@@ -13,9 +10,7 @@ import com.qlarr.backend.persistence.entities.ResponseSummaryInterface
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.splitToComponentCodes
-import com.qlarr.surveyengine.model.Dependency
 import com.qlarr.surveyengine.model.ReservedCode
-import com.qlarr.surveyengine.model.ReservedCode.Order
 import com.qlarr.surveyengine.model.exposed.ReturnType
 import com.qlarr.surveyengine.model.sortChildren
 import org.apache.commons.csv.CSVFormat
