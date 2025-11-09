@@ -1,6 +1,7 @@
 package com.qlarr.backend.mappers
 
 import com.qlarr.backend.api.response.ResponseDto
+import com.qlarr.backend.api.response.ResponseValue
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import org.springframework.stereotype.Component
 
@@ -9,9 +10,9 @@ class ResponseMapper {
 
 
     fun toDto(
-        disqualified:Boolean,
+        disqualified: Boolean,
         entity: SurveyResponseEntity,
-        values: Map<String, Any> = mapOf(),
+        values: List<ResponseValue> = emptyList(),
     ) =
         ResponseDto(
             id = entity.id,
@@ -23,7 +24,7 @@ class ResponseMapper {
             submitDate = entity.submitDate,
             lang = entity.lang,
             disqualified = disqualified,
-            values = LinkedHashMap(values)
+            values = values
         )
 }
 

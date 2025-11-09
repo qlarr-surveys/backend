@@ -23,11 +23,17 @@ data class ResponseDto(
 
     val disqualified: Boolean,
 
-    val values: LinkedHashMap<String, Any?> = linkedMapOf(),
+    val values: List<ResponseValue> = emptyList(),
 
     val surveyorName: String?,
 
     val surveyorID: String?
+)
+
+data class ResponseValue(
+    val key: String,
+    val code: String,
+    val value: Any? = null,
 )
 
 

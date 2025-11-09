@@ -244,11 +244,11 @@ class ResponseService(
                 responseEntity.response.lang,
                 responseEntity.response.values["Survey.disqualified"] ?: false
             ).apply {
-                addAll(valueNames.map { valueKey->
+                addAll(valueNames.map { valueKey ->
                     val names = valueKey.split(".")
-                        maskedValues["${names[0]}.${ReservedCode.MaskedValue.code}"]?.let {
-                            "$it [${responseEntity.response.values[valueKey]}]"
-                        } ?: responseEntity.response.values[valueKey]
+                    maskedValues["${names[0]}.${ReservedCode.MaskedValue.code}"]?.let {
+                        "$it [${responseEntity.response.values[valueKey]}]"
+                    } ?: responseEntity.response.values[valueKey]
                 })
             }
         }
@@ -358,34 +358,31 @@ class ResponseService(
         val maskedValues = SurveyProcessor.maskedValues(
             values = response.values
         )
-        val values = response.values
+        val valueCodes = response.values
             .filterKeys { it.split(".").last() == "value" }
-            .toSortedMap { key1: String, key2: String ->
-                val code1 = key1.split(".")[0]  // Extract component code
-                val code2 = key2.split(".")[0]  // Extract component code
-                componentIndexList.indexOfFirst {
-                    it.code == code1
-                } - componentIndexList.indexOfFirst {
-                    it.code == code2
-                }
+            .map {
+                it.key.split(".").first()
             }
-            .mapValues { entry ->
-                maskedValues[entry.key.split(".")[0] + ".masked_value"]?.let {
-                    "$it (${entry.value})"
-                } ?: entry.value
-            }.mapKeys { entry ->
-                val names = entry.key.split(".")
-                val componentCode = names[0]
-                val instructionCode = names[1]
-                val componentCodes = componentCode.splitToComponentCodes()
-                // this is an answer, we could add the question code
-                if (componentCodes.size > 1) {
+        val values: List<ResponseValue> = componentIndexList
+            .map { it.code }
+            .filter {
+                valueCodes.contains(it)
+            }.map { code ->
+                val componentCodes = code.splitToComponentCodes()
+                val key = if (componentCodes.size > 1) {
                     val questionCode = componentCodes[0]
-                    "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[componentCode]
-                        ?: componentCode)
+                    "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[code]
+                        ?: code)
                 } else {
-                    "(${indexList[componentCode]}) ${labels[componentCode] ?: ""}"
-                } + if (instructionCode == ReservedCode.Value.code) "" else "[${instructionCode}]"
+                    "(${indexList[code]}) ${labels[code] ?: ""}"
+                }
+                ResponseValue(
+                    key = key,
+                    code = code,
+                    value = if (response.values.containsKey("$code.value")) {
+                        val value = response.values["$code.value"]!!
+                        maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
+                    } else null)
             }
 
         return responseMapper.toDto(
