@@ -56,6 +56,7 @@ class ReturnTypeDeserializer : StdDeserializer<ReturnType>(ReturnType::class.jav
                     "date" -> ReturnType.Date
                     "file" -> ReturnType.File
                     "list" -> ReturnType.List(emptySet())
+                    "enum" -> ReturnType.Enum(emptySet())
                     else -> throw IllegalArgumentException("Unknown return type: ${node.asText()}")
                 }
             }
