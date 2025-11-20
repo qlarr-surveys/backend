@@ -425,6 +425,42 @@ class ControllerExceptionHandler {
     }
 
     @ExceptionHandler
+    fun handleException(exception: FromCodeNotAvailableException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage(null, exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
+    fun handleException(exception: DuplicateToCodeException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage(null, exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
+    fun handleException(exception: InvalidCodeChangeException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage(null, exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
+    fun handleException(exception: IdenticalFromToCodesException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage(null, exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
     fun handleException(exception: WrongConfirmationTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
