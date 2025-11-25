@@ -10,3 +10,11 @@ data class FileInfo(
     @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
     val lastModified: LocalDateTime
 )
+
+data class AutoCompleteFileInfo(
+    val name: String,
+    val rowCount:Int,
+    val size: Long,
+    @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
+    val lastModified: LocalDateTime
+)

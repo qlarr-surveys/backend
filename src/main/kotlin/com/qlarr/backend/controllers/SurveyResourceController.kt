@@ -1,5 +1,6 @@
 package com.qlarr.backend.controllers
 
+import com.qlarr.backend.api.survey.AutoCompleteFileInfo
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.services.SurveyResourceService
 import jakarta.servlet.http.HttpServletRequest
@@ -22,6 +23,19 @@ class SurveyResourceController(
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<FileInfo> {
         return resourceService.uploadResource(surveyId, file)
+    }
+
+    @PostMapping("/survey/{surveyId}/autocomplete_resource/{componentId}")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
+    fun uploadAutoCompleteResource(
+        @PathVariable surveyId: UUID,
+        @PathVariable componentId: String,
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<AutoCompleteFileInfo> {
+        if (file.isEmpty) {
+            return ResponseEntity.badRequest().build()
+        }
+        return resourceService.uploadAutoCompleteResource(surveyId,componentId, file)
     }
 
     @GetMapping("/survey/{surveyId}/resource/{fileName}")

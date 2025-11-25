@@ -39,6 +39,7 @@ class SecurityConfiguration(
 //                    .requestMatchers(GET, "/v3/api-docs").permitAll()
 //                    .requestMatchers(GET, "/v3/api-docs/**").permitAll()
                     
+                    .requestMatchers(GET, "/autocomplete/{uuid}").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/run/start").permitAll()
                     .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()
                     .requestMatchers(GET, "/survey/{surveyId}/run/runtime.js").permitAll()

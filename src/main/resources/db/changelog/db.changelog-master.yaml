@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/DDL/00003-modify-response-table.sql
   - include:
       file: db/changelog/DDL/00004-add-nav-data-to-survey-table.sql
+  - include:
+      file: db/changelog/DDL/00005-add-auto-complete-table.sql
