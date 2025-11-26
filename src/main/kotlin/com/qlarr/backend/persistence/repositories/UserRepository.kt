@@ -27,8 +27,10 @@ interface UserRepository : ListCrudRepository<UserEntity, UUID> {
             value = "select " +
                     "count(*) filter (where cast(roles as varchar) like '%SUPER_ADMIN%') as superAdmin, " +
                     "count(*) filter (where cast(roles as varchar) like '%SURVEY_ADMIN%') as surveyAdmin, " +
-                    "count(*) filter (where cast(roles as varchar) like '%{SURVEYOR,%' or cast(roles as varchar) " +
-                    "like '%SURVEYOR}%' or cast(roles as varchar) like '%,SURVEYOR,%') as surveyor from users"
+                    "count(*) filter (where cast(roles as varchar) like '%SURVEYOR%') as surveyor, " +
+                    "count(*) filter (where cast(roles as varchar) like '%ANALYST%') as analyst, " +
+                    "count(*) filter (where cast(roles as varchar) like '%SUPERVISOR%') as supervisor" +
+                    " from users"
     )
     fun selectRoleCounts(): CountByRoleResponse
 

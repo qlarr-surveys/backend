@@ -24,6 +24,7 @@ data class SurveyDTO(
     val usage: Usage,
     val quota: Int,
     val canLockSurvey: Boolean,
+    val responseReviewRequired: Boolean,
     val surveyNavigationData: SurveyNavigationData,
 ){
     fun isActive(): Boolean {

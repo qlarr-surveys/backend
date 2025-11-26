@@ -50,6 +50,9 @@ data class SurveyEntity(
     val image: String?,
 
     val description: String?,
+
+    @Column(name = "response_review_required")
+    val responseReviewRequired: Boolean,
 ) {
     fun isActive(): Boolean {
         return status == Status.ACTIVE

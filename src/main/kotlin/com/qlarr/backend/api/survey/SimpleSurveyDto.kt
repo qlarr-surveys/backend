@@ -27,6 +27,7 @@ data class SimpleSurveyDto(
     val completeResponseCount: Int,
     val latestVersion: VersionDto,
     val navigationData: SurveyNavigationData = SurveyNavigationData(),
+    val responseReviewRequired: Boolean? = null,
 )
 
 

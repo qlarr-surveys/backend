@@ -102,6 +102,7 @@ class SurveyService(
             canLockSurvey = editSurveyRequest.canLockSurvey ?: survey.canLockSurvey,
             description = editSurveyRequest.description ?: survey.description,
             image = editSurveyRequest.image ?: survey.image,
+            responseReviewRequired = editSurveyRequest.responseReviewRequired ?: survey.responseReviewRequired,
             navigationData = SurveyNavigationData(
                 navigationMode = editSurveyRequest.navigationMode ?: survey.navigationData.navigationMode,
                 allowPrevious = editSurveyRequest.allowPrevious ?: survey.navigationData.allowPrevious,
@@ -287,6 +288,7 @@ class SurveyService(
                     image = simpleSurveyDto.image,
                     description = simpleSurveyDto.description,
                     navigationData = simpleSurveyDto.navigationData,
+                    responseReviewRequired = simpleSurveyDto.responseReviewRequired ?: false,
                 )
             )
         } catch (exception: DataIntegrityViolationException) {

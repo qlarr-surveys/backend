@@ -18,7 +18,7 @@ class DesignController(
 ) {
 
     @PostMapping("/survey/{surveyId}/offline/design")
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor','supervisor'})")
     fun offlineDesignDiff(
             @PathVariable surveyId: UUID,
             @RequestBody publishInfo: PublishInfo

@@ -30,5 +30,6 @@ data class EditSurveyRequest(
     val resumeExpiryMillis: Long? = null,
     val skipInvalid: Boolean? = null,
     val allowIncomplete: Boolean? = null,
+    val responseReviewRequired: Boolean? = null,
     val allowJump: Boolean? = null,
 )

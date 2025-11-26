@@ -13,6 +13,9 @@ enum class Roles {
     @JsonProperty("surveyor")
     SURVEYOR,
 
+    @JsonProperty("supervisor")
+    SUPERVISOR,
+
     @JsonProperty("analyst")
     ANALYST
 }

@@ -29,7 +29,7 @@ class DashboardController(
     }
 
     @GetMapping("/survey/offline")
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor','supervisor'})")
     fun surveysForOffline(
     ): ResponseEntity<List<OfflineSurveyDto>> {
         return ResponseEntity(surveyDashboardService.surveysForOffline(), HttpStatus.OK)

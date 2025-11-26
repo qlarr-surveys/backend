@@ -24,6 +24,7 @@ class SurveyMapper(
             startDate = null,
             endDate = null,
             canLockSurvey = true,
+            responseReviewRequired = false,
             creationDate = nowUtc(),
             lastModified = nowUtc(),
             navigationData = SurveyNavigationData()
@@ -44,7 +45,8 @@ class SurveyMapper(
             description = surveyEntity.description,
             image = surveyEntity.image,
             canLockSurvey = surveyEntity.canLockSurvey,
-            surveyNavigationData = surveyEntity.navigationData
+            surveyNavigationData = surveyEntity.navigationData,
+            responseReviewRequired = surveyEntity.responseReviewRequired
         )
     }
 

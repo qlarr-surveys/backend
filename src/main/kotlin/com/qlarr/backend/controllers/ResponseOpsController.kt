@@ -52,7 +52,7 @@ class ResponseOpsController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor','supervisor'})")
     @PostMapping("/survey/{surveyId}/offline/response/{responseId}/upload/{fileName}")
     fun uploadOfflineResponseFile(
             request: HttpServletRequest,
@@ -65,7 +65,7 @@ class ResponseOpsController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor','supervisor'})")
     @PostMapping("/survey/{surveyId}/offline/response/{responseId}/upload/{filename}/exists")
     fun isOfflineFileUploaded(
             request: HttpServletRequest,
@@ -77,7 +77,7 @@ class ResponseOpsController(
         return ResponseEntity(result, HttpStatus.OK)
     }
 
-    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor'})")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','surveyor','supervisor'})")
     @PostMapping("/survey/{surveyId}/response/{responseId}/upload")
     fun uploadOfflineSurveyResponse(
             request: HttpServletRequest,
