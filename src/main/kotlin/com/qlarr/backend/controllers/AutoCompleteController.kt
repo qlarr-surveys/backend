@@ -27,7 +27,7 @@ class AutoCompleteController(
         return resourceService.uploadAutoCompleteResource(surveyId,componentId, file)
     }
 
-    @GetMapping("/autocomplete/{uuid}")
+    @GetMapping("/survey/{surveyId}/autocomplete/{uuid}")
     fun searchAutoComplete(
         @PathVariable uuid: String,
         @RequestParam("q") searchTerm: String,

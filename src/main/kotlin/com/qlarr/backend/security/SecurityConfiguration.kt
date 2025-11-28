@@ -21,8 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 class SecurityConfiguration(
-        private val authenticationFilter: JwtTokenFilter,
-        private val logoutHandler: LogoutServiceHandler
+    private val authenticationFilter: JwtTokenFilter,
+    private val logoutHandler: LogoutServiceHandler
 ) {
 
     @Bean
@@ -34,33 +34,33 @@ class SecurityConfiguration(
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         http.authorizeHttpRequests { authorize ->
             authorize
-                    .requestMatchers(OPTIONS).permitAll()
+                .requestMatchers(OPTIONS).permitAll()
 //                    .requestMatchers(GET, "/swagger-ui/**").permitAll()
 //                    .requestMatchers(GET, "/v3/api-docs").permitAll()
 //                    .requestMatchers(GET, "/v3/api-docs/**").permitAll()
-                    
-                    .requestMatchers(GET, "/autocomplete/{uuid}").permitAll()
-                    .requestMatchers(POST, "/survey/{surveyId}/run/start").permitAll()
-                    .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()
-                    .requestMatchers(GET, "/survey/{surveyId}/run/runtime.js").permitAll()
+
+                .requestMatchers(GET, "/survey/{surveyId}/autocomplete/{uuid}").permitAll()
+                .requestMatchers(POST, "/survey/{surveyId}/run/start").permitAll()
+                .requestMatchers(POST, "/survey/{surveyId}/run/navigate").permitAll()
+                .requestMatchers(GET, "/survey/{surveyId}/run/runtime.js").permitAll()
                 .requestMatchers(GET, "/survey/{surveyId}/response/{responseId}/attach/{filename}").permitAll()
                 .requestMatchers(GET, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
-                    .requestMatchers(POST, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
-                    .requestMatchers(GET, "/survey/{surveyId}/resource/{fileName}").permitAll()
-                    .requestMatchers(POST, "/user/login").permitAll()
-                    .requestMatchers(POST, "/user/forgot_password").permitAll()
-                    .requestMatchers(POST, "/user/reset_password").permitAll()
-                    .requestMatchers(POST, "/user/refresh_token").permitAll()
+                .requestMatchers(POST, "/survey/{surveyId}/response/attach/{responseId}/{questionId}").permitAll()
+                .requestMatchers(GET, "/survey/{surveyId}/resource/{fileName}").permitAll()
+                .requestMatchers(POST, "/user/login").permitAll()
+                .requestMatchers(POST, "/user/forgot_password").permitAll()
+                .requestMatchers(POST, "/user/reset_password").permitAll()
+                .requestMatchers(POST, "/user/refresh_token").permitAll()
         }
         http.authorizeHttpRequests()
-                .anyRequest()
-                .authenticated()
-                .and()
-                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .anyRequest()
+            .authenticated()
+            .and()
+            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         http.httpBasic(Customizer.withDefaults())
         http.logout().logoutUrl("/logout").addLogoutHandler(logoutHandler)
-                .logoutSuccessHandler { _, _, _ -> SecurityContextHolder.clearContext() }
-                .permitAll()
+            .logoutSuccessHandler { _, _, _ -> SecurityContextHolder.clearContext() }
+            .permitAll()
         return http.build()
     }
 
