@@ -11,29 +11,23 @@ interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
 
     @Query(
         value = """
-            SELECT 
-                elem.value as match_value
-            FROM 
-                auto_complete ac,
-                jsonb_array_elements(ac.data) WITH ORDINALITY AS elem(value, idx)
-            WHERE 
-                ac.id = :uuid
-                AND (
-                    (jsonb_typeof(elem.value) = 'string' 
-                     AND (elem.value #>> '{}') ILIKE CONCAT(:searchTerm, '%'))
-                    OR
-                    (jsonb_typeof(elem.value) = 'object' 
-                     AND (elem.value ->> 'key') ILIKE CONCAT(:searchTerm, '%'))
-                )
-            ORDER BY 
-                match_value
-            LIMIT :limit
-        """,
+        SELECT DISTINCT
+            elem.value #>> '{}' as match_value
+        FROM 
+            auto_complete ac
+            CROSS JOIN LATERAL jsonb_array_elements(ac.data) AS elem(value)
+        WHERE 
+            ac.id = :uuid
+            AND elem.value #>> '{}' ILIKE :searchTerm || '%'
+        ORDER BY 
+            match_value
+        LIMIT :limit
+    """,
         nativeQuery = true
     )
     fun searchAutoComplete(
         uuid: UUID,
         searchTerm: String,
         limit: Int = 10
-    ): List<Any>
+    ): List<String>
 }

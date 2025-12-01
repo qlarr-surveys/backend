@@ -10,6 +10,7 @@ import com.qlarr.backend.common.RandomResourceIdGenerator
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.nowUtc
 import com.qlarr.backend.configurations.objectMapper
+import com.qlarr.backend.exceptions.AutoCompleteMalformedInputException
 import com.qlarr.backend.exceptions.ResourceNotFoundException
 import com.qlarr.backend.exceptions.SurveyIsClosedException
 import com.qlarr.backend.exceptions.SurveyNotFoundException
@@ -54,13 +55,7 @@ class SurveyResourceService(
     private fun validateAutoCompleteFile(file: MultipartFile): ArrayNode {
         // Check file is not empty
         if (file.isEmpty) {
-            throw IllegalArgumentException("File cannot be empty")
-        }
-
-        // Check file extension
-        val filename = file.originalFilename ?: throw IllegalArgumentException("Filename is required")
-        if (!filename.lowercase().endsWith(".json")) {
-            throw IllegalArgumentException("File must be a JSON file")
+            throw AutoCompleteMalformedInputException()
         }
 
         // Parse and validate JSON structure
@@ -70,66 +65,28 @@ class SurveyResourceService(
 
             // Must be an array
             if (!jsonNode.isArray) {
-                throw IllegalArgumentException("JSON file must contain an array at the root level")
+                throw AutoCompleteMalformedInputException()
             }
 
             val arrayNode = jsonNode as ArrayNode
 
             // Check if empty array
             if (arrayNode.isEmpty) {
-                throw IllegalArgumentException("JSON array cannot be empty")
+                throw AutoCompleteMalformedInputException()
             }
 
-            // Validate array contents
-            val firstElement = arrayNode[0]
-
-            when {
-                firstElement.isTextual -> {
-                    // Array of strings - validate all elements are strings
-                    arrayNode.forEachIndexed { index, element ->
-                        if (!element.isTextual) {
-                            throw IllegalArgumentException(
-                                "All array elements must be strings. Element at index $index is not a string"
-                            )
-                        }
-                    }
-                }
-
-                firstElement.isObject -> {
-                    // Array of objects - validate all have 'key' attribute with string value
-                    arrayNode.forEachIndexed { index, element ->
-                        if (!element.isObject) {
-                            throw IllegalArgumentException(
-                                "All array elements must be objects. Element at index $index is not an object"
-                            )
-                        }
-
-                        val keyField = element.get("key")
-                            ?: throw IllegalArgumentException(
-                                "Object at index $index is missing required 'key' attribute"
-                            )
-
-                        if (!keyField.isTextual) {
-                            throw IllegalArgumentException(
-                                "Object at index $index has 'key' attribute that is not a string"
-                            )
-                        }
-                    }
-                }
-
-                else -> {
-                    throw IllegalArgumentException(
-                        "JSON array must contain either strings or objects with a 'key' attribute"
-                    )
+            arrayNode.forEachIndexed { _, element ->
+                if (!element.isTextual) {
+                    throw AutoCompleteMalformedInputException()
                 }
             }
 
             return arrayNode
 
         } catch (e: JsonProcessingException) {
-            throw IllegalArgumentException("Invalid JSON file: ${e.message}", e)
+            throw AutoCompleteMalformedInputException()
         } catch (e: IOException) {
-            throw IllegalArgumentException("Error reading file: ${e.message}", e)
+            throw AutoCompleteMalformedInputException()
         }
     }
 
