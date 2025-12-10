@@ -69,7 +69,8 @@ interface SurveyRepository : CrudRepository<SurveyEntity, UUID> {
                     "JOIN VersionEntity v ON v.surveyId = s.id AND v.version = (SELECT MAX(p.version) FROM VersionEntity p WHERE p.surveyId = s.id AND p.published = TRUE GROUP BY p.surveyId) " +
                     "LEFT JOIN SurveyResponseEntity r ON s.id = r.surveyId AND r.preview = false AND r.submitDate IS NOT NULL " +
                     "WHERE (s.status = 'ACTIVE' AND (s.usage = 'OFFLINE' OR s.usage = 'MIXED')) " +
-                    "GROUP BY s.id, v.surveyId, v.version "
+                    "GROUP BY s.id, v.surveyId, v.version " +
+                    "ORDER BY s.lastModified DESC, completeResponseCount DESC"
     )
     fun findAllOfflineSurveysByUserId(userId: UUID): List<OfflineSurveyResponseCount>
 }
