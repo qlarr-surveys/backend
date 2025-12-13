@@ -1,17 +1,23 @@
 package com.qlarr.backend.services
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.survey.*
+import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
+import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.isValidName
 import com.qlarr.backend.common.nowUtc
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.SurveyMapper
+import com.qlarr.backend.persistence.entities.AutoCompleteEntity
 import com.qlarr.backend.persistence.entities.SurveyEntity
 import com.qlarr.backend.persistence.entities.SurveyNavigationData
 import com.qlarr.backend.persistence.entities.SurveyResponseCount
 import com.qlarr.backend.persistence.entities.VersionEntity
+import com.qlarr.backend.persistence.repositories.AutoCompleteRepository
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
@@ -31,8 +37,8 @@ class SurveyService(
     private val responsesRepository: ResponseRepository,
     private val designService: DesignService,
     private val fileSystemHelper: FileHelper,
-
-    ) {
+    private val autoCompleteRepository: AutoCompleteRepository
+) {
     @Transactional(rollbackFor = [DuplicateSurveyException::class])
     fun create(surveyCreateRequest: SurveyCreateRequest): SurveyDTO {
         if (!surveyCreateRequest.name.isValidName()) {
@@ -218,21 +224,39 @@ class SurveyService(
 
     fun importSurvey(inputStream: InputStream): SurveyDTO {
         var surveyDTO: SurveyDTO? = null
-        var designSaved = false
+        var designContent: String? = null
 
         fileSystemHelper.importSurvey(inputStream, onSurveyData = {
             surveyDTO = saveSurveyData(it)
-            surveyDTO!!
-        }, onDesign = { designSaved = true })
+            surveyDTO
+        }, onDesign = { designString ->
+            designContent = designString
+        })
 
-
-        if (!designSaved) {
+        if (designContent.isNullOrEmpty()) {
             throw DesignNotAvailableException()
         }
         if (surveyDTO == null) {
             throw SurveyDefNotAvailableException()
         }
-        return surveyDTO ?: throw SurveyDefNotAvailableException()
+        saveAutoComplete(surveyDTO.id, designContent)
+
+        return surveyDTO
+    }
+
+    private fun saveAutoComplete(surveyId: UUID, design: String) {
+        val validationJson = objectMapper.readValue(design, ValidationJsonOutput::class.java)
+        val objectMapper = ObjectMapper()
+        validationJson.getAutoCompleteResources()
+            .forEach { (code, filename) ->
+                try {
+                    (objectMapper.readTree(
+                        fileSystemHelper.getText(surveyId, SurveyFolder.Resources, filename)
+                    ).takeIf { it.isArray } as? ArrayNode)?.let { arrayNode ->
+                        autoCompleteRepository.save(AutoCompleteEntity(null, surveyId, code, arrayNode))
+                    }
+                } catch (e: Exception) { }
+            }
     }
 
     private fun uniqueSurveyName(surveyName: String): String {

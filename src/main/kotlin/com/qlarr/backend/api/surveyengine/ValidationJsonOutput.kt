@@ -2,6 +2,7 @@ package com.qlarr.backend.api.surveyengine
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.contains
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.surveyengine.context.assemble.NotSkippedInstructionManifesto
@@ -26,18 +27,18 @@ data class ValidationJsonOutput(
         componentIndexList
             .subList(1, componentIndexList.size) // we skip Survey, the first element
             .forEach {
-            if (it.code.startsWith("G")) {
-                groupIndex++
-                put(it.code, "P$groupIndex")
-            } else if (it.code.startsWith("Q") && !it.code.contains("A")) {
-                currentQuestion = it.code
-                questionIndex++
-                put(it.code, "Q$questionIndex")
-            } else {
-                put(it.code, it.code.replace(currentQuestion, this[currentQuestion]!!))
-            }
+                if (it.code.startsWith("G")) {
+                    groupIndex++
+                    put(it.code, "P$groupIndex")
+                } else if (it.code.startsWith("Q") && !it.code.contains("A")) {
+                    currentQuestion = it.code
+                    questionIndex++
+                    put(it.code, "Q$questionIndex")
+                } else {
+                    put(it.code, it.code.replace(currentQuestion, this[currentQuestion]!!))
+                }
 
-        }
+            }
     }
 
     fun toDesignerInput(): DesignerInput = DesignerInput(
@@ -72,6 +73,20 @@ data class ValidationJsonOutput(
 
     fun resources() = JsonExt.resources(survey.toString())
     fun labels() = JsonExt.labels(survey.toString(), lang = defaultSurveyLang().code)
+    fun getAutoCompleteResources() =
+        survey.get("groups")?.mapNotNull { group ->
+            group.get("questions")
+        }?.flatten()
+            ?.filter { question -> question.get("type")?.asText() == "autocomplete" }
+            ?.mapNotNull {
+                val code = it.get("code")?.asText()
+                val autoCompleteId = it.get("resources")?.get("autoComplete")?.asText()
+                if (!code.isNullOrBlank() && !autoCompleteId.isNullOrBlank()) {
+                    Pair(code, autoCompleteId)
+                } else {
+                    null
+                }
+            } ?: emptyList()
 }
 
 data class DesignerInput(

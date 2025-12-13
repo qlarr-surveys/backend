@@ -331,7 +331,7 @@ class FileSystemHelper(
     override fun importSurvey(
         inputStream: InputStream,
         onSurveyData: (String) -> SurveyDTO,
-        onDesign: () -> Unit
+        onDesign: (String) -> Unit
     ) {
         val zipInputStream = ZipInputStream(inputStream)
         val tempFiles = mutableListOf<File>()
@@ -385,7 +385,7 @@ class FileSystemHelper(
                                     )
                                 }
                             }
-                            onDesign()
+                            onDesign(tempFile.readText())
                         }
                     }
                     zipEntry = it.nextEntry
