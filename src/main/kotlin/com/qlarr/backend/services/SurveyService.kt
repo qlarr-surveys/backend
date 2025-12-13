@@ -143,6 +143,7 @@ class SurveyService(
         } ?: throw SurveyNotFoundException()
     }
 
+    @Transactional
     fun clone(surveyId: UUID): SurveyDTO {
         val survey = surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
         val cloned = survey.copy(
@@ -159,6 +160,8 @@ class SurveyService(
         }
         fileSystemHelper.cloneResources(surveyId, cloned.id!!)
         copyDesign(surveyId, cloned.id)
+        autoCompleteRepository.copyAutoCompleteEntries(surveyId, cloned.id)
+
         return surveyMapper.mapEntityToDto(cloned)
     }
 

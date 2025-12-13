@@ -2,6 +2,7 @@ package com.qlarr.backend.persistence.repositories
 
 import com.qlarr.backend.persistence.entities.AutoCompleteEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.util.*
 
@@ -36,4 +37,20 @@ interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
         searchTerm: String,
         limit: Int = 10
     ): List<Any>
+
+    @Modifying
+    @Query(
+        value = """
+            INSERT INTO auto_complete (id, survey_id, component_id, data)
+            SELECT
+                gen_random_uuid(),
+                :destinationSurveyId,
+                component_id,
+                data
+            FROM auto_complete
+            WHERE survey_id = :sourceSurveyId
+        """,
+        nativeQuery = true
+    )
+    fun copyAutoCompleteEntries(sourceSurveyId: UUID, destinationSurveyId: UUID): Int
 }
