@@ -434,6 +434,15 @@ class ControllerExceptionHandler {
     }
 
     @ExceptionHandler
+    fun handleException(exception: AutoCompleteMalformedInputException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+                ErrorMessage(null, exception.javaClass.simpleName),
+                HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
     fun handleException(exception: DuplicateToCodeException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
