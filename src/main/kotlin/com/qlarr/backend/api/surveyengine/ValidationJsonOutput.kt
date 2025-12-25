@@ -73,20 +73,6 @@ data class ValidationJsonOutput(
 
     fun resources() = JsonExt.resources(survey.toString())
     fun labels() = JsonExt.labels(survey.toString(), lang = defaultSurveyLang().code)
-    fun getAutoCompleteResources() =
-        survey.get("groups")?.mapNotNull { group ->
-            group.get("questions")
-        }?.flatten()
-            ?.filter { question -> question.get("type")?.asText() == "autocomplete" }
-            ?.mapNotNull {
-                val code = it.get("code")?.asText()
-                val autoCompleteId = it.get("resources")?.get("autoComplete")?.asText()
-                if (!code.isNullOrBlank() && !autoCompleteId.isNullOrBlank()) {
-                    Pair(code, autoCompleteId)
-                } else {
-                    null
-                }
-            } ?: emptyList()
 }
 
 data class DesignerInput(
