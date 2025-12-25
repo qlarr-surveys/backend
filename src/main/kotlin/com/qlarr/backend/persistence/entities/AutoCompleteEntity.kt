@@ -13,6 +13,9 @@ data class AutoCompleteEntity(
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID?,
 
+    @Column(name = "filename", nullable = false)
+    val filename: String,
+
     @Column(name = "survey_id", nullable = false)
     val surveyId: UUID,
 

@@ -47,8 +47,9 @@ class SurveyService(
         val surveyEntity = surveyMapper.mapCreateRequestToEntity(surveyCreateRequest).let {
             it.copy(name = uniqueSurveyName(it.name))
         }
-        if (surveyEntity.startDate != null
-            && surveyEntity.endDate != null && surveyEntity.startDate.isAfter(surveyEntity.endDate)
+        if (surveyEntity.startDate != null && surveyEntity.endDate != null && surveyEntity.startDate.isAfter(
+                surveyEntity.endDate
+            )
         ) {
             throw InvalidSurveyDates()
         }
@@ -117,9 +118,7 @@ class SurveyService(
                 allowJump = editSurveyRequest.allowJump ?: survey.navigationData.allowJump
             )
         )
-        if (newSurvey.startDate != null
-            && newSurvey.endDate != null && newSurvey.startDate.isAfter(newSurvey.endDate)
-        ) {
+        if (newSurvey.startDate != null && newSurvey.endDate != null && newSurvey.startDate.isAfter(newSurvey.endDate)) {
             throw InvalidSurveyDates()
         }
         try {
@@ -167,15 +166,10 @@ class SurveyService(
 
     @Transactional
     fun copyDesign(source: UUID, destination: UUID) {
-        val latestVersion = versionRepository.findLatestVersion(source)
-            ?: return
+        val latestVersion = versionRepository.findLatestVersion(source) ?: return
         versionRepository.save(
             latestVersion.copy(
-                surveyId = destination,
-                version = 1,
-                published = false,
-                subVersion = 1,
-                lastModified = nowUtc()
+                surveyId = destination, version = 1, published = false, subVersion = 1, lastModified = nowUtc()
             )
         )
         fileSystemHelper.copyDesign(source, destination, latestVersion.version.toString(), "1")
@@ -191,8 +185,7 @@ class SurveyService(
         return surveyMapper.mapEntityToDto(
             surveyRepository.save(
                 entity.copy(
-                    status = Status.CLOSED,
-                    lastModified = nowUtc()
+                    status = Status.CLOSED, lastModified = nowUtc()
                 )
             )
         )
@@ -217,7 +210,13 @@ class SurveyService(
             override val latestVersion: VersionEntity =
                 latestVersion!!.copy(version = 1, subVersion = 1, published = false)
         }.let {
-            surveyMapper.mapEntityToSimpleResponse(it)
+            val surveyDto = surveyMapper.mapEntityToSimpleResponse(it)
+            val autoCompleteList = autoCompleteRepository.findBySurveyId(surveyId).mapNotNull { entity ->
+                if (entity.filename.isNotBlank()) {
+                    ExportedAutoCompleteResource(entity.componentId, entity.filename)
+                } else null
+            }
+            ExportedSimpleSurvey(surveyDto, autoCompleteList)
         }.let {
             objectMapper.writeValueAsString(it)
         }
@@ -228,9 +227,11 @@ class SurveyService(
     fun importSurvey(inputStream: InputStream): SurveyDTO {
         var surveyDTO: SurveyDTO? = null
         var designContent: String? = null
+        var exportSurvey: ExportedSimpleSurvey? = null
 
         fileSystemHelper.importSurvey(inputStream, onSurveyData = {
-            surveyDTO = saveSurveyData(it)
+            exportSurvey = objectMapper.readValue(it, ExportedSimpleSurvey::class.java)
+            surveyDTO = saveSurveyData(exportSurvey.survey)
             surveyDTO
         }, onDesign = { designString ->
             designContent = designString
@@ -242,25 +243,35 @@ class SurveyService(
         if (surveyDTO == null) {
             throw SurveyDefNotAvailableException()
         }
-        saveAutoComplete(surveyDTO.id, designContent)
+
+        if(exportSurvey != null) {
+            saveAutoComplete(surveyDTO.id, exportSurvey.autoCompleteResources)
+        }
 
         return surveyDTO
     }
 
-    private fun saveAutoComplete(surveyId: UUID, design: String) {
-        val validationJson = objectMapper.readValue(design, ValidationJsonOutput::class.java)
-        val objectMapper = ObjectMapper()
-        validationJson.getAutoCompleteResources()
-            .forEach { (code, filename) ->
-                try {
-                    (objectMapper.readTree(
-                        fileSystemHelper.getText(surveyId, SurveyFolder.Resources, filename)
-                    ).takeIf { it.isArray } as? ArrayNode)?.let { arrayNode ->
-                        autoCompleteRepository.save(AutoCompleteEntity(null, surveyId, code, arrayNode))
-                    }
-                } catch (e: Exception) { }
+    fun saveAutoComplete(surveyId: UUID, autoCompleteResources: List<ExportedAutoCompleteResource>) {
+        autoCompleteResources.forEach { resource ->
+            try {
+                (objectMapper.readTree(
+                    fileSystemHelper.getText(surveyId, SurveyFolder.Resources, resource.filename)
+                ).takeIf { it.isArray } as? ArrayNode)?.let { arrayNode ->
+                    autoCompleteRepository.save(
+                        AutoCompleteEntity(
+                            id = null,
+                            filename = resource.filename,
+                            surveyId = surveyId,
+                            componentId = resource.code,
+                            values = arrayNode
+                        )
+                    )
+                }
+            } catch (e: Exception) {
             }
+        }
     }
+
 
     private fun uniqueSurveyName(surveyName: String): String {
         val existingNames = surveyRepository.findAllSurveyNames()
@@ -296,9 +307,7 @@ class SurveyService(
         return candidateName
     }
 
-    fun saveSurveyData(surveyDataString: String): SurveyDTO {
-        val simpleSurveyDto = objectMapper.readValue(surveyDataString, SimpleSurveyDto::class.java)
-
+    fun saveSurveyData(simpleSurveyDto: SimpleSurveyDto): SurveyDTO {
         val savedSurvey = try {
             surveyRepository.save(
                 SurveyEntity(
