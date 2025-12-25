@@ -226,18 +226,18 @@ class SurveyService(
 
     fun importSurvey(inputStream: InputStream): SurveyDTO {
         var surveyDTO: SurveyDTO? = null
-        var designContent: String? = null
+        var designSaved = false
         var exportSurvey: ExportedSimpleSurvey? = null
 
         fileSystemHelper.importSurvey(inputStream, onSurveyData = {
             exportSurvey = objectMapper.readValue(it, ExportedSimpleSurvey::class.java)
             surveyDTO = saveSurveyData(exportSurvey.survey)
             surveyDTO
-        }, onDesign = { designString ->
-            designContent = designString
+        }, onDesign = {
+            designSaved = true
         })
 
-        if (designContent.isNullOrEmpty()) {
+        if (!designSaved) {
             throw DesignNotAvailableException()
         }
         if (surveyDTO == null) {

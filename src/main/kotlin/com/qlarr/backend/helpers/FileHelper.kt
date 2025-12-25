@@ -77,7 +77,7 @@ interface FileHelper {
     fun importSurvey(
         inputStream: InputStream,
         onSurveyData: (String) -> SurveyDTO,
-        onDesign: (String) -> Unit
+        onDesign: () -> Unit
     )
 
     fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>)
