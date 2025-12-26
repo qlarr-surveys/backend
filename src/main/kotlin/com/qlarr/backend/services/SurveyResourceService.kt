@@ -90,17 +90,30 @@ class SurveyResourceService(
         }
     }
 
-    fun uploadAutoCompleteResource(surveyId: UUID, componentId: String, file: MultipartFile): ResponseEntity<AutoCompleteFileInfo> {
+    fun uploadAutoCompleteResource(
+        surveyId: UUID,
+        componentId: String,
+        file: MultipartFile
+    ): ResponseEntity<AutoCompleteFileInfo> {
         val arrayNode = validateAutoCompleteFile(file)
         surveyRepository.findByIdOrNull(surveyId)?.let { surveyEntity ->
             if (surveyEntity.status == Status.CLOSED) {
                 throw SurveyIsClosedException()
             }
         } ?: throw SurveyNotFoundException()
+
+        val mimeType = file.contentType
+            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
+            ?: "application/octet-stream"
+
+        val savedFilename =
+            helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, UUID.randomUUID().toString())
+
         val entity = autoCompleteRepository.findBySurveyIdAndComponentId(surveyId, componentId)
-            ?.copy(values = arrayNode)
+            ?.copy(values = arrayNode, filename = savedFilename)
             ?: AutoCompleteEntity(
                 id = null,
+                filename = savedFilename,
                 surveyId = surveyId,
                 componentId = componentId,
                 values = arrayNode
@@ -108,16 +121,14 @@ class SurveyResourceService(
 
         autoCompleteRepository.save(entity)
 
-        val mimeType = file.contentType
-            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
-            ?: "application/octet-stream"
-        val savedFilename = helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, entity.id.toString())
-        return ResponseEntity.ok().body(AutoCompleteFileInfo(
-            name = savedFilename,
-            rowCount = arrayNode.size(),
-            size = file.size,
-            lastModified = nowUtc()
-        ))
+        return ResponseEntity.ok().body(
+            AutoCompleteFileInfo(
+                name = savedFilename,
+                rowCount = arrayNode.size(),
+                size = file.size,
+                lastModified = nowUtc()
+            )
+        )
     }
 
 
@@ -147,12 +158,15 @@ class SurveyResourceService(
     }
 
     fun search(
-        uuid: String,
+        surveyId: UUID,
+        filename: String,
         searchTerm: String,
         limit: Int = 10
     ): List<Any> {
+
         return autoCompleteRepository.searchAutoComplete(
-            UUID.fromString(uuid),
+            surveyId,
+            filename,
             searchTerm,
             limit
         )

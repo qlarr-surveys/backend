@@ -2,10 +2,13 @@ package com.qlarr.backend.persistence.repositories
 
 import com.qlarr.backend.persistence.entities.AutoCompleteEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.util.*
 
 interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
+
+    fun findBySurveyId(surveyId: UUID): List<AutoCompleteEntity>
 
     fun findBySurveyIdAndComponentId(surveyId: UUID, componentId: String): AutoCompleteEntity?
 
@@ -13,21 +16,40 @@ interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
         value = """
         SELECT DISTINCT
             elem.value #>> '{}' as match_value
-        FROM 
+        FROM
             auto_complete ac
             CROSS JOIN LATERAL jsonb_array_elements(ac.data) AS elem(value)
-        WHERE 
-            ac.id = :uuid
+        WHERE
+            ac.survey_id = :surveyId
+            AND ac.filename = :filename
             AND elem.value #>> '{}' ILIKE :searchTerm || '%'
-        ORDER BY 
+        ORDER BY
             match_value
         LIMIT :limit
     """,
         nativeQuery = true
     )
     fun searchAutoComplete(
-        uuid: UUID,
+        surveyId: UUID,
+        filename: String,
         searchTerm: String,
         limit: Int = 10
     ): List<String>
+
+    @Modifying
+    @Query(
+        value = """
+            INSERT INTO auto_complete (id, survey_id, component_id, filename, data)
+            SELECT
+                gen_random_uuid(),
+                :destinationSurveyId,
+                component_id,
+                filename,
+                data
+            FROM auto_complete
+            WHERE survey_id = :sourceSurveyId
+        """,
+        nativeQuery = true
+    )
+    fun copyAutoCompleteEntries(sourceSurveyId: UUID, destinationSurveyId: UUID): Int
 }

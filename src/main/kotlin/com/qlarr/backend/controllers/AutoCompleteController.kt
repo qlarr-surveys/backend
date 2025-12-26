@@ -29,11 +29,12 @@ class AutoCompleteController(
 
     @GetMapping("/survey/{surveyId}/autocomplete/{uuid}")
     fun searchAutoComplete(
+        @PathVariable surveyId: UUID,
         @PathVariable uuid: String,
         @RequestParam("q") searchTerm: String,
         @RequestParam(defaultValue = "10") limit: Int
     ): ResponseEntity<List<Any>> {
-        val results = resourceService.search(uuid, searchTerm, limit)
+        val results = resourceService.search(surveyId, uuid, searchTerm, limit)
         return ResponseEntity.ok(results)
     }
 

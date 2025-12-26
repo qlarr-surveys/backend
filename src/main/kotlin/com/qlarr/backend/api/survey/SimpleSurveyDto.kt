@@ -29,12 +29,22 @@ data class SimpleSurveyDto(
     val navigationData: SurveyNavigationData = SurveyNavigationData(),
 )
 
+data class ExportedSimpleSurvey(
+    val survey: SimpleSurveyDto,
+    val autoCompleteResources: List<ExportedAutoCompleteResource>
+)
+
+data class ExportedAutoCompleteResource(
+    val code: String,
+    val filename: String
+)
+
 
 data class SurveysDto(
-        val totalCount: Int,
-        val totalPages: Int,
-        val pageNumber: Int,
-        val surveys: List<SimpleSurveyDto> = listOf()
+    val totalCount: Int,
+    val totalPages: Int,
+    val pageNumber: Int,
+    val surveys: List<SimpleSurveyDto> = listOf()
 )
 
 data class OfflineSurveyDto(
