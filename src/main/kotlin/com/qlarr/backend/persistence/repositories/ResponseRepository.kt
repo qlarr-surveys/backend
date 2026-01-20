@@ -79,6 +79,16 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
         to: Int
     ): List<ResponseWithSurveyorName>
 
+    @Query(
+        "SELECT r as response, u.firstName as firstName, u.lastName as lastName " +
+                "FROM SurveyResponseEntity r " +
+                "LEFT JOIN UserEntity u ON r.surveyor = u.id " +
+                "WHERE r.id = :responseId"
+    )
+    fun responseWithSurveyorName(
+        responseId:UUID,
+    ): ResponseWithSurveyorName?
+
 
     @Query(
         "SELECT r.id as id, r.survey_response_index as index, r.survey_id as surveyId, r.surveyor as surveyor, r.start_date as startDate, " +

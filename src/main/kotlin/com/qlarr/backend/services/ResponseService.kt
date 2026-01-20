@@ -348,7 +348,8 @@ class ResponseService(
     }
 
     fun getResponse(responseId: UUID): ResponseDto {
-        val response = responseRepository.findByIdOrNull(responseId) ?: throw Exception()
+        val responseWithSurveyorName = responseRepository.responseWithSurveyorName(responseId) ?: throw Exception()
+        val response = responseWithSurveyorName.response
         val processed = designService.getLatestProcessedSurvey(response.surveyId)
         val indexList = processed.validationJsonOutput.buildCodeIndex()
         val componentIndexList = processed.validationJsonOutput.componentIndexList
@@ -386,6 +387,9 @@ class ResponseService(
             }
 
         return responseMapper.toDto(
+            surveyorName = response.surveyor?.let {
+                "${responseWithSurveyorName.firstName} ${responseWithSurveyorName.firstName}"
+            },
             disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
             entity = response,
             values = values

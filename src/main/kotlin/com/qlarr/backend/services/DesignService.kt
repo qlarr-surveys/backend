@@ -122,7 +122,7 @@ class DesignService(
                 .map { it.code }
                 .filter { !it.startsWith("G") }
             if (!newCodes.containsAll(oldCodes)) {
-                throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
+                throw CodeChangeAfterPublishException(oldCodes.filter { !newCodes.contains(it) })
             }
         }
         helper.upload(

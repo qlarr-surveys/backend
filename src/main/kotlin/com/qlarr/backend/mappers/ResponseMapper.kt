@@ -10,6 +10,7 @@ class ResponseMapper {
 
 
     fun toDto(
+        surveyorName:String?,
         disqualified: Boolean,
         entity: SurveyResponseEntity,
         values: List<ResponseValue> = emptyList(),
@@ -19,7 +20,7 @@ class ResponseMapper {
             index = entity.surveyResponseIndex,
             startDate = entity.startDate,
             surveyorID = entity.surveyor?.toString(),
-            surveyorName = null,
+            surveyorName = surveyorName,
             preview = entity.preview,
             submitDate = entity.submitDate,
             lang = entity.lang,
