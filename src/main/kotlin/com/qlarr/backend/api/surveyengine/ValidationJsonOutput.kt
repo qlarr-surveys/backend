@@ -2,6 +2,7 @@ package com.qlarr.backend.api.surveyengine
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.contains
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.surveyengine.context.assemble.NotSkippedInstructionManifesto
@@ -26,18 +27,18 @@ data class ValidationJsonOutput(
         componentIndexList
             .subList(1, componentIndexList.size) // we skip Survey, the first element
             .forEach {
-            if (it.code.startsWith("G")) {
-                groupIndex++
-                put(it.code, "P$groupIndex")
-            } else if (it.code.startsWith("Q") && !it.code.contains("A")) {
-                currentQuestion = it.code
-                questionIndex++
-                put(it.code, "Q$questionIndex")
-            } else {
-                put(it.code, it.code.replace(currentQuestion, this[currentQuestion]!!))
-            }
+                if (it.code.startsWith("G")) {
+                    groupIndex++
+                    put(it.code, "P$groupIndex")
+                } else if (it.code.startsWith("Q") && !it.code.contains("A")) {
+                    currentQuestion = it.code
+                    questionIndex++
+                    put(it.code, "Q$questionIndex")
+                } else {
+                    put(it.code, it.code.replace(currentQuestion, this[currentQuestion]!!))
+                }
 
-        }
+            }
     }
 
     fun toDesignerInput(): DesignerInput = DesignerInput(

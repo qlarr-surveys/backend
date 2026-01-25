@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/DDL/00004-add-nav-data-to-survey-table.sql
   - include:
       file: db/changelog/DDL/00005-add-auto-complete-table.sql
+  - include:
+      file: db/changelog/DDL/00006-change-auto-complete-pk-to-composite.sql

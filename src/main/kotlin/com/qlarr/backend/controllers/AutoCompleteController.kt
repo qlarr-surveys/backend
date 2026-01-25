@@ -27,13 +27,14 @@ class AutoCompleteController(
         return resourceService.uploadAutoCompleteResource(surveyId,componentId, file)
     }
 
-    @GetMapping("/survey/{surveyId}/autocomplete/{uuid}")
+    @GetMapping("/survey/{surveyId}/autocomplete/{filename}")
     fun searchAutoComplete(
-        @PathVariable uuid: String,
+        @PathVariable surveyId: UUID,
+        @PathVariable filename: String,
         @RequestParam("q") searchTerm: String,
         @RequestParam(defaultValue = "10") limit: Int
     ): ResponseEntity<List<Any>> {
-        val results = resourceService.search(uuid, searchTerm, limit)
+        val results = resourceService.search(surveyId, filename, searchTerm, limit)
         return ResponseEntity.ok(results)
     }
 

@@ -4,6 +4,7 @@ import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
 import java.io.InputStream
 import java.time.LocalDateTime
 import java.util.*
