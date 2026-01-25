@@ -4,20 +4,30 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import java.io.Serializable
 import java.util.*
 
+data class AutoCompleteId(
+    val surveyId: UUID = UUID.randomUUID(),
+    val filename: String = ""
+) : Serializable
+
 @Entity
-@Table(name = "auto_complete")
+@Table(
+    name = "auto_complete",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["survey_id", "component_id"])
+    ]
+)
+@IdClass(AutoCompleteId::class)
 data class AutoCompleteEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID?,
-
-    @Column(name = "filename", nullable = false)
-    val filename: String,
-
     @Column(name = "survey_id", nullable = false)
     val surveyId: UUID,
+
+    @Id
+    @Column(name = "filename", nullable = false)
+    val filename: String,
 
     @Column(name = "component_id", nullable = false)
     val componentId: String,

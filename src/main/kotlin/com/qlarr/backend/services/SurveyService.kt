@@ -211,10 +211,8 @@ class SurveyService(
                 latestVersion!!.copy(version = 1, subVersion = 1, published = false)
         }.let {
             val surveyDto = surveyMapper.mapEntityToSimpleResponse(it)
-            val autoCompleteList = autoCompleteRepository.findBySurveyId(surveyId).mapNotNull { entity ->
-                if (entity.filename.isNotBlank()) {
-                    ExportedAutoCompleteResource(entity.componentId, entity.filename)
-                } else null
+            val autoCompleteList = autoCompleteRepository.findBySurveyId(surveyId).map { entity ->
+                ExportedAutoCompleteResource(entity.componentId, entity.filename)
             }
             ExportedSimpleSurvey(surveyDto, autoCompleteList)
         }.let {
@@ -259,9 +257,8 @@ class SurveyService(
                 ).takeIf { it.isArray } as? ArrayNode)?.let { arrayNode ->
                     autoCompleteRepository.save(
                         AutoCompleteEntity(
-                            id = null,
-                            filename = resource.filename,
                             surveyId = surveyId,
+                            filename = resource.filename,
                             componentId = resource.code,
                             values = arrayNode
                         )

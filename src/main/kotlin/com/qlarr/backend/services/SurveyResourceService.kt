@@ -109,12 +109,16 @@ class SurveyResourceService(
         val savedFilename =
             helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, UUID.randomUUID().toString())
 
-        val entity = autoCompleteRepository.findBySurveyIdAndComponentId(surveyId, componentId)
-            ?.copy(values = arrayNode, filename = savedFilename)
+        val existingEntity = autoCompleteRepository.findBySurveyIdAndComponentId(surveyId, componentId)
+
+        existingEntity?.let {
+            runCatching { helper.delete(surveyId, SurveyFolder.Resources, it.filename) }
+        }
+
+        val entity = existingEntity?.copy(values = arrayNode, filename = savedFilename)
             ?: AutoCompleteEntity(
-                id = null,
-                filename = savedFilename,
                 surveyId = surveyId,
+                filename = savedFilename,
                 componentId = componentId,
                 values = arrayNode
             )
@@ -163,7 +167,6 @@ class SurveyResourceService(
         searchTerm: String,
         limit: Int = 10
     ): List<Any> {
-
         return autoCompleteRepository.searchAutoComplete(
             surveyId,
             filename,

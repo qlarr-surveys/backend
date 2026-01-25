@@ -1,12 +1,13 @@
 package com.qlarr.backend.persistence.repositories
 
 import com.qlarr.backend.persistence.entities.AutoCompleteEntity
+import com.qlarr.backend.persistence.entities.AutoCompleteId
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import java.util.*
 
-interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
+interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, AutoCompleteId> {
 
     fun findBySurveyId(surveyId: UUID): List<AutoCompleteEntity>
 
@@ -39,9 +40,8 @@ interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, UUID> {
     @Modifying
     @Query(
         value = """
-            INSERT INTO auto_complete (id, survey_id, component_id, filename, data)
+            INSERT INTO auto_complete (survey_id, component_id, filename, data)
             SELECT
-                gen_random_uuid(),
                 :destinationSurveyId,
                 component_id,
                 filename,
