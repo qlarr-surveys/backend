@@ -1,5 +1,6 @@
 package com.qlarr.backend.services
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.response.AnalyticsDto
 import com.qlarr.backend.api.response.AnalyticsImage
@@ -26,7 +27,12 @@ class AnalyticsService(
         val validationOutput = processed.validationJsonOutput
 
         // Get labels and component hierarchy
-        val labels = validationOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
+        val defaultLang = validationOutput.defaultSurveyLang().code
+        val jarLabels = validationOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
+        val supplementaryLabels = extractLabels(validationOutput.survey, defaultLang)
+            .filterValues { it.isNotEmpty() }
+            .stripHtmlTags()
+        val labels = supplementaryLabels + jarLabels
         val componentIndexList = validationOutput.componentIndexList
         val schemaMap = validationOutput.schema
             .filter { it.columnName == ColumnName.VALUE }
@@ -122,6 +128,55 @@ class AnalyticsService(
             node.get(childKey)?.forEach { child ->
                 if (child is ObjectNode) {
                     traverseForContentPaths(child, currentQuestionCode, result)
+                }
+            }
+        }
+    }
+
+    private fun extractLabels(survey: ObjectNode, lang: String): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        traverseForLabels(survey, null, result, lang)
+        return result
+    }
+
+    private fun traverseForLabels(
+        node: ObjectNode,
+        parentQuestionCode: String?,
+        result: MutableMap<String, String>,
+        lang: String
+    ) {
+        val code = node.get("code")?.asText() ?: return
+        val isQuestion = code.startsWith("Q") && !code.contains("A")
+        val isAnswer = code.startsWith("A")
+        val currentQuestionCode = if (isQuestion) code else parentQuestionCode
+        val fullCode = when {
+            isQuestion -> code
+            isAnswer && currentQuestionCode != null -> currentQuestionCode + code
+            else -> code
+        }
+
+        // Try content.{lang}.label
+        val content = node.get("content") as? ObjectNode
+        val langContent = content?.get(lang) as? ObjectNode
+        val label = langContent?.get("label")?.asText()?.takeIf { it.isNotBlank() }
+
+        // Fallback: instructionList Format instruction "format_label"
+        val resolvedLabel = label ?: run {
+            val instructionList = node.get("instructionList") as? ArrayNode
+            instructionList?.firstOrNull { inst ->
+                inst.get("code")?.asText() == "format_label"
+                        && inst.get("lang")?.asText() == lang
+            }?.get("text")?.asText()?.takeIf { it.isNotBlank() }
+        }
+
+        if (resolvedLabel != null) {
+            result[fullCode] = resolvedLabel
+        }
+
+        listOf("children", "groups", "questions", "answers").forEach { childKey ->
+            node.get(childKey)?.forEach { child ->
+                if (child is ObjectNode) {
+                    traverseForLabels(child, currentQuestionCode, result, lang)
                 }
             }
         }
