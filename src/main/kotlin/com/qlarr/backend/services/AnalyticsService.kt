@@ -32,8 +32,9 @@ class AnalyticsService(
             .filter { it.columnName == ColumnName.VALUE }
             .associateBy { it.componentCode }
 
-        // Extract question types from survey design
+        // Extract question types and content paths from survey design
         val questionTypes = extractQuestionTypes(validationOutput.survey)
+        val contentPaths = extractContentPaths(validationOutput.survey)
 
         // Fetch completed responses
         val pageable = Pageable.ofSize(maxResponses).withPage(0)
@@ -52,7 +53,9 @@ class AnalyticsService(
                 labels,
                 schemaMap,
                 componentIndexList,
-                responses
+                responses,
+                surveyId,
+                contentPaths
             )
         }
 
@@ -86,6 +89,48 @@ class AnalyticsService(
         }
     }
 
+    private fun extractContentPaths(survey: ObjectNode): Map<String, List<String>> {
+        val result = mutableMapOf<String, List<String>>()
+        traverseForContentPaths(survey, null, result)
+        return result
+    }
+
+    private fun traverseForContentPaths(
+        node: ObjectNode,
+        parentQuestionCode: String?,
+        result: MutableMap<String, List<String>>
+    ) {
+        val code = node.get("code")?.asText() ?: return
+        val isQuestion = code.startsWith("Q") && !code.contains("A")
+        val isAnswer = code.startsWith("A")
+        val currentQuestionCode = if (isQuestion) code else parentQuestionCode
+
+        if (isAnswer && currentQuestionCode != null) {
+            val fullCode = currentQuestionCode + code
+            val resourcesNode = node.get("resources")
+            if (resourcesNode is ObjectNode) {
+                val icon = resourcesNode.get("icon")?.asText()
+                val image = resourcesNode.get("image")?.asText()
+                val resourceFile = icon ?: image
+                if (resourceFile != null) {
+                    result[fullCode] = listOf(resourceFile)
+                }
+            }
+        }
+
+        listOf("children", "groups", "questions", "answers").forEach { childKey ->
+            node.get(childKey)?.forEach { child ->
+                if (child is ObjectNode) {
+                    traverseForContentPaths(child, currentQuestionCode, result)
+                }
+            }
+        }
+    }
+
+    private fun buildResourceUrl(surveyId: UUID, fileName: String): String {
+        return "/survey/$surveyId/resource/$fileName"
+    }
+
     private fun mapQuestionType(backendType: String): String {
         // Map from Qlarr backend question types to chart visualization types
         return when (backendType.uppercase()) {
@@ -110,6 +155,8 @@ class AnalyticsService(
             "IMAGE_RANKING" -> "IMAGE_RANKING"
             "IMAGE_SCQ" -> "IMAGE_SCQ"
             "IMAGE_MCQ" -> "IMAGE_MCQ"
+            "ICON_SCQ" -> "ICON_SCQ"
+            "ICON_MCQ" -> "ICON_MCQ"
             "FILE_UPLOAD", "FILE" -> "FILE_UPLOAD"
             "SIGNATURE" -> "SIGNATURE"
             "PHOTO_CAPTURE", "PHOTO" -> "PHOTO_CAPTURE"
@@ -124,7 +171,9 @@ class AnalyticsService(
         labels: Map<String, String>,
         schemaMap: Map<String, ResponseField>,
         componentIndexList: List<ComponentIndex>,
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>
+        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
+        surveyId: UUID,
+        contentPaths: Map<String, List<String>>
     ): AnalyticsQuestion? {
         val responseField = schemaMap[questionCode]
         val questionType = questionTypes[questionCode]
@@ -137,7 +186,7 @@ class AnalyticsService(
         val answerCodes = componentIndex?.children ?: emptyList()
 
         // Build question metadata based on type
-        val options = if (questionType in listOf("SCQ", "MCQ", "RANKING", "AUTOCOMPLETE")) {
+        val options = if (questionType in listOf("SCQ", "MCQ", "RANKING", "AUTOCOMPLETE", "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ", "IMAGE_RANKING")) {
             answerCodes.map { labels[it] ?: it }
         } else null
 
@@ -173,7 +222,15 @@ class AnalyticsService(
             options = options,
             rows = rows,
             columns = columns,
-            images = null, // TODO: Extract for IMAGE types
+            images = answerCodes.mapNotNull { answerCode ->
+                contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
+                    AnalyticsImage(
+                        id = answerCode,
+                        label = labels[answerCode],
+                        url = buildResourceUrl(surveyId, resourceFile)
+                    )
+                }
+            }.ifEmpty { null },
             fields = if (questionType in listOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")) {
                 answerCodes.map { labels[it] ?: it }
             } else null,
@@ -209,17 +266,24 @@ class AnalyticsService(
             if (value is List<*> && value.isEmpty()) return@mapNotNull null
             if (value is Map<*, *> && value.isEmpty()) return@mapNotNull null
             when (type) {
-                "SCQ", "AUTOCOMPLETE", "IMAGE_SCQ" -> {
-                    // value is a string answer code like "Q1A1", map to label
-                    labels[value.toString()] ?: value.toString()
+                "SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ" -> {
+                    // value is an answer code (full like "Q1A1" or short like "A1"), map to label
+                    val v = value.toString()
+                    labels[v] ?: labels[questionCode + v] ?: v
                 }
-                "MCQ", "IMAGE_MCQ" -> {
+                "MCQ", "IMAGE_MCQ", "ICON_MCQ" -> {
                     // value is a list of answer codes, map each to label
-                    (value as? List<*>)?.map { labels[it.toString()] ?: it.toString() }
+                    (value as? List<*>)?.map { item ->
+                        val v = item.toString()
+                        labels[v] ?: labels[questionCode + v] ?: v
+                    }
                 }
                 "RANKING", "IMAGE_RANKING" -> {
                     // value is an ordered list of answer codes
-                    (value as? List<*>)?.map { labels[it.toString()] ?: it.toString() }
+                    (value as? List<*>)?.map { item ->
+                        val v = item.toString()
+                        labels[v] ?: labels[questionCode + v] ?: v
+                    }
                 }
                 "NPS", "NUMBER" -> {
                     // Numeric value
