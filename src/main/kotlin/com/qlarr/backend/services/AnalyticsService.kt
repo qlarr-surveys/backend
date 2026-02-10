@@ -78,9 +78,11 @@ class AnalyticsService(
             types[code] = mapQuestionType(type)
         }
 
-        node.get("children")?.forEach { child ->
-            if (child is ObjectNode) {
-                traverseTree(child, types)
+        listOf("children", "groups", "questions", "answers").forEach { childKey ->
+            node.get(childKey)?.forEach { child ->
+                if (child is ObjectNode) {
+                    traverseTree(child, types)
+                }
             }
         }
     }
@@ -98,8 +100,10 @@ class AnalyticsService(
             "DATETIME" -> "DATETIME"
             "MATRIX_SCQ" -> "MATRIX_SCQ"
             "MATRIX_MCQ" -> "MATRIX_MCQ"
-            "TEXT", "SHORTTEXT" -> "TEXT"
-            "PARAGRAPH", "LONGTEXT" -> "PARAGRAPH"
+            "TEXT" -> "TEXT"
+            "SHORTTEXT" -> "SHORTTEXT"
+            "PARAGRAPH" -> "PARAGRAPH"
+            "LONGTEXT" -> "LONGTEXT"
             "EMAIL" -> "EMAIL"
             "MULTIPLE_TEXT" -> "MULTIPLE_TEXT"
             "AUTOCOMPLETE" -> "AUTOCOMPLETE"
@@ -182,6 +186,9 @@ class AnalyticsService(
     ): List<Any?> {
         return responses.mapNotNull { response ->
             val value = response.values[valueKey] ?: return@mapNotNull null
+            if (value is String && value.isBlank()) return@mapNotNull null
+            if (value is List<*> && value.isEmpty()) return@mapNotNull null
+            if (value is Map<*, *> && value.isEmpty()) return@mapNotNull null
             when (type) {
                 "SCQ", "AUTOCOMPLETE", "IMAGE_SCQ" -> {
                     // value is a string answer code like "Q1A1", map to label
@@ -199,7 +206,7 @@ class AnalyticsService(
                     // Numeric value
                     value
                 }
-                "TEXT", "EMAIL", "PARAGRAPH", "BARCODE", "TIME" -> {
+                "TEXT", "SHORTTEXT", "EMAIL", "PARAGRAPH", "LONGTEXT", "BARCODE", "TIME" -> {
                     // String value
                     value
                 }
