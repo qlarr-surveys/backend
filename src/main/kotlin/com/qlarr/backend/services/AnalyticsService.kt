@@ -97,8 +97,8 @@ class AnalyticsService(
             "DATE" -> "DATE"
             "TIME" -> "TIME"
             "DATETIME" -> "DATETIME"
-            "MATRIX_SCQ" -> "MATRIX_SCQ"
-            "MATRIX_MCQ" -> "MATRIX_MCQ"
+            "MATRIX_SCQ", "SCQ_ARRAY", "SCQ_ICON_ARRAY" -> "MATRIX_SCQ"
+            "MATRIX_MCQ", "MCQ_ARRAY" -> "MATRIX_MCQ"
             "TEXT" -> "TEXT"
             "SHORTTEXT" -> "SHORTTEXT"
             "PARAGRAPH" -> "PARAGRAPH"
@@ -142,13 +142,28 @@ class AnalyticsService(
         } else null
 
         // Extract response values for this question
+        val isMatrix = questionType in listOf("MATRIX_SCQ", "MATRIX_MCQ")
         val responseValues = if (responseField != null) {
             val valueKey = responseField.toValueKey()
-            extractResponses(questionType, valueKey, responses, answerCodes, labels)
+            extractResponses(questionType, valueKey, questionCode, responses, answerCodes, labels)
+        } else if (isMatrix) {
+            // For MATRIX types, values are stored per-row answer; rebuild as row→column label maps
+            extractMatrixMultiFieldResponses(responses, answerCodes, questionCode, labels, schemaMap)
         } else {
             // Values stored at answer level (e.g., MULTIPLE_TEXT, MULTI_SHORT_TEXT)
             extractMultiFieldResponses(responses, answerCodes, labels, schemaMap)
         }
+
+        val rows = if (isMatrix) {
+            answerCodes
+                .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
+                .map { labels[it] ?: it }
+        } else null
+        val columns = if (isMatrix) {
+            answerCodes
+                .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
+                .map { labels[it] ?: it }
+        } else null
 
         return AnalyticsQuestion(
             id = questionCode,
@@ -156,8 +171,8 @@ class AnalyticsService(
             title = title,
             description = null,
             options = options,
-            rows = null, // TODO: Extract for MATRIX types
-            columns = null, // TODO: Extract for MATRIX types
+            rows = rows,
+            columns = columns,
             images = null, // TODO: Extract for IMAGE types
             fields = if (questionType in listOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")) {
                 answerCodes.map { labels[it] ?: it }
@@ -183,6 +198,7 @@ class AnalyticsService(
     private fun extractResponses(
         type: String,
         valueKey: String,
+        questionCode: String,
         responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
         answerCodes: List<String>,
         labels: Map<String, String>
@@ -218,11 +234,21 @@ class AnalyticsService(
                     value
                 }
                 "MATRIX_SCQ", "MATRIX_MCQ" -> {
-                    // value is a map {answerCode: selectedColumnCode}
+                    // value is a map {shortRowCode: shortColumnCode}
+                    // Short codes like "Ac1" need questionCode prefix for label lookup
                     (value as? Map<*, *>)?.entries?.associate { (k, v) ->
-                        (labels[k.toString()] ?: k.toString()) to
-                                if (v is List<*>) v.map { labels[it.toString()] ?: it.toString() }
-                                else (labels[v.toString()] ?: v.toString())
+                        val rowKey = k.toString()
+                        val rowLabel = labels[questionCode + rowKey] ?: labels[rowKey] ?: rowKey
+                        val colValue = if (v is List<*>) {
+                            v.map {
+                                val colKey = it.toString()
+                                labels[questionCode + colKey] ?: labels[colKey] ?: colKey
+                            }
+                        } else {
+                            val colKey = v.toString()
+                            labels[questionCode + colKey] ?: labels[colKey] ?: colKey
+                        }
+                        rowLabel to colValue
                     }
                 }
                 "MULTIPLE_TEXT", "MULTI_SHORT_TEXT" -> {
@@ -244,6 +270,39 @@ class AnalyticsService(
                 }
                 else -> value
             }
+        }
+    }
+
+    private fun extractMatrixMultiFieldResponses(
+        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
+        answerCodes: List<String>,
+        questionCode: String,
+        labels: Map<String, String>,
+        schemaMap: Map<String, ResponseField>
+    ): List<Any?> {
+        // Only process row answer codes (A followed by digits, not Ac)
+        val rowCodes = answerCodes.filter {
+            it.removePrefix(questionCode).matches(Regex("^A\\d+$"))
+        }
+        return responses.mapNotNull { response ->
+            val fieldMap = rowCodes.mapNotNull mapField@{ answerCode ->
+                val field = schemaMap[answerCode] ?: return@mapField null
+                val valueKey = field.toValueKey()
+                val value = response.values[valueKey] ?: return@mapField null
+                if (value is String && value.isBlank()) return@mapField null
+                val rowLabel = labels[answerCode] ?: answerCode
+                val colValue = if (value is List<*>) {
+                    value.map {
+                        val colKey = it.toString()
+                        labels[questionCode + colKey] ?: labels[colKey] ?: colKey
+                    }
+                } else {
+                    val colKey = value.toString()
+                    labels[questionCode + colKey] ?: labels[colKey] ?: colKey
+                }
+                rowLabel to colValue
+            }.toMap()
+            fieldMap.ifEmpty { null }
         }
     }
 
