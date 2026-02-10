@@ -1,10 +1,12 @@
 package com.qlarr.backend.controllers
 
+import com.qlarr.backend.api.response.AnalyticsDto
 import com.qlarr.backend.api.response.ResponseDto
 import com.qlarr.backend.api.response.ResponseFormat
 import com.qlarr.backend.api.response.ResponseStatus
 import com.qlarr.backend.api.response.ResponsesSummaryDto
 import com.qlarr.backend.exceptions.UnrecognizedZoneException
+import com.qlarr.backend.services.AnalyticsService
 import com.qlarr.backend.services.ResponseService
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
@@ -20,7 +22,8 @@ import java.util.*
 
 @RestController
 class ResponseController(
-    private val responseService: ResponseService
+    private val responseService: ResponseService,
+    private val analyticsService: AnalyticsService
 ) {
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
     @GetMapping("/response/{responseId}")
@@ -100,5 +103,15 @@ class ResponseController(
         @RequestParam complete: Boolean?,
     ): ResponseEntity<InputStreamResource> {
         return responseService.bulkDownloadResponses(surveyId, complete, from, to)
+    }
+
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/survey/{surveyId}/response/analytics")
+    fun getAnalytics(
+        @PathVariable surveyId: UUID,
+        @RequestParam("max_responses", required = false) maxResponses: Int?
+    ): ResponseEntity<AnalyticsDto> {
+        val result = analyticsService.getAnalytics(surveyId, maxResponses ?: 5000)
+        return ResponseEntity(result, HttpStatus.OK)
     }
 }
