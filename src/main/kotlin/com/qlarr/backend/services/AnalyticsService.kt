@@ -44,7 +44,6 @@ class AnalyticsService(
         val questionCodes = componentIndexList
             .map { it.code }
             .filter { it.startsWith("Q") && !it.contains("A") }
-            .filter { schemaMap.containsKey(it) }
 
         val questions = questionCodes.mapNotNull { questionCode ->
             buildAnalyticsQuestion(
@@ -106,6 +105,7 @@ class AnalyticsService(
             "LONGTEXT" -> "LONGTEXT"
             "EMAIL" -> "EMAIL"
             "MULTIPLE_TEXT" -> "MULTIPLE_TEXT"
+            "MULTI_SHORT_TEXT", "MULTISHORTTEXT" -> "MULTI_SHORT_TEXT"
             "AUTOCOMPLETE" -> "AUTOCOMPLETE"
             "IMAGE_RANKING" -> "IMAGE_RANKING"
             "IMAGE_SCQ" -> "IMAGE_SCQ"
@@ -126,8 +126,10 @@ class AnalyticsService(
         componentIndexList: List<ComponentIndex>,
         responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>
     ): AnalyticsQuestion? {
-        val responseField = schemaMap[questionCode] ?: return null
-        val questionType = questionTypes[questionCode] ?: inferTypeFromReturnType(responseField.dataType)
+        val responseField = schemaMap[questionCode]
+        val questionType = questionTypes[questionCode]
+            ?: responseField?.let { inferTypeFromReturnType(it.dataType) }
+            ?: return null
         val title = labels[questionCode] ?: questionCode
 
         // Get answer codes (children of this question)
@@ -140,14 +142,13 @@ class AnalyticsService(
         } else null
 
         // Extract response values for this question
-        val valueKey = responseField.toValueKey()
-        val responseValues = extractResponses(
-            questionType,
-            valueKey,
-            responses,
-            answerCodes,
-            labels
-        )
+        val responseValues = if (responseField != null) {
+            val valueKey = responseField.toValueKey()
+            extractResponses(questionType, valueKey, responses, answerCodes, labels)
+        } else {
+            // Values stored at answer level (e.g., MULTIPLE_TEXT, MULTI_SHORT_TEXT)
+            extractMultiFieldResponses(responses, answerCodes, labels, schemaMap)
+        }
 
         return AnalyticsQuestion(
             id = questionCode,
@@ -158,7 +159,9 @@ class AnalyticsService(
             rows = null, // TODO: Extract for MATRIX types
             columns = null, // TODO: Extract for MATRIX types
             images = null, // TODO: Extract for IMAGE types
-            fields = null, // TODO: Extract for MULTIPLE_TEXT
+            fields = if (questionType in listOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")) {
+                answerCodes.map { labels[it] ?: it }
+            } else null,
             responses = responseValues
         )
     }
@@ -222,9 +225,11 @@ class AnalyticsService(
                                 else (labels[v.toString()] ?: v.toString())
                     }
                 }
-                "MULTIPLE_TEXT" -> {
-                    // Map with field labels
-                    value
+                "MULTIPLE_TEXT", "MULTI_SHORT_TEXT" -> {
+                    // value is a map {answerCode: textValue}, remap keys to labels
+                    (value as? Map<*, *>)?.entries?.associate { (k, v) ->
+                        (labels[k.toString()] ?: k.toString()) to v
+                    } ?: value
                 }
                 "SIGNATURE", "PHOTO_CAPTURE" -> {
                     // Extract completion status
@@ -239,6 +244,24 @@ class AnalyticsService(
                 }
                 else -> value
             }
+        }
+    }
+
+    private fun extractMultiFieldResponses(
+        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
+        answerCodes: List<String>,
+        labels: Map<String, String>,
+        schemaMap: Map<String, ResponseField>
+    ): List<Any?> {
+        return responses.mapNotNull { response ->
+            val fieldMap = answerCodes.mapNotNull mapField@{ answerCode ->
+                val field = schemaMap[answerCode] ?: return@mapField null
+                val valueKey = field.toValueKey()
+                val value = response.values[valueKey] ?: return@mapField null
+                if (value is String && value.isBlank()) return@mapField null
+                (labels[answerCode] ?: answerCode) to value
+            }.toMap()
+            fieldMap.ifEmpty { null }
         }
     }
 }
