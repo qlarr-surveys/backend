@@ -7,7 +7,6 @@ import com.qlarr.backend.api.response.AnalyticsImage
 import com.qlarr.backend.api.response.AnalyticsQuestion
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.qlarr.surveyengine.ext.splitToComponentCodes
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
@@ -37,7 +36,6 @@ class AnalyticsService(
         val schemaMap = validationOutput.schema
             .filter { it.columnName == ColumnName.VALUE }
             .associateBy { it.componentCode }
-
         // Extract question types and content paths from survey design
         val questionTypes = extractQuestionTypes(validationOutput.survey)
         val contentPaths = extractContentPaths(validationOutput.survey)
@@ -113,14 +111,29 @@ class AnalyticsService(
 
         if (isAnswer && currentQuestionCode != null) {
             val fullCode = currentQuestionCode + code
+            var resourceFiles: List<String>? = null
+            // Check resources node first
             val resourcesNode = node.get("resources")
             if (resourcesNode is ObjectNode) {
                 val icon = resourcesNode.get("icon")?.asText()
                 val image = resourcesNode.get("image")?.asText()
                 val resourceFile = icon ?: image
                 if (resourceFile != null) {
-                    result[fullCode] = listOf(resourceFile)
+                    resourceFiles = listOf(resourceFile)
                 }
+            }
+            // Fallback: check instructionList Format instructions for contentPath
+            if (resourceFiles == null) {
+                val instructionList = node.get("instructionList") as? ArrayNode
+                instructionList?.firstOrNull { inst ->
+                    inst.get("code")?.asText()?.startsWith("format_") == true
+                            && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
+                }?.let { inst ->
+                    resourceFiles = (inst.get("contentPath") as ArrayNode).map { it.asText() }
+                }
+            }
+            if (resourceFiles != null) {
+                result[fullCode] = resourceFiles
             }
         }
 
@@ -163,10 +176,38 @@ class AnalyticsService(
         // Fallback: instructionList Format instruction "format_label"
         val resolvedLabel = label ?: run {
             val instructionList = node.get("instructionList") as? ArrayNode
-            instructionList?.firstOrNull { inst ->
+            val formatLabelInst = instructionList?.firstOrNull { inst ->
                 inst.get("code")?.asText() == "format_label"
                         && inst.get("lang")?.asText() == lang
-            }?.get("text")?.asText()?.takeIf { it.isNotBlank() }
+            }
+            formatLabelInst?.get("text")?.asText()?.takeIf { it.isNotBlank() }
+                ?: formatLabelInst?.get("contentPath")?.let { cpNode ->
+                    (cpNode as? ArrayNode)?.firstOrNull()?.asText()?.takeIf { it.isNotBlank() }?.let { path ->
+                        path.substringAfterLast("/").substringBeforeLast(".")
+                    }
+                }
+        }
+        // Fallback: any format_* instruction with contentPath (e.g., format_icon, format_image)
+        ?: run {
+            val instructionList = node.get("instructionList") as? ArrayNode
+            instructionList?.firstOrNull { inst ->
+                inst.get("code")?.asText()?.startsWith("format_") == true
+                        && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
+            }?.let { inst ->
+                (inst.get("contentPath") as? ArrayNode)?.firstOrNull()?.asText()
+                    ?.takeIf { it.isNotBlank() }?.let { path ->
+                        path.substringAfterLast("/").substringBeforeLast(".")
+                    }
+            }
+        }
+        // Fallback: resources node icon/image filename
+        ?: run {
+            val resourcesNode = node.get("resources") as? ObjectNode
+            val icon = resourcesNode?.get("icon")?.asText()
+            val image = resourcesNode?.get("image")?.asText()
+            (icon ?: image)?.takeIf { it.isNotBlank() }?.let { resourceFile ->
+                resourceFile.substringAfterLast("/").substringBeforeLast(".")
+            }
         }
 
         if (resolvedLabel != null) {
@@ -241,13 +282,17 @@ class AnalyticsService(
         val answerCodes = componentIndex?.children ?: emptyList()
 
         // Build question metadata based on type
-        val options = if (questionType in listOf("SCQ", "MCQ", "RANKING", "AUTOCOMPLETE", "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ", "IMAGE_RANKING")) {
+        val options = if (questionType in listOf("SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE", "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")) {
             answerCodes.map { labels[it] ?: it }
         } else null
 
         // Extract response values for this question
         val isMatrix = questionType in listOf("MATRIX_SCQ", "MATRIX_MCQ")
-        val responseValues = if (responseField != null) {
+        val isRanking = questionType in listOf("RANKING", "IMAGE_RANKING")
+        val responseValues: List<Any?> = if (isRanking) {
+            // Each answer stores its rank as an integer VALUE (e.g., Q1A1.value = 2)
+            extractRankingFromAnswerValues(responses, answerCodes, labels, schemaMap)
+        } else if (responseField != null) {
             val valueKey = responseField.toValueKey()
             extractResponses(questionType, valueKey, questionCode, responses, answerCodes, labels)
         } else if (isMatrix) {
@@ -261,12 +306,15 @@ class AnalyticsService(
         val rows = if (isMatrix) {
             answerCodes
                 .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
-                .map { labels[it] ?: it }
+                .map { labels[it] ?: it.removePrefix(questionCode) }
         } else null
+        val isIconOrImageChoice = questionType in listOf("ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")
         val columns = if (isMatrix) {
             answerCodes
                 .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
-                .map { labels[it] ?: it }
+                .map { labels[it] ?: it.removePrefix(questionCode) }
+        } else if (isIconOrImageChoice) {
+            answerCodes.map { labels[it] ?: it.removePrefix(questionCode) }
         } else null
 
         return AnalyticsQuestion(
@@ -333,13 +381,6 @@ class AnalyticsService(
                         labels[v] ?: labels[questionCode + v] ?: v
                     }
                 }
-                "RANKING", "IMAGE_RANKING" -> {
-                    // value is an ordered list of answer codes
-                    (value as? List<*>)?.map { item ->
-                        val v = item.toString()
-                        labels[v] ?: labels[questionCode + v] ?: v
-                    }
-                }
                 "NPS", "NUMBER" -> {
                     // Numeric value
                     value
@@ -376,13 +417,7 @@ class AnalyticsService(
                         (labels[k.toString()] ?: k.toString()) to v
                     } ?: value
                 }
-                "SIGNATURE", "PHOTO_CAPTURE" -> {
-                    // Extract completion status
-                    when (value) {
-                        is Map<*, *> -> value["signed"] ?: value["captured"] ?: false
-                        else -> value
-                    }
-                }
+                "SIGNATURE", "PHOTO_CAPTURE" -> true
                 "FILE_UPLOAD" -> {
                     // Extract file metadata
                     value
@@ -422,6 +457,29 @@ class AnalyticsService(
                 rowLabel to colValue
             }.toMap()
             fieldMap.ifEmpty { null }
+        }
+    }
+
+    private fun extractRankingFromAnswerValues(
+        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
+        answerCodes: List<String>,
+        labels: Map<String, String>,
+        schemaMap: Map<String, ResponseField>
+    ): List<Any?> {
+        return responses.mapNotNull { response ->
+            val rankedItems = answerCodes.mapNotNull mapField@{ answerCode ->
+                val field = schemaMap[answerCode] ?: return@mapField null
+                val valueKey = field.toValueKey()
+                val value = response.values[valueKey] ?: return@mapField null
+                val rank = when (value) {
+                    is Number -> value.toInt()
+                    is String -> value.toIntOrNull() ?: return@mapField null
+                    else -> return@mapField null
+                }
+                rank to (labels[answerCode] ?: answerCode)
+            }
+            if (rankedItems.isEmpty()) null
+            else rankedItems.sortedBy { it.first }.map { it.second }
         }
     }
 
