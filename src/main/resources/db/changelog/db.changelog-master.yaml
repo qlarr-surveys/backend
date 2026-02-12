@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/DDL/00005-add-auto-complete-table.sql
   - include:
       file: db/changelog/DDL/00006-change-auto-complete-pk-to-composite.sql
+  - include:
+      file: db/changelog/DDL/00007-change-nav-index-to-text.sql
