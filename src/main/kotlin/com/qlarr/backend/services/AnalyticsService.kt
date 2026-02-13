@@ -6,6 +6,7 @@ import com.qlarr.backend.api.response.AnalyticsDto
 import com.qlarr.backend.api.response.AnalyticsImage
 import com.qlarr.backend.api.response.AnalyticsQuestion
 import com.qlarr.backend.common.stripHtmlTags
+import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
@@ -20,6 +21,31 @@ class AnalyticsService(
     private val designService: DesignService,
     private val responseRepository: ResponseRepository
 ) {
+    companion object {
+        private val CHOICE_TYPES = setOf(
+            "SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE",
+            "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ"
+        )
+        private val MATRIX_TYPES = setOf("MATRIX_SCQ", "MATRIX_MCQ")
+        private val RANKING_TYPES = setOf("RANKING", "IMAGE_RANKING")
+        private val ICON_IMAGE_CHOICE_TYPES = setOf("ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")
+        private val MULTI_FIELD_TYPES = setOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")
+        private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
+        private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
+        private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
+        private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
+    }
+
+    private data class AnalyticsContext(
+        val labels: Map<String, String>,
+        val schemaMap: Map<String, ResponseField>,
+        val componentIndexList: List<ComponentIndex>,
+        val questionTypes: Map<String, String>,
+        val contentPaths: Map<String, List<String>>,
+        val surveyId: UUID,
+        val responses: List<SurveyResponseEntity>
+    )
+
     fun getAnalytics(surveyId: UUID, maxResponses: Int): AnalyticsDto {
         val processed = designService.getLatestProcessedSurvey(surveyId)
         val survey = processed.survey
@@ -32,36 +58,26 @@ class AnalyticsService(
             .filterValues { it.isNotEmpty() }
             .stripHtmlTags()
         val labels = supplementaryLabels + jarLabels
-        val componentIndexList = validationOutput.componentIndexList
         val schemaMap = validationOutput.schema
             .filter { it.columnName == ColumnName.VALUE }
             .associateBy { it.componentCode }
+
         // Extract question types and content paths from survey design
         val questionTypes = extractQuestionTypes(validationOutput.survey)
         val contentPaths = extractContentPaths(validationOutput.survey)
 
         // Fetch completed responses
         val pageable = Pageable.ofSize(maxResponses).withPage(0)
-        val responsePage = responseRepository.findCompletedBySurveyId(surveyId, pageable)
-        val responses = responsePage.content
+        val responses = responseRepository.findCompletedBySurveyId(surveyId, pageable).content
+
+        val ctx = AnalyticsContext(labels, schemaMap, validationOutput.componentIndexList, questionTypes, contentPaths, surveyId, responses)
 
         // Build analytics questions
-        val questionCodes = componentIndexList
+        val questionCodes = ctx.componentIndexList
             .map { it.code }
-            .filter { it.startsWith("Q") && !it.contains("A") }
+            .filter { it.isQuestionCode() }
 
-        val questions = questionCodes.mapNotNull { questionCode ->
-            buildAnalyticsQuestion(
-                questionCode,
-                questionTypes,
-                labels,
-                schemaMap,
-                componentIndexList,
-                responses,
-                surveyId,
-                contentPaths
-            )
-        }
+        val questions = questionCodes.mapNotNull { buildAnalyticsQuestion(it, ctx) }
 
         return AnalyticsDto(
             surveyTitle = survey.name,
@@ -70,165 +86,146 @@ class AnalyticsService(
         )
     }
 
-    private fun extractQuestionTypes(survey: ObjectNode): Map<String, String> {
-        val types = mutableMapOf<String, String>()
-        traverseTree(survey, types)
-        return types
-    }
+    // --- Tree traversal ---
 
-    private fun traverseTree(node: ObjectNode, types: MutableMap<String, String>) {
+    private fun traverseSurveyTree(
+        node: ObjectNode,
+        parentQuestionCode: String? = null,
+        visitor: (node: ObjectNode, code: String?, parentQuestionCode: String?) -> Unit
+    ) {
         val code = node.get("code")?.asText()
-        val type = node.get("type")?.asText()
+        visitor(node, code, parentQuestionCode)
 
-        if (code != null && type != null && code.startsWith("Q") && !code.contains("A")) {
-            types[code] = mapQuestionType(type)
-        }
-
-        listOf("children", "groups", "questions", "answers").forEach { childKey ->
+        val currentQuestionCode = if (code != null && code.isQuestionCode()) code else parentQuestionCode
+        CHILD_KEYS.forEach { childKey ->
             node.get(childKey)?.forEach { child ->
                 if (child is ObjectNode) {
-                    traverseTree(child, types)
+                    traverseSurveyTree(child, currentQuestionCode, visitor)
                 }
             }
         }
+    }
+
+    private fun extractQuestionTypes(survey: ObjectNode): Map<String, String> {
+        val types = mutableMapOf<String, String>()
+        traverseSurveyTree(survey) { node, code, _ ->
+            if (code != null && code.isQuestionCode()) {
+                node.get("type")?.asText()?.let { types[code] = mapQuestionType(it) }
+            }
+        }
+        return types
     }
 
     private fun extractContentPaths(survey: ObjectNode): Map<String, List<String>> {
         val result = mutableMapOf<String, List<String>>()
-        traverseForContentPaths(survey, null, result)
+        traverseSurveyTree(survey) { node, code, parentQuestionCode ->
+            if (code != null && code.startsWith("A") && parentQuestionCode != null) {
+                resolveContentPaths(node)?.let { result[parentQuestionCode + code] = it }
+            }
+        }
         return result
-    }
-
-    private fun traverseForContentPaths(
-        node: ObjectNode,
-        parentQuestionCode: String?,
-        result: MutableMap<String, List<String>>
-    ) {
-        val code = node.get("code")?.asText() ?: return
-        val isQuestion = code.startsWith("Q") && !code.contains("A")
-        val isAnswer = code.startsWith("A")
-        val currentQuestionCode = if (isQuestion) code else parentQuestionCode
-
-        if (isAnswer && currentQuestionCode != null) {
-            val fullCode = currentQuestionCode + code
-            var resourceFiles: List<String>? = null
-            // Check resources node first
-            val resourcesNode = node.get("resources")
-            if (resourcesNode is ObjectNode) {
-                val icon = resourcesNode.get("icon")?.asText()
-                val image = resourcesNode.get("image")?.asText()
-                val resourceFile = icon ?: image
-                if (resourceFile != null) {
-                    resourceFiles = listOf(resourceFile)
-                }
-            }
-            // Fallback: check instructionList Format instructions for contentPath
-            if (resourceFiles == null) {
-                val instructionList = node.get("instructionList") as? ArrayNode
-                instructionList?.firstOrNull { inst ->
-                    inst.get("code")?.asText()?.startsWith("format_") == true
-                            && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
-                }?.let { inst ->
-                    resourceFiles = (inst.get("contentPath") as ArrayNode).map { it.asText() }
-                }
-            }
-            if (resourceFiles != null) {
-                result[fullCode] = resourceFiles
-            }
-        }
-
-        listOf("children", "groups", "questions", "answers").forEach { childKey ->
-            node.get(childKey)?.forEach { child ->
-                if (child is ObjectNode) {
-                    traverseForContentPaths(child, currentQuestionCode, result)
-                }
-            }
-        }
     }
 
     private fun extractLabels(survey: ObjectNode, lang: String): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        traverseForLabels(survey, null, result, lang)
+        traverseSurveyTree(survey) { node, code, parentQuestionCode ->
+            if (code == null) return@traverseSurveyTree
+            val fullCode = when {
+                code.isQuestionCode() -> code
+                code.startsWith("A") && parentQuestionCode != null -> parentQuestionCode + code
+                else -> code
+            }
+            resolveNodeLabel(node, lang)?.let { result[fullCode] = it }
+        }
         return result
     }
 
-    private fun traverseForLabels(
-        node: ObjectNode,
-        parentQuestionCode: String?,
-        result: MutableMap<String, String>,
-        lang: String
-    ) {
-        val code = node.get("code")?.asText() ?: return
-        val isQuestion = code.startsWith("Q") && !code.contains("A")
-        val isAnswer = code.startsWith("A")
-        val currentQuestionCode = if (isQuestion) code else parentQuestionCode
-        val fullCode = when {
-            isQuestion -> code
-            isAnswer && currentQuestionCode != null -> currentQuestionCode + code
-            else -> code
-        }
+    // --- Node-level extraction helpers ---
 
+    private fun resolveNodeLabel(node: ObjectNode, lang: String): String? {
         // Try content.{lang}.label
         val content = node.get("content") as? ObjectNode
         val langContent = content?.get(lang) as? ObjectNode
         val label = langContent?.get("label")?.asText()?.takeIf { it.isNotBlank() }
+        if (label != null) return label
 
-        // Fallback: instructionList Format instruction "format_label"
-        val resolvedLabel = label ?: run {
-            val instructionList = node.get("instructionList") as? ArrayNode
-            val formatLabelInst = instructionList?.firstOrNull { inst ->
-                inst.get("code")?.asText() == "format_label"
-                        && inst.get("lang")?.asText() == lang
+        val instructionList = node.get("instructionList") as? ArrayNode
+
+        // Fallback: instructionList "format_label" instruction
+        val formatLabelInst = instructionList?.firstOrNull { inst ->
+            inst.get("code")?.asText() == "format_label"
+                    && inst.get("lang")?.asText() == lang
+        }
+        val fromFormatLabel = formatLabelInst?.get("text")?.asText()?.takeIf { it.isNotBlank() }
+            ?: formatLabelInst?.get("contentPath")?.let { cpNode ->
+                (cpNode as? ArrayNode)?.firstOrNull()?.asText()?.takeIf { it.isNotBlank() }?.let { path ->
+                    path.substringAfterLast("/").substringBeforeLast(".")
+                }
             }
-            formatLabelInst?.get("text")?.asText()?.takeIf { it.isNotBlank() }
-                ?: formatLabelInst?.get("contentPath")?.let { cpNode ->
-                    (cpNode as? ArrayNode)?.firstOrNull()?.asText()?.takeIf { it.isNotBlank() }?.let { path ->
-                        path.substringAfterLast("/").substringBeforeLast(".")
-                    }
+        if (fromFormatLabel != null) return fromFormatLabel
+
+        // Fallback: any format_* instruction with contentPath
+        val fromFormatAny = instructionList?.firstOrNull { inst ->
+            inst.get("code")?.asText()?.startsWith("format_") == true
+                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
+        }?.let { inst ->
+            (inst.get("contentPath") as? ArrayNode)?.firstOrNull()?.asText()
+                ?.takeIf { it.isNotBlank() }?.let { path ->
+                    path.substringAfterLast("/").substringBeforeLast(".")
                 }
         }
-        // Fallback: any format_* instruction with contentPath (e.g., format_icon, format_image)
-        ?: run {
-            val instructionList = node.get("instructionList") as? ArrayNode
-            instructionList?.firstOrNull { inst ->
-                inst.get("code")?.asText()?.startsWith("format_") == true
-                        && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
-            }?.let { inst ->
-                (inst.get("contentPath") as? ArrayNode)?.firstOrNull()?.asText()
-                    ?.takeIf { it.isNotBlank() }?.let { path ->
-                        path.substringAfterLast("/").substringBeforeLast(".")
-                    }
-            }
-        }
+        if (fromFormatAny != null) return fromFormatAny
+
         // Fallback: resources node icon/image filename
-        ?: run {
-            val resourcesNode = node.get("resources") as? ObjectNode
-            val icon = resourcesNode?.get("icon")?.asText()
-            val image = resourcesNode?.get("image")?.asText()
-            (icon ?: image)?.takeIf { it.isNotBlank() }?.let { resourceFile ->
-                resourceFile.substringAfterLast("/").substringBeforeLast(".")
-            }
-        }
-
-        if (resolvedLabel != null) {
-            result[fullCode] = resolvedLabel
-        }
-
-        listOf("children", "groups", "questions", "answers").forEach { childKey ->
-            node.get(childKey)?.forEach { child ->
-                if (child is ObjectNode) {
-                    traverseForLabels(child, currentQuestionCode, result, lang)
-                }
-            }
+        val resourcesNode = node.get("resources") as? ObjectNode
+        val resourceFile = resourcesNode?.get("icon")?.asText() ?: resourcesNode?.get("image")?.asText()
+        return resourceFile?.takeIf { it.isNotBlank() }?.let {
+            it.substringAfterLast("/").substringBeforeLast(".")
         }
     }
 
-    private fun buildResourceUrl(surveyId: UUID, fileName: String): String {
-        return "/survey/$surveyId/resource/$fileName"
+    private fun resolveContentPaths(node: ObjectNode): List<String>? {
+        // Check resources node first
+        val resourcesNode = node.get("resources") as? ObjectNode
+        if (resourcesNode != null) {
+            val resourceFile = resourcesNode.get("icon")?.asText() ?: resourcesNode.get("image")?.asText()
+            if (resourceFile != null) return listOf(resourceFile)
+        }
+        // Fallback: instructionList format_* with contentPath
+        val instructionList = node.get("instructionList") as? ArrayNode
+        return instructionList?.firstOrNull { inst ->
+            inst.get("code")?.asText()?.startsWith("format_") == true
+                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
+        }?.let { inst ->
+            (inst.get("contentPath") as ArrayNode).map { it.asText() }
+        }
     }
+
+    // --- Label & value resolution helpers ---
+
+    private fun resolveLabel(code: String, questionCode: String, labels: Map<String, String>): String {
+        return labels[code] ?: labels[questionCode + code] ?: code
+    }
+
+    private fun resolveColumnValue(value: Any?, questionCode: String, labels: Map<String, String>): Any {
+        return if (value is List<*>) {
+            value.map { resolveLabel(it.toString(), questionCode, labels) }
+        } else {
+            resolveLabel(value.toString(), questionCode, labels)
+        }
+    }
+
+    private fun isEmptyValue(value: Any?): Boolean = when (value) {
+        null -> true
+        is String -> value.isBlank()
+        is List<*> -> value.isEmpty()
+        is Map<*, *> -> value.isEmpty()
+        else -> false
+    }
+
+    // --- Question type mapping ---
 
     private fun mapQuestionType(backendType: String): String {
-        // Map from Qlarr backend question types to chart visualization types
         return when (backendType.uppercase()) {
             "SCQ", "SINGLECHOICEQUESTION" -> "SCQ"
             "MCQ", "MULTIPLECHOICEQUESTION" -> "MCQ"
@@ -257,88 +254,8 @@ class AnalyticsService(
             "SIGNATURE" -> "SIGNATURE"
             "PHOTO_CAPTURE", "PHOTO" -> "PHOTO_CAPTURE"
             "BARCODE" -> "BARCODE"
-            else -> backendType.uppercase() // Fallback to original
+            else -> backendType.uppercase()
         }
-    }
-
-    private fun buildAnalyticsQuestion(
-        questionCode: String,
-        questionTypes: Map<String, String>,
-        labels: Map<String, String>,
-        schemaMap: Map<String, ResponseField>,
-        componentIndexList: List<ComponentIndex>,
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
-        surveyId: UUID,
-        contentPaths: Map<String, List<String>>
-    ): AnalyticsQuestion? {
-        val responseField = schemaMap[questionCode]
-        val questionType = questionTypes[questionCode]
-            ?: responseField?.let { inferTypeFromReturnType(it.dataType) }
-            ?: return null
-        val title = labels[questionCode] ?: questionCode
-
-        // Get answer codes (children of this question)
-        val componentIndex = componentIndexList.firstOrNull { it.code == questionCode }
-        val answerCodes = componentIndex?.children ?: emptyList()
-
-        // Build question metadata based on type
-        val options = if (questionType in listOf("SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE", "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")) {
-            answerCodes.map { labels[it] ?: it }
-        } else null
-
-        // Extract response values for this question
-        val isMatrix = questionType in listOf("MATRIX_SCQ", "MATRIX_MCQ")
-        val isRanking = questionType in listOf("RANKING", "IMAGE_RANKING")
-        val responseValues: List<Any?> = if (isRanking) {
-            // Each answer stores its rank as an integer VALUE (e.g., Q1A1.value = 2)
-            extractRankingFromAnswerValues(responses, answerCodes, labels, schemaMap)
-        } else if (responseField != null) {
-            val valueKey = responseField.toValueKey()
-            extractResponses(questionType, valueKey, questionCode, responses, answerCodes, labels)
-        } else if (isMatrix) {
-            // For MATRIX types, values are stored per-row answer; rebuild as row→column label maps
-            extractMatrixMultiFieldResponses(responses, answerCodes, questionCode, labels, schemaMap)
-        } else {
-            // Values stored at answer level (e.g., MULTIPLE_TEXT, MULTI_SHORT_TEXT)
-            extractMultiFieldResponses(responses, answerCodes, labels, schemaMap)
-        }
-
-        val rows = if (isMatrix) {
-            answerCodes
-                .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
-                .map { labels[it] ?: it.removePrefix(questionCode) }
-        } else null
-        val isIconOrImageChoice = questionType in listOf("ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")
-        val columns = if (isMatrix) {
-            answerCodes
-                .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
-                .map { labels[it] ?: it.removePrefix(questionCode) }
-        } else if (isIconOrImageChoice) {
-            answerCodes.map { labels[it] ?: it.removePrefix(questionCode) }
-        } else null
-
-        return AnalyticsQuestion(
-            id = questionCode,
-            type = questionType,
-            title = title,
-            description = null,
-            options = options,
-            rows = rows,
-            columns = columns,
-            images = answerCodes.mapNotNull { answerCode ->
-                contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
-                    AnalyticsImage(
-                        id = answerCode,
-                        label = labels[answerCode],
-                        url = buildResourceUrl(surveyId, resourceFile)
-                    )
-                }
-            }.ifEmpty { null },
-            fields = if (questionType in listOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")) {
-                answerCodes.map { labels[it] ?: it }
-            } else null,
-            responses = responseValues
-        )
     }
 
     private fun inferTypeFromReturnType(dataType: ReturnType): String {
@@ -355,128 +272,145 @@ class AnalyticsService(
         }
     }
 
+    // --- Analytics question building ---
+
+    private fun buildAnalyticsQuestion(questionCode: String, ctx: AnalyticsContext): AnalyticsQuestion? {
+        val responseField = ctx.schemaMap[questionCode]
+        val questionType = ctx.questionTypes[questionCode]
+            ?: responseField?.let { inferTypeFromReturnType(it.dataType) }
+            ?: return null
+        val title = ctx.labels[questionCode] ?: questionCode
+
+        // Get answer codes (children of this question)
+        val componentIndex = ctx.componentIndexList.firstOrNull { it.code == questionCode }
+        val answerCodes = componentIndex?.children ?: emptyList()
+
+        val options = if (questionType in CHOICE_TYPES) {
+            answerCodes.map { ctx.labels[it] ?: it }
+        } else null
+
+        // Extract response values for this question
+        val isMatrix = questionType in MATRIX_TYPES
+        val isRanking = questionType in RANKING_TYPES
+        val responseValues: List<Any?> = if (isRanking) {
+            extractRankingFromAnswerValues(ctx, answerCodes)
+        } else if (responseField != null) {
+            extractResponses(questionType, responseField.toValueKey(), questionCode, ctx)
+        } else if (isMatrix) {
+            extractMatrixMultiFieldResponses(ctx, answerCodes, questionCode)
+        } else {
+            extractMultiFieldResponses(ctx, answerCodes)
+        }
+
+        val rows = if (isMatrix) {
+            answerCodes
+                .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
+                .map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+        } else null
+
+        val columns = if (isMatrix) {
+            answerCodes
+                .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
+                .map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+        } else if (questionType in ICON_IMAGE_CHOICE_TYPES) {
+            answerCodes.map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+        } else null
+
+        return AnalyticsQuestion(
+            id = questionCode,
+            type = questionType,
+            title = title,
+            description = null,
+            options = options,
+            rows = rows,
+            columns = columns,
+            images = answerCodes.mapNotNull { answerCode ->
+                ctx.contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
+                    AnalyticsImage(
+                        id = answerCode,
+                        label = ctx.labels[answerCode],
+                        url = buildResourceUrl(ctx.surveyId, resourceFile)
+                    )
+                }
+            }.ifEmpty { null },
+            fields = if (questionType in MULTI_FIELD_TYPES) {
+                answerCodes.map { ctx.labels[it] ?: it }
+            } else null,
+            responses = responseValues
+        )
+    }
+
+    private fun buildResourceUrl(surveyId: UUID, fileName: String): String {
+        return "/survey/$surveyId/resource/$fileName"
+    }
+
+    // --- Response extraction ---
+
     private fun extractResponses(
         type: String,
         valueKey: String,
         questionCode: String,
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
-        answerCodes: List<String>,
-        labels: Map<String, String>
+        ctx: AnalyticsContext
     ): List<Any?> {
-        return responses.mapNotNull { response ->
+        return ctx.responses.mapNotNull { response ->
             val value = response.values[valueKey] ?: return@mapNotNull null
-            if (value is String && value.isBlank()) return@mapNotNull null
-            if (value is List<*> && value.isEmpty()) return@mapNotNull null
-            if (value is Map<*, *> && value.isEmpty()) return@mapNotNull null
-            when (type) {
-                "SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ" -> {
-                    // value is an answer code (full like "Q1A1" or short like "A1"), map to label
-                    val v = value.toString()
-                    labels[v] ?: labels[questionCode + v] ?: v
+            if (isEmptyValue(value)) return@mapNotNull null
+            when {
+                type in SINGLE_CHOICE_TYPES -> resolveLabel(value.toString(), questionCode, ctx.labels)
+                type in MULTI_CHOICE_TYPES -> {
+                    (value as? List<*>)?.map { resolveLabel(it.toString(), questionCode, ctx.labels) }
                 }
-                "MCQ", "IMAGE_MCQ", "ICON_MCQ" -> {
-                    // value is a list of answer codes, map each to label
-                    (value as? List<*>)?.map { item ->
-                        val v = item.toString()
-                        labels[v] ?: labels[questionCode + v] ?: v
+                type in MATRIX_TYPES -> {
+                    (value as? Map<*, *>)?.entries?.associate { (k, v) ->
+                        resolveLabel(k.toString(), questionCode, ctx.labels) to
+                                resolveColumnValue(v, questionCode, ctx.labels)
                     }
                 }
-                "NPS", "NUMBER" -> {
-                    // Numeric value
-                    value
-                }
-                "TEXT", "SHORTTEXT", "EMAIL", "PARAGRAPH", "LONGTEXT", "BARCODE", "TIME" -> {
-                    // String value
-                    value
-                }
-                "DATE", "DATETIME" -> {
-                    // Date string
-                    value
-                }
-                "MATRIX_SCQ", "MATRIX_MCQ" -> {
-                    // value is a map {shortRowCode: shortColumnCode}
-                    // Short codes like "Ac1" need questionCode prefix for label lookup
+                type in MULTI_FIELD_TYPES -> {
                     (value as? Map<*, *>)?.entries?.associate { (k, v) ->
-                        val rowKey = k.toString()
-                        val rowLabel = labels[questionCode + rowKey] ?: labels[rowKey] ?: rowKey
-                        val colValue = if (v is List<*>) {
-                            v.map {
-                                val colKey = it.toString()
-                                labels[questionCode + colKey] ?: labels[colKey] ?: colKey
-                            }
-                        } else {
-                            val colKey = v.toString()
-                            labels[questionCode + colKey] ?: labels[colKey] ?: colKey
-                        }
-                        rowLabel to colValue
-                    }
-                }
-                "MULTIPLE_TEXT", "MULTI_SHORT_TEXT" -> {
-                    // value is a map {answerCode: textValue}, remap keys to labels
-                    (value as? Map<*, *>)?.entries?.associate { (k, v) ->
-                        (labels[k.toString()] ?: k.toString()) to v
+                        (ctx.labels[k.toString()] ?: k.toString()) to v
                     } ?: value
                 }
-                "SIGNATURE", "PHOTO_CAPTURE" -> true
-                "FILE_UPLOAD" -> {
-                    // Extract file metadata
-                    value
-                }
+                type in PRESENCE_ONLY_TYPES -> true
                 else -> value
             }
         }
     }
 
     private fun extractMatrixMultiFieldResponses(
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
+        ctx: AnalyticsContext,
         answerCodes: List<String>,
-        questionCode: String,
-        labels: Map<String, String>,
-        schemaMap: Map<String, ResponseField>
+        questionCode: String
     ): List<Any?> {
-        // Only process row answer codes (A followed by digits, not Ac)
         val rowCodes = answerCodes.filter {
             it.removePrefix(questionCode).matches(Regex("^A\\d+$"))
         }
-        return responses.mapNotNull { response ->
+        return ctx.responses.mapNotNull { response ->
             val fieldMap = rowCodes.mapNotNull mapField@{ answerCode ->
-                val field = schemaMap[answerCode] ?: return@mapField null
-                val valueKey = field.toValueKey()
-                val value = response.values[valueKey] ?: return@mapField null
-                if (value is String && value.isBlank()) return@mapField null
-                val rowLabel = labels[answerCode] ?: answerCode
-                val colValue = if (value is List<*>) {
-                    value.map {
-                        val colKey = it.toString()
-                        labels[questionCode + colKey] ?: labels[colKey] ?: colKey
-                    }
-                } else {
-                    val colKey = value.toString()
-                    labels[questionCode + colKey] ?: labels[colKey] ?: colKey
-                }
-                rowLabel to colValue
+                val field = ctx.schemaMap[answerCode] ?: return@mapField null
+                val value = response.values[field.toValueKey()] ?: return@mapField null
+                if (isEmptyValue(value)) return@mapField null
+                val rowLabel = ctx.labels[answerCode] ?: answerCode
+                rowLabel to resolveColumnValue(value, questionCode, ctx.labels)
             }.toMap()
             fieldMap.ifEmpty { null }
         }
     }
 
     private fun extractRankingFromAnswerValues(
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
-        answerCodes: List<String>,
-        labels: Map<String, String>,
-        schemaMap: Map<String, ResponseField>
+        ctx: AnalyticsContext,
+        answerCodes: List<String>
     ): List<Any?> {
-        return responses.mapNotNull { response ->
+        return ctx.responses.mapNotNull { response ->
             val rankedItems = answerCodes.mapNotNull mapField@{ answerCode ->
-                val field = schemaMap[answerCode] ?: return@mapField null
-                val valueKey = field.toValueKey()
-                val value = response.values[valueKey] ?: return@mapField null
+                val field = ctx.schemaMap[answerCode] ?: return@mapField null
+                val value = response.values[field.toValueKey()] ?: return@mapField null
                 val rank = when (value) {
                     is Number -> value.toInt()
                     is String -> value.toIntOrNull() ?: return@mapField null
                     else -> return@mapField null
                 }
-                rank to (labels[answerCode] ?: answerCode)
+                rank to (ctx.labels[answerCode] ?: answerCode)
             }
             if (rankedItems.isEmpty()) null
             else rankedItems.sortedBy { it.first }.map { it.second }
@@ -484,20 +418,19 @@ class AnalyticsService(
     }
 
     private fun extractMultiFieldResponses(
-        responses: List<com.qlarr.backend.persistence.entities.SurveyResponseEntity>,
-        answerCodes: List<String>,
-        labels: Map<String, String>,
-        schemaMap: Map<String, ResponseField>
+        ctx: AnalyticsContext,
+        answerCodes: List<String>
     ): List<Any?> {
-        return responses.mapNotNull { response ->
+        return ctx.responses.mapNotNull { response ->
             val fieldMap = answerCodes.mapNotNull mapField@{ answerCode ->
-                val field = schemaMap[answerCode] ?: return@mapField null
-                val valueKey = field.toValueKey()
-                val value = response.values[valueKey] ?: return@mapField null
-                if (value is String && value.isBlank()) return@mapField null
-                (labels[answerCode] ?: answerCode) to value
+                val field = ctx.schemaMap[answerCode] ?: return@mapField null
+                val value = response.values[field.toValueKey()] ?: return@mapField null
+                if (isEmptyValue(value)) return@mapField null
+                (ctx.labels[answerCode] ?: answerCode) to value
             }.toMap()
             fieldMap.ifEmpty { null }
         }
     }
 }
+
+private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")
