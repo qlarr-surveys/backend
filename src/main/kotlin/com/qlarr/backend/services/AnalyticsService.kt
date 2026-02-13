@@ -12,6 +12,7 @@ import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
 import com.qlarr.surveyengine.model.exposed.ReturnType
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.util.*
@@ -21,6 +22,8 @@ class AnalyticsService(
     private val designService: DesignService,
     private val responseRepository: ResponseRepository
 ) {
+    private val logger = LoggerFactory.getLogger(AnalyticsService::class.java)
+
     companion object {
         private val CHOICE_TYPES = setOf(
             "SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE",
@@ -34,6 +37,9 @@ class AnalyticsService(
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
         private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
         private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
+        const val DEFAULT_MAX_RESPONSES = 5000
+
+        private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")
     }
 
     private data class AnalyticsContext(
@@ -46,8 +52,8 @@ class AnalyticsService(
         val responses: List<SurveyResponseEntity>
     )
 
-    fun getAnalytics(surveyId: UUID, maxResponses: Int): AnalyticsDto {
-        val processed = designService.getLatestProcessedSurvey(surveyId)
+    fun getAnalytics(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsDto {
+        val processed = designService.getProcessedSurvey(surveyId, published = true)
         val survey = processed.survey
         val validationOutput = processed.validationJsonOutput
 
@@ -208,10 +214,12 @@ class AnalyticsService(
     }
 
     private fun resolveColumnValue(value: Any?, questionCode: String, labels: Map<String, String>): Any {
-        return if (value is List<*>) {
-            value.map { resolveLabel(it.toString(), questionCode, labels) }
-        } else {
-            resolveLabel(value.toString(), questionCode, labels)
+        return when (value) {
+            is List<*> -> value.map { resolveLabel(it.toString(), questionCode, labels) }
+            is Map<*, *> -> value.entries.associate { (k, v) ->
+                resolveLabel(k.toString(), questionCode, labels) to resolveColumnValue(v, questionCode, labels)
+            }
+            else -> resolveLabel(value.toString(), questionCode, labels)
         }
     }
 
@@ -358,18 +366,36 @@ class AnalyticsService(
             when {
                 type in SINGLE_CHOICE_TYPES -> resolveLabel(value.toString(), questionCode, ctx.labels)
                 type in MULTI_CHOICE_TYPES -> {
-                    (value as? List<*>)?.map { resolveLabel(it.toString(), questionCode, ctx.labels) }
+                    val list = value as? List<*>
+                    if (list == null) {
+                        logger.warn("Expected List for MCQ question {}, got {}", questionCode, value::class.simpleName)
+                        null
+                    } else {
+                        list.map { resolveLabel(it.toString(), questionCode, ctx.labels) }
+                    }
                 }
                 type in MATRIX_TYPES -> {
-                    (value as? Map<*, *>)?.entries?.associate { (k, v) ->
-                        resolveLabel(k.toString(), questionCode, ctx.labels) to
-                                resolveColumnValue(v, questionCode, ctx.labels)
+                    val map = value as? Map<*, *>
+                    if (map == null) {
+                        logger.warn("Expected Map for matrix question {}, got {}", questionCode, value::class.simpleName)
+                        null
+                    } else {
+                        map.entries.associate { (k, v) ->
+                            resolveLabel(k.toString(), questionCode, ctx.labels) to
+                                    resolveColumnValue(v, questionCode, ctx.labels)
+                        }
                     }
                 }
                 type in MULTI_FIELD_TYPES -> {
-                    (value as? Map<*, *>)?.entries?.associate { (k, v) ->
-                        (ctx.labels[k.toString()] ?: k.toString()) to v
-                    } ?: value
+                    val map = value as? Map<*, *>
+                    if (map == null) {
+                        logger.warn("Expected Map for multi-field question {}, got {}", questionCode, value::class.simpleName)
+                        value
+                    } else {
+                        map.entries.associate { (k, v) ->
+                            (ctx.labels[k.toString()] ?: k.toString()) to v
+                        }
+                    }
                 }
                 type in PRESENCE_ONLY_TYPES -> true
                 else -> value
@@ -432,5 +458,3 @@ class AnalyticsService(
         }
     }
 }
-
-private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")

@@ -111,7 +111,7 @@ class ResponseController(
         @PathVariable surveyId: UUID,
         @RequestParam("max_responses", required = false) maxResponses: Int?
     ): ResponseEntity<AnalyticsDto> {
-        val result = analyticsService.getAnalytics(surveyId, maxResponses ?: 5000)
+        val result = analyticsService.getAnalytics(surveyId, maxResponses ?: AnalyticsService.DEFAULT_MAX_RESPONSES)
         return ResponseEntity(result, HttpStatus.OK)
     }
 }
