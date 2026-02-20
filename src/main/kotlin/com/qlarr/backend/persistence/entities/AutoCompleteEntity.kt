@@ -9,16 +9,11 @@ import java.util.*
 
 data class AutoCompleteId(
     val surveyId: UUID = UUID.randomUUID(),
-    val filename: String = ""
+    val componentId: String = ""
 ) : Serializable
 
 @Entity
-@Table(
-    name = "auto_complete",
-    uniqueConstraints = [
-        UniqueConstraint(columnNames = ["survey_id", "component_id"])
-    ]
-)
+@Table(name = "auto_complete")
 @IdClass(AutoCompleteId::class)
 data class AutoCompleteEntity(
     @Id
@@ -26,11 +21,11 @@ data class AutoCompleteEntity(
     val surveyId: UUID,
 
     @Id
-    @Column(name = "filename", nullable = false)
-    val filename: String,
-
     @Column(name = "component_id", nullable = false)
     val componentId: String,
+
+    @Column(name = "filename", nullable = false)
+    val filename: String,
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "data", columnDefinition = "jsonb")

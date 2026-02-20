@@ -106,14 +106,16 @@ class SurveyResourceService(
             ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
             ?: "application/octet-stream"
 
-        val savedFilename =
-            helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, UUID.randomUUID().toString())
+
 
         val existingEntity = autoCompleteRepository.findBySurveyIdAndComponentId(surveyId, componentId)
 
         existingEntity?.let {
             runCatching { helper.delete(surveyId, SurveyFolder.Resources, it.filename) }
         }
+
+        val savedFilename =
+            helper.upload(surveyId, SurveyFolder.Resources, file, mimeType, UUID.randomUUID().toString())
 
         val entity = existingEntity?.copy(values = arrayNode, filename = savedFilename)
             ?: AutoCompleteEntity(

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/amr/.gradle/caches/modules-2/files-2.1/com.github.qlarr-surveys/survey-engine-kmp/5b9c4687ab/e33fac724ef9e07892eaedfe81c14de72b2e598d/**)",
+      "Bash(javap:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
