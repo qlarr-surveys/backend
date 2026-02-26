@@ -1,4 +1,4 @@
-FROM gradle:jdk19 AS build
+FROM --platform=$BUILDPLATFORM gradle:jdk19 AS build
 WORKDIR /app
 
 COPY build.gradle settings.gradle* ./
