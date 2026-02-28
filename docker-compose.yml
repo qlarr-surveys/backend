@@ -83,11 +83,12 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile
-      args:
-        VITE_FRONT_END_HOST: "localhost"
-        VITE_PROTOCOL: "http"
-        VITE_BE_URL: "http://localhost:8080"
-        VITE_CLOUD_URL: "https://stg.api.qlarr.com"
+    environment:
+      CADDY_PORT: "80"
+      VITE_FRONT_END_HOST: "localhost"
+      VITE_PROTOCOL: "http"
+      VITE_BE_URL: "http://localhost:8080"
+      VITE_CLOUD_URL: "https://stg.api.qlarr.com"
     depends_on:
       - backend-app
     ports:
