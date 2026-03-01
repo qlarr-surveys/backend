@@ -29,6 +29,7 @@ class NavigationDirectionDeserializer : StdDeserializer<NavigationDirection>(Nav
             "PREV" -> NavigationDirection.Previous
             "JUMP" -> NavigationDirection.Jump(navigationIndex!!)
             "NEXT" -> NavigationDirection.Next
+            "SAVE" -> NavigationDirection.Saved
             else -> throw IllegalStateException("invalid name for NavigationDirection")
         }
     }
