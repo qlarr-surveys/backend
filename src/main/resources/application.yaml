@@ -36,6 +36,8 @@ mail:
   password: ${MAIL_PASSWORD}
   username: ${MAIL_USERNAME}
 frontendUrl: ${FRONTEND_URL}
+support:
+  email: ${SUPPORT_EMAIL}
 fileSystem:
   rootFolder: ${FILE_SYSTEM_ROOT_FOLDER}
 ---
@@ -59,3 +61,5 @@ fileSystem:
 jwt:
   secret: lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
 frontendUrl: http://localhost:3000
+support:
+  email: support@localhost

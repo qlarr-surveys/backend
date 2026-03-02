@@ -51,6 +51,7 @@ class SecurityConfiguration(
                 .requestMatchers(POST, "/user/forgot_password").permitAll()
                 .requestMatchers(POST, "/user/reset_password").permitAll()
                 .requestMatchers(POST, "/user/refresh_token").permitAll()
+                .requestMatchers(POST, "/support/contact").permitAll()
         }
         http.authorizeHttpRequests()
             .anyRequest()
