@@ -151,5 +151,13 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
     )
     fun summary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
 
+    @Query(
+        "SELECT r FROM SurveyResponseEntity r " +
+                "WHERE r.surveyId = :surveyId " +
+                "AND r.submitDate IS NOT NULL " +
+                "AND r.preview = false " +
+                "ORDER BY r.surveyResponseIndex ASC"
+    )
+    fun findCompletedBySurveyId(surveyId: UUID, pageable: Pageable): Page<SurveyResponseEntity>
 
 }
