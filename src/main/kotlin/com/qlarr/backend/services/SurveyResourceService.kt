@@ -25,6 +25,7 @@ import org.springframework.http.HttpHeaders.CONTENT_LENGTH
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.io.IOException
@@ -90,6 +91,7 @@ class SurveyResourceService(
         }
     }
 
+    @Transactional
     fun uploadAutoCompleteResource(
         surveyId: UUID,
         componentId: String,
@@ -113,15 +115,16 @@ class SurveyResourceService(
 
         existingEntity?.let {
             runCatching { helper.delete(surveyId, SurveyFolder.Resources, it.filename) }
+            autoCompleteRepository.delete(it)
+            autoCompleteRepository.flush()
         }
 
-        val entity = existingEntity?.copy(values = arrayNode, filename = savedFilename)
-            ?: AutoCompleteEntity(
-                surveyId = surveyId,
-                filename = savedFilename,
-                componentId = componentId,
-                values = arrayNode
-            )
+        val entity = AutoCompleteEntity(
+            surveyId = surveyId,
+            filename = savedFilename,
+            componentId = componentId,
+            values = arrayNode
+        )
 
         autoCompleteRepository.save(entity)
 
@@ -159,6 +162,13 @@ class SurveyResourceService(
         } catch (e: ResourceNotFoundException) {
             throw ResourceNotFoundException()
         }
+    }
+
+    fun getAutoCompleteValues(surveyId: UUID, componentId: String): List<String> {
+        surveyRepository.findByIdOrNull(surveyId) ?: throw SurveyNotFoundException()
+        val entity = autoCompleteRepository.findBySurveyIdAndComponentId(surveyId, componentId)
+            ?: return emptyList()
+        return entity.values.map { it.asText() }
     }
 
     fun search(
