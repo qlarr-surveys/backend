@@ -50,6 +50,18 @@ data class SurveyEntity(
     val image: String?,
 
     val description: String?,
+
+    @Column(name = "save_ip")
+    val saveIp: Boolean,
+
+    @Column(name = "save_timings")
+    val saveTimings: Boolean,
+
+    @Column(name = "background_audio")
+    val backgroundAudio: Boolean,
+
+    @Column(name = "record_gps")
+    val recordGps: Boolean,
 ) {
     fun isActive(): Boolean {
         return status == Status.ACTIVE

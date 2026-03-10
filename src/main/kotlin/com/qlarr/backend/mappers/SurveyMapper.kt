@@ -26,7 +26,11 @@ class SurveyMapper(
             canLockSurvey = true,
             creationDate = nowUtc(),
             lastModified = nowUtc(),
-            navigationData = SurveyNavigationData()
+            navigationData = SurveyNavigationData(),
+            saveIp = true,
+            saveTimings = true,
+            backgroundAudio = true,
+            recordGps = true
         )
     }
 
@@ -44,7 +48,11 @@ class SurveyMapper(
             description = surveyEntity.description,
             image = surveyEntity.image,
             canLockSurvey = surveyEntity.canLockSurvey,
-            surveyNavigationData = surveyEntity.navigationData
+            surveyNavigationData = surveyEntity.navigationData,
+            saveIp = surveyEntity.saveIp,
+            saveTimings = surveyEntity.saveTimings,
+            backgroundAudio = surveyEntity.backgroundAudio,
+            recordGps = surveyEntity.recordGps,
         )
     }
 
@@ -66,7 +74,7 @@ class SurveyMapper(
             latestVersion = versionMapper.toDto(
                 surveyResponseCount.latestVersion,
                 surveyStatus = surveyResponseCount.survey.status
-            )
+            ),
         )
     }
 
@@ -89,7 +97,10 @@ class SurveyMapper(
                 surveyResponseCount.latestVersion,
                 surveyStatus = surveyResponseCount.survey.status
             ),
-            navigationData = surveyResponseCount.survey.navigationData
+            navigationData = surveyResponseCount.survey.navigationData,
+            saveTimings = surveyResponseCount.survey.saveTimings,
+            backgroundAudio = surveyResponseCount.survey.backgroundAudio,
+            recordGps = surveyResponseCount.survey.recordGps
         )
     }
 

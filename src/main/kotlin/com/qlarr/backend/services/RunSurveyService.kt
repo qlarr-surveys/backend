@@ -1,5 +1,6 @@
 package com.qlarr.backend.services
 
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.runsurvey.NavigateRequest
 import com.qlarr.backend.api.runsurvey.RunSurveyDto
 import com.qlarr.backend.api.runsurvey.StartRequest
@@ -10,9 +11,11 @@ import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.RunMapper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
+import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.NavigationIndex
 import com.qlarr.surveyengine.model.exposed.SurveyMode
+import com.qlarr.surveyengine.model.exposed.stringIndex
 import com.qlarr.surveyengine.scriptengine.commonScript
 import com.qlarr.surveyengine.usecase.SurveyDesignWithErrorException
 import org.springframework.data.repository.findByIdOrNull
@@ -28,12 +31,12 @@ class RunSurveyService(
     private val helper: FileHelper
 ) {
 
-
     fun start(
         surveyId: UUID,
         startRequest: StartRequest,
         preview: Boolean,
-        surveyMode: SurveyMode
+        surveyMode: SurveyMode,
+        clientIp: String
     ): RunSurveyDto {
         val processedSurvey = designService.getProcessedSurvey(surveyId, !preview)
 
@@ -56,6 +59,19 @@ class RunSurveyService(
             values = result.navigationJsonOutput.toSave,
             startDate = nowUtc(),
             navigationIndex = result.navigationJsonOutput.navigationIndex,
+            events = if (processedSurvey.survey.saveTimings) {
+                listOf(
+                    ResponseEvent.Navigation(
+                        from = "",
+                        to = result.navigationJsonOutput.navigationIndex.stringIndex(),
+                        direction = NavigationDirection.Start,
+                        time = nowUtc()
+                    )
+                )
+            } else {
+                emptyList()
+            },
+            ipAddress = clientIp.takeIf { processedSurvey.survey.saveIp },
             surveyor = null,
             preview = preview,
             version = processedSurvey.latestVersion.version
@@ -83,8 +99,7 @@ class RunSurveyService(
         val result = navigationService.navigate(
             surveyId = surveyId,
             response = response,
-            navigationLang = navigateRequest.lang,
-            navigationMode = navigateRequest.navigationMode,
+            navigationLang = navigateRequest.lang,navigationMode = navigateRequest.navigationMode,
             processedSurvey = processedSurvey,
             navigationDirection = navigateRequest.navigationDirection,
             values = response.values.toMutableMap().apply {
@@ -98,12 +113,30 @@ class RunSurveyService(
             lang = result.lang.code,
             submitDate = if (result.navigationJsonOutput.navigationIndex is NavigationIndex.End) nowUtc() else null,
             values = result.navigationJsonOutput.toSave,
-            preview = preview
+            preview = preview,
+            events = response.events.toMutableList().apply {
+                addAll(navigateRequest.events.filter {
+                    processedSurvey.survey.saveTimings || it is ResponseEvent.Location || it is ResponseEvent.VoiceRecording
+                })
+                if (processedSurvey.survey.saveTimings) {
+                    add(
+                        ResponseEvent.Navigation(
+                            from = response.navigationIndex.stringIndex(),
+                            to = result.navigationJsonOutput.navigationIndex.stringIndex(),
+                            direction = navigateRequest.navigationDirection,
+                            time = nowUtc()
+                        )
+                    )
+                }
+            }
         )
         responseRepository.save(entityToSave)
 
         if (result.navigationJsonOutput.navigationIndex is NavigationIndex.End) {
-            helper.deleteUnusedResponseFiles(surveyId, navigateRequest.responseId, result.navigationJsonOutput.toSave)
+            helper.deleteUnusedResponseFiles(surveyId,
+                navigateRequest.responseId,
+                result.navigationJsonOutput.toSave,
+                response.events)
         }
         return runMapper.toRunDto(
             navigateRequest.responseId,

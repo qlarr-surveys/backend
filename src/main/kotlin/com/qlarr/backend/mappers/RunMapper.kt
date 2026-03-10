@@ -23,6 +23,7 @@ class RunMapper {
         navigationData = surveyEntity.navigationData,
         responseId = responseId,
         lang = lang,
-        additionalLang = additionalLang
+        additionalLang = additionalLang,
+        saveTimings = surveyEntity.saveTimings
     )
 }

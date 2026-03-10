@@ -25,6 +25,10 @@ data class SurveyDTO(
     val quota: Int,
     val canLockSurvey: Boolean,
     val surveyNavigationData: SurveyNavigationData,
+    val saveIp: Boolean,
+    val saveTimings: Boolean,
+    val backgroundAudio: Boolean,
+    val recordGps: Boolean,
 ){
     fun isActive(): Boolean {
         return status == Status.ACTIVE
