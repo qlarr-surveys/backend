@@ -27,6 +27,16 @@ class AutoCompleteController(
         return resourceService.uploadAutoCompleteResource(surveyId,componentId, file)
     }
 
+    @GetMapping("/autocomplete/{surveyId}/{componentId}")
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin'})")
+    fun getAutoCompleteValues(
+        @PathVariable surveyId: UUID,
+        @PathVariable componentId: String
+    ): ResponseEntity<List<String>> {
+        val values = resourceService.getAutoCompleteValues(surveyId, componentId)
+        return ResponseEntity.ok(values)
+    }
+
     @GetMapping("/survey/{surveyId}/autocomplete/{filename}")
     fun searchAutoComplete(
         @PathVariable surveyId: UUID,
