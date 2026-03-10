@@ -1,10 +1,8 @@
 package com.qlarr.backend.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.survey.*
-import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.isValidName
 import com.qlarr.backend.common.nowUtc
@@ -12,15 +10,12 @@ import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.SurveyMapper
-import com.qlarr.backend.persistence.entities.AutoCompleteEntity
-import com.qlarr.backend.persistence.entities.SurveyEntity
-import com.qlarr.backend.persistence.entities.SurveyNavigationData
-import com.qlarr.backend.persistence.entities.SurveyResponseCount
-import com.qlarr.backend.persistence.entities.VersionEntity
+import com.qlarr.backend.persistence.entities.*
 import com.qlarr.backend.persistence.repositories.AutoCompleteRepository
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.backend.persistence.repositories.SurveyRepository
 import com.qlarr.backend.persistence.repositories.VersionRepository
+import com.qlarr.surveyengine.ext.JsonExt
 import com.qlarr.surveyengine.usecase.ValidationUseCaseWrapper
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
@@ -116,7 +111,11 @@ class SurveyService(
                 skipInvalid = editSurveyRequest.skipInvalid ?: survey.navigationData.skipInvalid,
                 allowIncomplete = editSurveyRequest.allowIncomplete ?: survey.navigationData.allowIncomplete,
                 allowJump = editSurveyRequest.allowJump ?: survey.navigationData.allowJump
-            )
+            ),
+            saveIp = editSurveyRequest.saveIp ?: survey.saveIp,
+            saveTimings = editSurveyRequest.saveTimings ?: survey.saveTimings,
+            backgroundAudio = editSurveyRequest.backgroundAudio ?: survey.backgroundAudio,
+            recordGps = editSurveyRequest.recordGps ?: survey.recordGps,
         )
         if (newSurvey.startDate != null && newSurvey.endDate != null && newSurvey.startDate.isAfter(newSurvey.endDate)) {
             throw InvalidSurveyDates()
@@ -185,7 +184,8 @@ class SurveyService(
         return surveyMapper.mapEntityToDto(
             surveyRepository.save(
                 entity.copy(
-                    status = Status.CLOSED, lastModified = nowUtc()
+                    status = Status.CLOSED,
+                    lastModified = nowUtc(),
                 )
             )
         )
@@ -229,8 +229,8 @@ class SurveyService(
 
         fileSystemHelper.importSurvey(inputStream, onSurveyData = {
             exportSurvey = objectMapper.readValue(it, ExportedSimpleSurvey::class.java)
-            surveyDTO = saveSurveyData(exportSurvey.survey)
-            surveyDTO
+            surveyDTO = saveSurveyData(exportSurvey!!.survey)
+            surveyDTO!!
         }, onDesign = {
             designSaved = true
         })
@@ -242,11 +242,11 @@ class SurveyService(
             throw SurveyDefNotAvailableException()
         }
 
-        if(exportSurvey != null) {
-            saveAutoComplete(surveyDTO.id, exportSurvey.autoCompleteResources)
+        if (exportSurvey != null) {
+            saveAutoComplete(surveyDTO!!.id, exportSurvey!!.autoCompleteResources)
         }
 
-        return surveyDTO
+        return surveyDTO!!
     }
 
     fun saveAutoComplete(surveyId: UUID, autoCompleteResources: List<ExportedAutoCompleteResource>) {
@@ -304,6 +304,7 @@ class SurveyService(
         return candidateName
     }
 
+    @Transactional
     fun saveSurveyData(simpleSurveyDto: SimpleSurveyDto): SurveyDTO {
         val savedSurvey = try {
             surveyRepository.save(
@@ -320,6 +321,10 @@ class SurveyService(
                     image = simpleSurveyDto.image,
                     description = simpleSurveyDto.description,
                     navigationData = simpleSurveyDto.navigationData,
+                    saveIp = true,
+                    saveTimings = true,
+                    backgroundAudio = true,
+                    recordGps = true
                 )
             )
         } catch (exception: DataIntegrityViolationException) {

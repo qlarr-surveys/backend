@@ -27,13 +27,26 @@ data class ResponseDto(
 
     val surveyorName: String?,
 
-    val surveyorID: String?
+    val surveyorID: String?,
+
+    val version: Int,
+
+    val events: List<ResponseEvent>,
+
+    val ipAddress: String?,
 )
 
 data class ResponseValue(
     val key: String,
     val code: String,
     val value: Any? = null,
+    val events: List<ResponseEventDto> = emptyList()
+)
+
+data class ResponseEventDto(
+    val time: LocalDateTime,
+    val name: String,
+    val timeMillis: Long
 )
 
 

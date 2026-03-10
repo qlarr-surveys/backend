@@ -1,5 +1,6 @@
 package com.qlarr.backend.helpers
 
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
@@ -183,7 +184,12 @@ class FileSystemHelper(
         return surveyFiles(surveyId, SurveyFolder.Responses(responseId.toString()), null, null)
     }
 
-    override fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>) {
+    override fun deleteUnusedResponseFiles(
+        surveyId: UUID,
+        responseId: UUID,
+        values: Map<String, Any>,
+        events: List<ResponseEvent>
+    ) {
         val responseFiles = values.mapNotNull {
             (it.value as? LinkedHashMap<*, *>)?.run {
                 if (containsKey("stored_filename")) {
@@ -194,12 +200,20 @@ class FileSystemHelper(
             }
         }.toSet()
 
+        val recordingFiles = events.mapNotNull {
+            if (it is ResponseEvent.VoiceRecording) {
+                it.fileName
+            } else {
+                null
+            }
+        }.toSet()
+
         val savedFiles = responseFiles(surveyId, responseId)
             .mapNotNull { file ->
                 file.name.takeUnless { it.endsWith(METADATA_POSTFIX) }
             }
 
-        (savedFiles - responseFiles).forEach { filename ->
+        (savedFiles - responseFiles - recordingFiles).forEach { filename ->
             delete(surveyId, SurveyFolder.Responses(responseId.toString()), filename)
         }
     }

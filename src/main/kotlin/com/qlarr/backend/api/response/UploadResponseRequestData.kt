@@ -10,5 +10,6 @@ data class UploadResponseRequestData(
         val startDate: LocalDateTime,
         val submitDate: LocalDateTime,
         val userId: String,
-        val navigationIndex: NavigationIndex
+        val navigationIndex: NavigationIndex,
+        val events: List<ResponseEvent> = listOf()
 )

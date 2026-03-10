@@ -67,4 +67,7 @@ data class OfflineSurveyDto(
     val completeResponseCount: Int,
     val latestVersion: VersionDto,
     val navigationData: SurveyNavigationData = SurveyNavigationData(),
+    val saveTimings: Boolean,
+    val backgroundAudio: Boolean,
+    val recordGps: Boolean,
 )

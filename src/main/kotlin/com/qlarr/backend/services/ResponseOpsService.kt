@@ -1,6 +1,7 @@
 package com.qlarr.backend.services
 
 import com.qlarr.backend.api.response.ResponseCountDto
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.response.ResponseUploadFile
 import com.qlarr.backend.api.response.UploadResponseRequestData
 import com.qlarr.backend.api.survey.Status
@@ -153,10 +154,12 @@ class ResponseOpsService(
             lang = uploadResponseRequestData.lang,
             navigationIndex = uploadResponseRequestData.navigationIndex,
             submitDate = uploadResponseRequestData.submitDate,
-            values = uploadResponseRequestData.values
+            values = uploadResponseRequestData.values,
+            events = uploadResponseRequestData.events
         )
         responseRepository.save(responseEntity)
-        helper.deleteUnusedResponseFiles(surveyId, responseId, uploadResponseRequestData.values)
+
+        helper.deleteUnusedResponseFiles(surveyId, responseId, uploadResponseRequestData.values, uploadResponseRequestData.events)
 
         return responseRepository.responseCount(
             userId = userUtils.currentUserId(),

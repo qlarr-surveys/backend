@@ -11,6 +11,7 @@ import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.splitToComponentCodes
 import com.qlarr.surveyengine.model.ReservedCode
+import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.ReturnType
 import com.qlarr.surveyengine.model.sortChildren
 import org.apache.commons.csv.CSVFormat
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
+import java.time.Duration.between
 import java.time.ZoneId
 import java.util.*
 import java.util.zip.ZipEntry
@@ -359,6 +361,13 @@ class ResponseService(
         val maskedValues = SurveyProcessor.maskedValues(
             values = response.values
         )
+        val componentEvents = response.events.filter {
+            it.componentCode != null
+        }
+
+        val eventCodes = componentEvents.mapNotNull {
+            it.componentCode
+        }
         val valueCodes = response.values
             .filterKeys { it.split(".").last() == "value" }
             .map {
@@ -367,7 +376,7 @@ class ResponseService(
         val values: List<ResponseValue> = componentIndexList
             .map { it.code }
             .filter {
-                valueCodes.contains(it)
+                valueCodes.contains(it) || eventCodes.contains(it)
             }.map { code ->
                 val componentCodes = code.splitToComponentCodes()
                 val key = if (componentCodes.size > 1) {
@@ -383,7 +392,13 @@ class ResponseService(
                     value = if (response.values.containsKey("$code.value")) {
                         val value = response.values["$code.value"]!!
                         maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
-                    } else null)
+                    } else null,
+                    events = response.events.filter {
+                        it.componentCode == code
+                    }.map {
+                        it.toDto(response.events.timeMillis(it))
+                    })
+
             }
 
         return responseMapper.toDto(
@@ -392,7 +407,11 @@ class ResponseService(
             },
             disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
             entity = response,
-            values = values
+            values = values,
+            events = response.events.filter {
+                it !is ResponseEvent.Value &&
+                        (it !is ResponseEvent.Navigation || it.direction == NavigationDirection.Start || it.to == "End")
+            }
         )
     }
 
@@ -409,4 +428,12 @@ interface ResponseWithSurveyorName {
     val response: SurveyResponseEntity
     val firstName: String?
     val lastName: String?
+}
+
+private fun List<ResponseEvent>.timeMillis(responseEvent: ResponseEvent): Long {
+    val index = indexOf(responseEvent)
+    if (index <= 0) return 0
+
+    val previousEvent = this[index - 1]
+    return between(previousEvent.time, responseEvent.time).toMillis()
 }
