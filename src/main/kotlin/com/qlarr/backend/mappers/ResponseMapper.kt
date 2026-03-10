@@ -2,6 +2,7 @@ package com.qlarr.backend.mappers
 
 import com.qlarr.backend.api.response.ResponseDto
 import com.qlarr.backend.api.response.ResponseValue
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import org.springframework.stereotype.Component
 
@@ -14,6 +15,7 @@ class ResponseMapper {
         disqualified: Boolean,
         entity: SurveyResponseEntity,
         values: List<ResponseValue> = emptyList(),
+        events: List<ResponseEvent>
     ) =
         ResponseDto(
             id = entity.id,
@@ -25,7 +27,10 @@ class ResponseMapper {
             submitDate = entity.submitDate,
             lang = entity.lang,
             disqualified = disqualified,
-            values = values
+            values = values,
+            version = entity.version,
+            events = events,
+            ipAddress = entity.ipAddress,
         )
 }
 

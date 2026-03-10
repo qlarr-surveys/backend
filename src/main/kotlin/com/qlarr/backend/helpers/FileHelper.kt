@@ -1,5 +1,6 @@
 package com.qlarr.backend.helpers
 
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.survey.FileInfo
 import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
@@ -80,7 +81,7 @@ interface FileHelper {
         onDesign: () -> Unit
     )
 
-    fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>)
+    fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>, events: List<ResponseEvent>)
 
 }
 

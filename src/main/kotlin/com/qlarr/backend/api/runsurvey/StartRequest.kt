@@ -1,6 +1,7 @@
 package com.qlarr.backend.api.runsurvey
 
 import com.qlarr.surveyengine.model.exposed.NavigationDirection
+import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.surveyengine.model.exposed.NavigationMode
 import java.util.*
 
@@ -15,5 +16,6 @@ data class NavigateRequest(
     val lang: String? = null,
     val navigationMode: NavigationMode? = null,
     val navigationDirection: NavigationDirection,
-    val values: Map<String, Any> = mapOf()
+    val values: Map<String, Any> = mapOf(),
+    val events: List<ResponseEvent> = listOf()
 )

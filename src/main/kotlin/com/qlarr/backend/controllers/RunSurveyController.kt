@@ -3,6 +3,7 @@ package com.qlarr.backend.controllers
 import com.qlarr.backend.api.runsurvey.NavigateRequest
 import com.qlarr.backend.api.runsurvey.RunSurveyDto
 import com.qlarr.backend.api.runsurvey.StartRequest
+import com.qlarr.backend.common.getClientIp
 import com.qlarr.backend.services.RunSurveyService
 import com.qlarr.surveyengine.model.exposed.SurveyMode
 import jakarta.servlet.http.HttpServletRequest
@@ -13,74 +14,75 @@ import java.util.*
 
 @RestController
 class RunSurveyController(
-        private val navigationService: RunSurveyService,
+    private val navigationService: RunSurveyService,
 ) {
 
     @PostMapping("/survey/{surveyId}/run/start")
     fun start(
-            request: HttpServletRequest,
-            @PathVariable surveyId: UUID,
-            @RequestBody startRequest: StartRequest
+        request: HttpServletRequest,
+        @PathVariable surveyId: UUID,
+        @RequestBody startRequest: StartRequest
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
-                navigationService.start(
-                        surveyId,
-                        startRequest,
-                        false,
-                        SurveyMode.ONLINE
-                ),
-                HttpStatus.OK
+            navigationService.start(
+                surveyId,
+                startRequest,
+                false,
+                SurveyMode.ONLINE,
+                getClientIp(request)
+            ), HttpStatus.OK
         )
     }
 
     @PostMapping("/survey/{surveyId}/preview/start")
     fun startPreview(
-            request: HttpServletRequest,
-            @RequestParam mode: String?,
-            @PathVariable surveyId: UUID,
-            @RequestBody startRequest: StartRequest
+        request: HttpServletRequest,
+        @RequestParam mode: String?,
+        @PathVariable surveyId: UUID,
+        @RequestBody startRequest: StartRequest
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
-                navigationService.start(
-                        surveyId,
-                        startRequest,
-                        true,
-                        mode.toSurveyMode(SurveyMode.ONLINE)
-                ), HttpStatus.OK
+            navigationService.start(
+                surveyId,
+                startRequest,
+                true,
+                mode.toSurveyMode(SurveyMode.ONLINE),
+                getClientIp(request)
+            ), HttpStatus.OK
         )
     }
 
     @PostMapping("/survey/{surveyId}/run/navigate")
     fun navigate(
-            request: HttpServletRequest,
-            @PathVariable surveyId: UUID,
-            @RequestBody navigateRequest: NavigateRequest
+        request: HttpServletRequest,
+        @PathVariable surveyId: UUID,
+        @RequestBody navigateRequest: NavigateRequest
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
-                navigationService.navigate(
-                        surveyId,
-                        navigateRequest,
-                        false,
-                        SurveyMode.ONLINE
-                ), HttpStatus.OK
+            navigationService.navigate(
+                surveyId,
+                navigateRequest,
+                false,
+                SurveyMode.ONLINE
+            ), HttpStatus.OK
         )
     }
 
     @PostMapping("/survey/{surveyId}/preview/navigate")
     fun navigatePreview(
-            request: HttpServletRequest,
-            @RequestParam mode: String?,
-            @PathVariable surveyId: UUID,
-            @RequestBody navigateRequest: NavigateRequest
+        request: HttpServletRequest,
+        @RequestParam mode: String?,
+        @PathVariable surveyId: UUID,
+        @RequestBody navigateRequest: NavigateRequest
     ): ResponseEntity<RunSurveyDto> {
         return ResponseEntity(
-                navigationService.navigate(
-                        surveyId,
-                        navigateRequest,
-                        true,
-                        mode.toSurveyMode(SurveyMode.ONLINE)
-                ),
-                HttpStatus.OK
+            navigationService.navigate(
+                surveyId,
+                navigateRequest,
+                true,
+                mode.toSurveyMode(SurveyMode.ONLINE)
+            ),
+            HttpStatus.OK
         )
     }
 

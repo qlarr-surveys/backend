@@ -13,5 +13,6 @@ data class RunSurveyDto(
     val navigationIndex: NavigationIndex,
     val responseId: UUID,
     val lang: SurveyLang,
-    val additionalLang: List<SurveyLang>
+    val additionalLang: List<SurveyLang>,
+    val saveTimings: Boolean,
 )
