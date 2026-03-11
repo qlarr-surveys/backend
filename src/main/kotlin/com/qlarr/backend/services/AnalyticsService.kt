@@ -27,12 +27,12 @@ class AnalyticsService(
     companion object {
         private val CHOICE_TYPES = setOf(
             "SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE",
-            "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ"
+            "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ", "NPS"
         )
-        private val MATRIX_TYPES = setOf("MATRIX_SCQ", "MATRIX_MCQ")
+        private val MATRIX_TYPES = setOf("SCQ_ARRAY", "MCQ_ARRAY", "SCQ_ICON_ARRAY", "MCQ_ICON_ARRAY")
         private val RANKING_TYPES = setOf("RANKING", "IMAGE_RANKING")
         private val ICON_IMAGE_CHOICE_TYPES = setOf("ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")
-        private val MULTI_FIELD_TYPES = setOf("MULTIPLE_TEXT", "MULTI_SHORT_TEXT")
+        private val MULTI_FIELD_TYPES = setOf("MULTIPLE_TEXT")
         private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
         private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
@@ -116,7 +116,7 @@ class AnalyticsService(
         val types = mutableMapOf<String, String>()
         traverseSurveyTree(survey) { node, code, _ ->
             if (code != null && code.isQuestionCode()) {
-                node.get("type")?.asText()?.let { types[code] = mapQuestionType(it) }
+                node.get("type")?.asText()?.let { types[code] = it.uppercase() }
             }
         }
         return types
@@ -231,41 +231,6 @@ class AnalyticsService(
         else -> false
     }
 
-    // --- Question type mapping ---
-
-    private fun mapQuestionType(backendType: String): String {
-        return when (backendType.uppercase()) {
-            "SCQ", "SINGLECHOICEQUESTION" -> "SCQ"
-            "MCQ", "MULTIPLECHOICEQUESTION" -> "MCQ"
-            "NPS", "NETPROMOTERSCORE" -> "NPS"
-            "RANKING" -> "RANKING"
-            "NUMBER", "NUMERIC" -> "NUMBER"
-            "DATE" -> "DATE"
-            "TIME" -> "TIME"
-            "DATETIME" -> "DATETIME"
-            "MATRIX_SCQ", "SCQ_ARRAY", "SCQ_ICON_ARRAY" -> "MATRIX_SCQ"
-            "MATRIX_MCQ", "MCQ_ARRAY" -> "MATRIX_MCQ"
-            "TEXT" -> "TEXT"
-            "SHORTTEXT" -> "SHORTTEXT"
-            "PARAGRAPH" -> "PARAGRAPH"
-            "LONGTEXT" -> "LONGTEXT"
-            "EMAIL" -> "EMAIL"
-            "MULTIPLE_TEXT" -> "MULTIPLE_TEXT"
-            "MULTI_SHORT_TEXT", "MULTISHORTTEXT" -> "MULTI_SHORT_TEXT"
-            "AUTOCOMPLETE" -> "AUTOCOMPLETE"
-            "IMAGE_RANKING" -> "IMAGE_RANKING"
-            "IMAGE_SCQ" -> "IMAGE_SCQ"
-            "IMAGE_MCQ" -> "IMAGE_MCQ"
-            "ICON_SCQ" -> "ICON_SCQ"
-            "ICON_MCQ" -> "ICON_MCQ"
-            "FILE_UPLOAD", "FILE" -> "FILE_UPLOAD"
-            "SIGNATURE" -> "SIGNATURE"
-            "PHOTO_CAPTURE", "PHOTO" -> "PHOTO_CAPTURE"
-            "BARCODE" -> "BARCODE"
-            else -> backendType.uppercase()
-        }
-    }
-
     private fun inferTypeFromReturnType(dataType: ReturnType): String {
         return when (dataType) {
             is ReturnType.Enum -> "SCQ"
@@ -273,7 +238,7 @@ class AnalyticsService(
             ReturnType.Int -> "NUMBER"
             ReturnType.String -> "TEXT"
             ReturnType.Date -> "DATE"
-            ReturnType.Map -> "MATRIX_SCQ"
+            ReturnType.Map -> "SCQ_ARRAY"
             ReturnType.Boolean -> "SCQ"
             ReturnType.Double -> "NUMBER"
             ReturnType.File -> "FILE_UPLOAD"
