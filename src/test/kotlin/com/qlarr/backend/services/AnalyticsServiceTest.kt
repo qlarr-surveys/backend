@@ -54,21 +54,21 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    fun `getAnalytics uses published survey version`() {
+    fun `getAnalytics uses latest survey version`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 
         analyticsService.getAnalytics(surveyId)
 
-        verify(exactly = 1) { designService.getProcessedSurvey(surveyId, true) }
+        verify(exactly = 1) { designService.getProcessedSurvey(surveyId, false) }
     }
 
     @Test
     fun `getAnalytics returns correct survey title and total responses`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
         every { responseRepository.completedSurveyCount(surveyId) } returns 42
 
@@ -102,7 +102,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "A2"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
@@ -142,7 +142,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to listOf("A1", "A3")))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
@@ -176,7 +176,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "Bob"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
@@ -209,7 +209,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 30))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
@@ -241,7 +241,7 @@ class AnalyticsServiceTest {
             buildResponse(emptyMap())
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 4
 
@@ -280,7 +280,7 @@ class AnalyticsServiceTest {
             ))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
@@ -311,7 +311,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "some-file-data"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
@@ -332,7 +332,7 @@ class AnalyticsServiceTest {
 
         val processed = buildProcessedSurvey(emptyList(), componentIndices)
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 
@@ -355,7 +355,7 @@ class AnalyticsServiceTest {
         val processed = buildProcessedSurvey(schema, componentIndices)
         val responses = listOf(buildResponse(mapOf("Q1.value" to "test")))
 
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
@@ -368,7 +368,7 @@ class AnalyticsServiceTest {
     @Test
     fun `getAnalytics respects maxResponses parameter via pageable`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, true) } returns processed
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
         every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 

@@ -54,7 +54,7 @@ class AnalyticsService(
     )
 
     fun getAnalytics(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsDto {
-        val processed = designService.getProcessedSurvey(surveyId, published = true)
+        val processed = designService.getProcessedSurvey(surveyId, published = false)
         val survey = processed.survey
         val validationOutput = processed.validationJsonOutput
 
