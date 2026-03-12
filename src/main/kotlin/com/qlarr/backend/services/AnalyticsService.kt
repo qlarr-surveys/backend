@@ -14,7 +14,6 @@ import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
 import com.qlarr.surveyengine.model.exposed.ReturnType
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -74,8 +73,7 @@ class AnalyticsService(
         val contentPaths = extractContentPaths(validationOutput.survey)
 
         // Fetch completed responses
-        val pageable = Pageable.ofSize(maxResponses).withPage(0)
-        val responses = responseRepository.findCompletedBySurveyId(surveyId, pageable).content
+        val responses = responseRepository.findCompletedBySurveyId(surveyId, maxResponses)
 
         val ctx = AnalyticsContext(labels, schemaMap, validationOutput.componentIndexList, questionTypes, contentPaths, surveyId, responses)
 

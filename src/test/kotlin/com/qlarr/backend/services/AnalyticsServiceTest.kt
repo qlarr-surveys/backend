@@ -28,8 +28,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
 import java.time.LocalDateTime
 import java.util.*
 
@@ -57,7 +55,7 @@ class AnalyticsServiceTest {
     fun `getAnalytics uses latest survey version`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns emptyList()
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 
         analyticsService.getAnalytics(surveyId)
@@ -69,7 +67,7 @@ class AnalyticsServiceTest {
     fun `getAnalytics returns correct survey title and total responses`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns emptyList()
         every { responseRepository.completedSurveyCount(surveyId) } returns 42
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -103,7 +101,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -143,7 +141,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -177,7 +175,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -210,7 +208,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 2
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -242,7 +240,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 4
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -281,7 +279,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -312,7 +310,7 @@ class AnalyticsServiceTest {
         )
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -333,7 +331,7 @@ class AnalyticsServiceTest {
         val processed = buildProcessedSurvey(emptyList(), componentIndices)
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns emptyList()
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -356,7 +354,7 @@ class AnalyticsServiceTest {
         val responses = listOf(buildResponse(mapOf("Q1.value" to "test")))
 
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(responses)
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns responses
         every { responseRepository.completedSurveyCount(surveyId) } returns 1
 
         val result = analyticsService.getAnalytics(surveyId)
@@ -366,16 +364,16 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    fun `getAnalytics respects maxResponses parameter via pageable`() {
+    fun `getAnalytics respects maxResponses parameter via limit`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
         every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns PageImpl(emptyList())
+        every { responseRepository.findCompletedBySurveyId(surveyId, any()) } returns emptyList()
         every { responseRepository.completedSurveyCount(surveyId) } returns 0
 
         analyticsService.getAnalytics(surveyId, 100)
 
         verify {
-            responseRepository.findCompletedBySurveyId(surveyId, match<Pageable> { it.pageSize == 100 })
+            responseRepository.findCompletedBySurveyId(surveyId, 100)
         }
     }
 
