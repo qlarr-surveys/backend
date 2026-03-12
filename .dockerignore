@@ -1,0 +1,9 @@
+.git
+.github
+.gradle
+build
+!build/libs/*.jar
+src/test
+*.md
+.idea
+*.iml

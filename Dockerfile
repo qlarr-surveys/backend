@@ -1,9 +1,14 @@
-FROM eclipse-temurin:19-jre
-
+FROM --platform=$BUILDPLATFORM gradle:jdk19 AS build
 WORKDIR /app
-CMD ["./gradlew", "clean", "bootJar"]
-COPY build/libs/*.jar app.jar
 
+COPY build.gradle settings.gradle* ./
+RUN gradle dependencies --no-daemon
+
+COPY src src
+RUN gradle bootJar --no-daemon
+
+FROM eclipse-temurin:19-jre
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
