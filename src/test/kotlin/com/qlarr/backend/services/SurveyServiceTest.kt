@@ -136,7 +136,11 @@ class SurveyServiceTest {
                 endDate = null,
                 description = null,
                 image = null,
-            navigationData = SurveyNavigationData()
+                navigationData = SurveyNavigationData(),
+                saveIp = false,
+                saveTimings = false,
+                backgroundAudio = false,
+                recordGps = false
         )
     }
 

@@ -2,6 +2,7 @@ package com.qlarr.backend.services
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.qlarr.backend.api.response.AnalyticsOption
 import com.qlarr.backend.api.survey.Status
 import com.qlarr.backend.api.survey.Usage
 import com.qlarr.backend.api.surveyengine.ValidationJsonOutput
@@ -112,10 +113,10 @@ class AnalyticsServiceTest {
         assertEquals("Q1", question.id)
         assertEquals("SCQ", question.type)
         assertEquals("Favorite Color", question.title)
-        assertEquals(listOf("Red", "Blue"), question.options)
+        assertEquals(listOf(AnalyticsOption("A1", "Red"), AnalyticsOption("A2", "Blue")), question.options)
         assertEquals(2, question.responses.size)
-        assertEquals("Red", question.responses[0])
-        assertEquals("Blue", question.responses[1])
+        assertEquals("A1", question.responses[0])
+        assertEquals("A2", question.responses[1])
     }
 
     @Test
@@ -150,10 +151,10 @@ class AnalyticsServiceTest {
         assertEquals(1, result.questions.size)
         val question = result.questions[0]
         assertEquals("MCQ", question.type)
-        assertEquals(listOf("Reading", "Sports", "Music"), question.options)
+        assertEquals(listOf(AnalyticsOption("A1", "Reading"), AnalyticsOption("A2", "Sports"), AnalyticsOption("A3", "Music")), question.options)
         @Suppress("UNCHECKED_CAST")
         val responseValues = question.responses[0] as List<String>
-        assertEquals(listOf("Reading", "Music"), responseValues)
+        assertEquals(listOf("A1", "A3"), responseValues)
     }
 
     @Test
@@ -289,7 +290,7 @@ class AnalyticsServiceTest {
         assertEquals("RANKING", result.questions[0].type)
         @Suppress("UNCHECKED_CAST")
         val rankedItems = result.questions[0].responses[0] as List<String>
-        assertEquals(listOf("Second Item", "First Item", "Third Item"), rankedItems)
+        assertEquals(listOf("A2", "A1", "A3"), rankedItems)
     }
 
     @Test
@@ -421,7 +422,11 @@ class AnalyticsServiceTest {
         endDate = null,
         description = null,
         image = null,
-        navigationData = SurveyNavigationData()
+        navigationData = SurveyNavigationData(),
+        saveIp = false,
+        saveTimings = false,
+        backgroundAudio = false,
+        recordGps = false
     )
 
     private fun buildVersionEntity() = VersionEntity(

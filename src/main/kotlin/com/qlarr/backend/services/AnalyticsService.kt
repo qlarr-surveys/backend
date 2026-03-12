@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.qlarr.backend.api.response.AnalyticsDto
 import com.qlarr.backend.api.response.AnalyticsImage
+import com.qlarr.backend.api.response.AnalyticsOption
 import com.qlarr.backend.api.response.AnalyticsQuestion
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
@@ -207,22 +208,6 @@ class AnalyticsService(
         }
     }
 
-    // --- Label & value resolution helpers ---
-
-    private fun resolveLabel(code: String, questionCode: String, labels: Map<String, String>): String {
-        return labels[code] ?: labels[questionCode + code] ?: code
-    }
-
-    private fun resolveColumnValue(value: Any?, questionCode: String, labels: Map<String, String>): Any {
-        return when (value) {
-            is List<*> -> value.map { resolveLabel(it.toString(), questionCode, labels) }
-            is Map<*, *> -> value.entries.associate { (k, v) ->
-                resolveLabel(k.toString(), questionCode, labels) to resolveColumnValue(v, questionCode, labels)
-            }
-            else -> resolveLabel(value.toString(), questionCode, labels)
-        }
-    }
-
     private fun isEmptyValue(value: Any?): Boolean = when (value) {
         null -> true
         is String -> value.isBlank()
@@ -259,34 +244,34 @@ class AnalyticsService(
         val answerCodes = componentIndex?.children ?: emptyList()
 
         val options = if (questionType in CHOICE_TYPES) {
-            answerCodes.map { ctx.labels[it] ?: it }
+            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
         } else null
 
         // Extract response values for this question
         val isMatrix = questionType in MATRIX_TYPES
         val isRanking = questionType in RANKING_TYPES
         val responseValues: List<Any?> = if (isRanking) {
-            extractRankingFromAnswerValues(ctx, answerCodes)
+            extractRankingFromAnswerValues(ctx, answerCodes, questionCode)
         } else if (responseField != null) {
             extractResponses(questionType, responseField.toValueKey(), questionCode, ctx)
         } else if (isMatrix) {
             extractMatrixMultiFieldResponses(ctx, answerCodes, questionCode)
         } else {
-            extractMultiFieldResponses(ctx, answerCodes)
+            extractMultiFieldResponses(ctx, answerCodes, questionCode)
         }
 
         val rows = if (isMatrix) {
             answerCodes
                 .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
-                .map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+                .map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
         } else null
 
         val columns = if (isMatrix) {
             answerCodes
                 .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
-                .map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+                .map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
         } else if (questionType in ICON_IMAGE_CHOICE_TYPES) {
-            answerCodes.map { ctx.labels[it] ?: it.removePrefix(questionCode) }
+            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
         } else null
 
         return AnalyticsQuestion(
@@ -307,7 +292,7 @@ class AnalyticsService(
                 }
             }.ifEmpty { null },
             fields = if (questionType in MULTI_FIELD_TYPES) {
-                answerCodes.map { ctx.labels[it] ?: it }
+                answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
             } else null,
             responses = responseValues
         )
@@ -329,37 +314,14 @@ class AnalyticsService(
             val value = response.values[valueKey] ?: return@mapNotNull null
             if (isEmptyValue(value)) return@mapNotNull null
             when {
-                type in SINGLE_CHOICE_TYPES -> resolveLabel(value.toString(), questionCode, ctx.labels)
+                type in SINGLE_CHOICE_TYPES -> value.toString()
                 type in MULTI_CHOICE_TYPES -> {
                     val list = value as? List<*>
                     if (list == null) {
                         logger.warn("Expected List for MCQ question {}, got {}", questionCode, value::class.simpleName)
                         null
                     } else {
-                        list.map { resolveLabel(it.toString(), questionCode, ctx.labels) }
-                    }
-                }
-                type in MATRIX_TYPES -> {
-                    val map = value as? Map<*, *>
-                    if (map == null) {
-                        logger.warn("Expected Map for matrix question {}, got {}", questionCode, value::class.simpleName)
-                        null
-                    } else {
-                        map.entries.associate { (k, v) ->
-                            resolveLabel(k.toString(), questionCode, ctx.labels) to
-                                    resolveColumnValue(v, questionCode, ctx.labels)
-                        }
-                    }
-                }
-                type in MULTI_FIELD_TYPES -> {
-                    val map = value as? Map<*, *>
-                    if (map == null) {
-                        logger.warn("Expected Map for multi-field question {}, got {}", questionCode, value::class.simpleName)
-                        value
-                    } else {
-                        map.entries.associate { (k, v) ->
-                            (ctx.labels[k.toString()] ?: k.toString()) to v
-                        }
+                        list.map { it.toString() }
                     }
                 }
                 type in PRESENCE_ONLY_TYPES -> true
@@ -381,8 +343,7 @@ class AnalyticsService(
                 val field = ctx.schemaMap[answerCode] ?: return@mapField null
                 val value = response.values[field.toValueKey()] ?: return@mapField null
                 if (isEmptyValue(value)) return@mapField null
-                val rowLabel = ctx.labels[answerCode] ?: answerCode
-                rowLabel to resolveColumnValue(value, questionCode, ctx.labels)
+                answerCode.removePrefix(questionCode) to value
             }.toMap()
             fieldMap.ifEmpty { null }
         }
@@ -390,7 +351,8 @@ class AnalyticsService(
 
     private fun extractRankingFromAnswerValues(
         ctx: AnalyticsContext,
-        answerCodes: List<String>
+        answerCodes: List<String>,
+        questionCode: String
     ): List<Any?> {
         return ctx.responses.mapNotNull { response ->
             val rankedItems = answerCodes.mapNotNull mapField@{ answerCode ->
@@ -401,7 +363,7 @@ class AnalyticsService(
                     is String -> value.toIntOrNull() ?: return@mapField null
                     else -> return@mapField null
                 }
-                rank to (ctx.labels[answerCode] ?: answerCode)
+                rank to answerCode.removePrefix(questionCode)
             }
             if (rankedItems.isEmpty()) null
             else rankedItems.sortedBy { it.first }.map { it.second }
@@ -410,14 +372,15 @@ class AnalyticsService(
 
     private fun extractMultiFieldResponses(
         ctx: AnalyticsContext,
-        answerCodes: List<String>
+        answerCodes: List<String>,
+        questionCode: String
     ): List<Any?> {
         return ctx.responses.mapNotNull { response ->
             val fieldMap = answerCodes.mapNotNull mapField@{ answerCode ->
                 val field = ctx.schemaMap[answerCode] ?: return@mapField null
                 val value = response.values[field.toValueKey()] ?: return@mapField null
                 if (isEmptyValue(value)) return@mapField null
-                (ctx.labels[answerCode] ?: answerCode) to value
+                answerCode.removePrefix(questionCode) to value
             }.toMap()
             fieldMap.ifEmpty { null }
         }
