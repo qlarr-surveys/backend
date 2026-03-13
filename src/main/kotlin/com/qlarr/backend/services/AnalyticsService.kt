@@ -7,8 +7,9 @@ import com.qlarr.backend.api.response.AnalyticsImage
 import com.qlarr.backend.api.response.AnalyticsOption
 import com.qlarr.backend.api.response.AnalyticsQuestion
 import com.qlarr.backend.common.stripHtmlTags
-import com.qlarr.backend.persistence.entities.SurveyResponseEntity
+import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.persistence.repositories.ResponseRepository
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
@@ -49,7 +50,7 @@ class AnalyticsService(
         val questionTypes: Map<String, String>,
         val contentPaths: Map<String, List<String>>,
         val surveyId: UUID,
-        val responses: List<SurveyResponseEntity>
+        val responses: List<Map<String, Any>>
     )
 
     fun getAnalytics(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsDto {
@@ -71,8 +72,9 @@ class AnalyticsService(
         // Extract question types and content paths in a single tree traversal
         val (questionTypes, contentPaths) = extractQuestionMetadata(validationOutput.survey)
 
-        // Fetch completed responses
-        val responses = responseRepository.findCompletedBySurveyId(surveyId, maxResponses)
+        // Fetch completed response values only (skip events, nav_index, etc.)
+        val responses = responseRepository.findCompletedValuesBySurveyId(surveyId, maxResponses)
+            .map { objectMapper.readValue(it, jacksonTypeRef<Map<String, Any>>()) }
 
         val ctx = AnalyticsContext(labels, schemaMap, validationOutput.componentIndexList, questionTypes, contentPaths, surveyId, responses)
 
@@ -306,7 +308,7 @@ class AnalyticsService(
         ctx: AnalyticsContext
     ): List<Any?> {
         return ctx.responses.mapNotNull { response ->
-            val value = response.values[valueKey] ?: return@mapNotNull null
+            val value = response[valueKey] ?: return@mapNotNull null
             if (isEmptyValue(value)) return@mapNotNull null
             when {
                 type in SINGLE_CHOICE_TYPES -> value.toString()
@@ -336,7 +338,7 @@ class AnalyticsService(
         return ctx.responses.mapNotNull { response ->
             val fieldMap = rowCodes.mapNotNull mapField@{ answerCode ->
                 val field = ctx.schemaMap[answerCode] ?: return@mapField null
-                val value = response.values[field.toValueKey()] ?: return@mapField null
+                val value = response[field.toValueKey()] ?: return@mapField null
                 if (isEmptyValue(value)) return@mapField null
                 answerCode.removePrefix(questionCode) to value
             }.toMap()
@@ -352,7 +354,7 @@ class AnalyticsService(
         return ctx.responses.mapNotNull { response ->
             val rankedItems = answerCodes.mapNotNull mapField@{ answerCode ->
                 val field = ctx.schemaMap[answerCode] ?: return@mapField null
-                val value = response.values[field.toValueKey()] ?: return@mapField null
+                val value = response[field.toValueKey()] ?: return@mapField null
                 val rank = when (value) {
                     is Number -> value.toInt()
                     is String -> value.toIntOrNull() ?: return@mapField null
@@ -373,7 +375,7 @@ class AnalyticsService(
         return ctx.responses.mapNotNull { response ->
             val fieldMap = answerCodes.mapNotNull mapField@{ answerCode ->
                 val field = ctx.schemaMap[answerCode] ?: return@mapField null
-                val value = response.values[field.toValueKey()] ?: return@mapField null
+                val value = response[field.toValueKey()] ?: return@mapField null
                 if (isEmptyValue(value)) return@mapField null
                 answerCode.removePrefix(questionCode) to value
             }.toMap()

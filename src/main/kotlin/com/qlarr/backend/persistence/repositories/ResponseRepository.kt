@@ -162,7 +162,7 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
     fun summary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
 
     @Query(
-        "SELECT r.* FROM responses r " +
+        "SELECT CAST(r.values AS TEXT) FROM responses r " +
                 "WHERE r.survey_id = :surveyId " +
                 "AND r.submit_date IS NOT NULL " +
                 "AND r.preview = false " +
@@ -170,6 +170,6 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
                 "LIMIT :limit",
         nativeQuery = true
     )
-    fun findCompletedBySurveyId(surveyId: UUID, limit: Int): List<SurveyResponseEntity>
+    fun findCompletedValuesBySurveyId(surveyId: UUID, limit: Int): List<String>
 
 }
