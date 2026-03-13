@@ -27,7 +27,7 @@ class ResponseController(
 ) {
     @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
     @GetMapping("/response/{responseId}")
-    fun getResponses(
+    fun getResponse(
         @PathVariable responseId: UUID,
     ): ResponseEntity<ResponseDto> {
         val result = responseService.getResponse(

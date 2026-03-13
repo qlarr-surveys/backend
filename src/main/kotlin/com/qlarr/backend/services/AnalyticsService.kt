@@ -37,9 +37,14 @@ class AnalyticsService(
         private val NPS_TYPE = "NPS"
         private val NUMBER_TYPE = "NUMBER"
         private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
+        private val ROW_REGEX = Regex("^A\\d+$")
+        private val COLUMN_REGEX = Regex("^Ac\\d+$")
         const val DEFAULT_MAX_RESPONSES = 5000
 
         private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")
+        private fun String.fileNameWithoutExtension(): String =
+            substringAfterLast("/").substringBeforeLast(".")
+        private fun Double.roundTo2(): Double = Math.round(this * 100.0) / 100.0
     }
 
     private data class AnalyticsContext(
@@ -145,6 +150,15 @@ class AnalyticsService(
 
     // --- Node-level extraction helpers ---
 
+    private fun resolveResourceFile(resourcesNode: ObjectNode?): String? =
+        resourcesNode?.get("icon")?.asText() ?: resourcesNode?.get("image")?.asText()
+
+    private fun findFormatContentPath(instructionList: ArrayNode?): com.fasterxml.jackson.databind.JsonNode? =
+        instructionList?.firstOrNull { inst ->
+            inst.get("code")?.asText()?.startsWith("format_") == true
+                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
+        }
+
     private fun resolveNodeLabel(node: ObjectNode, lang: String): String? {
         // Try content.{lang}.label
         val content = node.get("content") as? ObjectNode
@@ -162,44 +176,32 @@ class AnalyticsService(
         val fromFormatLabel = formatLabelInst?.get("text")?.asText()?.takeIf { it.isNotBlank() }
             ?: formatLabelInst?.get("contentPath")?.let { cpNode ->
                 (cpNode as? ArrayNode)?.firstOrNull()?.asText()?.takeIf { it.isNotBlank() }?.let { path ->
-                    path.substringAfterLast("/").substringBeforeLast(".")
+                    path.fileNameWithoutExtension()
                 }
             }
         if (fromFormatLabel != null) return fromFormatLabel
 
         // Fallback: any format_* instruction with contentPath
-        val fromFormatAny = instructionList?.firstOrNull { inst ->
-            inst.get("code")?.asText()?.startsWith("format_") == true
-                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
-        }?.let { inst ->
+        val fromFormatAny = findFormatContentPath(instructionList)?.let { inst ->
             (inst.get("contentPath") as? ArrayNode)?.firstOrNull()?.asText()
                 ?.takeIf { it.isNotBlank() }?.let { path ->
-                    path.substringAfterLast("/").substringBeforeLast(".")
+                    path.fileNameWithoutExtension()
                 }
         }
         if (fromFormatAny != null) return fromFormatAny
 
         // Fallback: resources node icon/image filename
-        val resourcesNode = node.get("resources") as? ObjectNode
-        val resourceFile = resourcesNode?.get("icon")?.asText() ?: resourcesNode?.get("image")?.asText()
+        val resourceFile = resolveResourceFile(node.get("resources") as? ObjectNode)
         return resourceFile?.takeIf { it.isNotBlank() }?.let {
-            it.substringAfterLast("/").substringBeforeLast(".")
+            it.fileNameWithoutExtension()
         }
     }
 
     private fun resolveContentPaths(node: ObjectNode): List<String>? {
         // Check resources node first
-        val resourcesNode = node.get("resources") as? ObjectNode
-        if (resourcesNode != null) {
-            val resourceFile = resourcesNode.get("icon")?.asText() ?: resourcesNode.get("image")?.asText()
-            if (resourceFile != null) return listOf(resourceFile)
-        }
+        resolveResourceFile(node.get("resources") as? ObjectNode)?.let { return listOf(it) }
         // Fallback: instructionList format_* with contentPath
-        val instructionList = node.get("instructionList") as? ArrayNode
-        return instructionList?.firstOrNull { inst ->
-            inst.get("code")?.asText()?.startsWith("format_") == true
-                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
-        }?.let { inst ->
+        return findFormatContentPath(node.get("instructionList") as? ArrayNode)?.let { inst ->
             (inst.get("contentPath") as ArrayNode).map { it.asText() }
         }
     }
@@ -240,7 +242,7 @@ class AnalyticsService(
         val answerCodes = componentIndex?.children ?: emptyList()
 
         val options = if (questionType in CHOICE_TYPES) {
-            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels)
         } else null
 
         // Extract response values for this question
@@ -257,17 +259,13 @@ class AnalyticsService(
         }
 
         val rows = if (isMatrix) {
-            answerCodes
-                .filter { it.removePrefix(questionCode).matches(Regex("^A\\d+$")) }
-                .map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { it.matches(ROW_REGEX) }
         } else null
 
         val columns = if (isMatrix) {
-            answerCodes
-                .filter { it.removePrefix(questionCode).matches(Regex("^Ac\\d+$")) }
-                .map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { it.matches(COLUMN_REGEX) }
         } else if (questionType in ICON_IMAGE_CHOICE_TYPES) {
-            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels)
         } else null
 
         val images = answerCodes.mapNotNull { answerCode ->
@@ -281,7 +279,7 @@ class AnalyticsService(
         }.ifEmpty { null }
 
         val fields = if (questionType in MULTI_FIELD_TYPES) {
-            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels)
         } else null
 
         val base = AnalyticsQuestion(
@@ -310,6 +308,19 @@ class AnalyticsService(
 
     private fun buildResourceUrl(surveyId: UUID, fileName: String): String {
         return "/survey/$surveyId/resource/$fileName"
+    }
+
+    private fun toAnalyticsOptions(
+        answerCodes: List<String>,
+        questionCode: String,
+        labels: Map<String, String>,
+        filter: ((String) -> Boolean)? = null
+    ): List<AnalyticsOption> {
+        val codes = if (filter != null) answerCodes.filter { filter(it.removePrefix(questionCode)) } else answerCodes
+        return codes.map { fullCode ->
+            val stripped = fullCode.removePrefix(questionCode)
+            AnalyticsOption(code = stripped, label = labels[fullCode] ?: stripped)
+        }
     }
 
     // --- Response extraction ---
@@ -346,7 +357,7 @@ class AnalyticsService(
         questionCode: String
     ): List<Any?> {
         val rowCodes = answerCodes.filter {
-            it.removePrefix(questionCode).matches(Regex("^A\\d+$"))
+            it.removePrefix(questionCode).matches(ROW_REGEX)
         }
         return ctx.responses.mapNotNull { response ->
             val fieldMap = rowCodes.mapNotNull mapField@{ answerCode ->
@@ -481,11 +492,11 @@ class AnalyticsService(
         return NumberSummary(
             min = sorted.first(),
             max = sorted.last(),
-            mean = Math.round(mean * 100.0) / 100.0,
-            median = Math.round(median * 100.0) / 100.0,
-            sum = Math.round(numbers.sum() * 100.0) / 100.0,
+            mean = mean.roundTo2(),
+            median = median.roundTo2(),
+            sum = numbers.sum().roundTo2(),
             count = count,
-            stdDev = Math.round(stdDev * 100.0) / 100.0,
+            stdDev = stdDev.roundTo2(),
             frequencyTable = frequencyTable,
             outlierValues = outlierValues,
             outliersCount = outlierValues.size
@@ -512,7 +523,7 @@ class AnalyticsService(
             val ranks = rankLists[option.code] ?: emptyList()
             RankingSummaryItem(
                 code = option.code,
-                averageRank = if (ranks.isNotEmpty()) Math.round(ranks.average() * 100.0) / 100.0 else 0.0,
+                averageRank = if (ranks.isNotEmpty()) ranks.average().roundTo2() else 0.0,
                 responseCount = ranks.size,
                 firstPlaceCount = firstPlaceCounts[option.code] ?: 0,
                 lastPlaceCount = lastPlaceCounts[option.code] ?: 0

@@ -28,9 +28,12 @@ class ResponseControllerIntegrationTest : IntegrationTestBase() {
 
     private val surveyId = UUID.randomUUID()
 
+    private fun createTestAnalyticsDto(totalResponses: Int = 0) =
+        AnalyticsDto("Test Survey", totalResponses, 0, 0, emptyList())
+
     @Test
     fun `getAnalytics returns 200 for super_admin`() {
-        val dto = AnalyticsDto("Test Survey", 10, 0, 0, emptyList())
+        val dto = createTestAnalyticsDto(totalResponses = 10)
         every { analyticsService.getAnalytics(surveyId, any()) } returns dto
 
         mockMvc.perform(
@@ -47,7 +50,7 @@ class ResponseControllerIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `getAnalytics returns 200 for survey_admin`() {
-        val dto = AnalyticsDto("Test Survey", 5, 0, 0, emptyList())
+        val dto = createTestAnalyticsDto(totalResponses = 5)
         every { analyticsService.getAnalytics(surveyId, any()) } returns dto
 
         mockMvc.perform(
@@ -62,7 +65,7 @@ class ResponseControllerIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `getAnalytics returns 200 for analyst`() {
-        val dto = AnalyticsDto("Test Survey", 0, 0, 0, emptyList())
+        val dto = createTestAnalyticsDto()
         every { analyticsService.getAnalytics(surveyId, any()) } returns dto
 
         mockMvc.perform(
@@ -117,7 +120,7 @@ class ResponseControllerIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `getAnalytics passes custom max_responses parameter`() {
-        val dto = AnalyticsDto("Test Survey", 0, 0, 0, emptyList())
+        val dto = createTestAnalyticsDto()
         every { analyticsService.getAnalytics(surveyId, 100) } returns dto
 
         mockMvc.perform(
@@ -132,7 +135,7 @@ class ResponseControllerIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `getAnalytics uses default max_responses when not provided`() {
-        val dto = AnalyticsDto("Test Survey", 0, 0, 0, emptyList())
+        val dto = createTestAnalyticsDto()
         every { analyticsService.getAnalytics(surveyId, AnalyticsService.DEFAULT_MAX_RESPONSES) } returns dto
 
         mockMvc.perform(

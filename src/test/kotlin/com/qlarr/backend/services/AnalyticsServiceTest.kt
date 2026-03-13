@@ -53,9 +53,7 @@ class AnalyticsServiceTest {
     @Test
     fun `getAnalytics uses latest survey version`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns emptyList()
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(0)
+        setupMocks(processed)
 
         analyticsService.getAnalytics(surveyId)
 
@@ -65,9 +63,7 @@ class AnalyticsServiceTest {
     @Test
     fun `getAnalytics returns correct survey title and total responses`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns emptyList()
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(42)
+        setupMocks(processed, completedCount = 42)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -99,9 +95,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "A2"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -141,9 +135,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to listOf("A1", "A3")))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(1)
+        setupMocks(processed, responses, completedCount = 1)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -177,9 +169,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "Bob"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -210,9 +200,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 30))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -221,7 +209,13 @@ class AnalyticsServiceTest {
         assertEquals("NUMBER", question.type)
         assertNull(question.responses)
         assertNotNull(question.numberSummary)
-        assertEquals(NumberSummary(min = 25.0, max = 30.0, mean = 27.5, median = 27.5, sum = 55.0, count = 2), question.numberSummary)
+        assertEquals(NumberSummary(
+            min = 25.0, max = 30.0, mean = 27.5, median = 27.5, sum = 55.0, count = 2,
+            stdDev = 2.5,
+            frequencyTable = listOf(NumberFrequencyItem(25.0, 1), NumberFrequencyItem(30.0, 1)),
+            outlierValues = emptyList(),
+            outliersCount = 0
+        ), question.numberSummary)
     }
 
     @Test
@@ -245,9 +239,7 @@ class AnalyticsServiceTest {
             buildResponse(emptyMap())
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(4)
+        setupMocks(processed, responses, completedCount = 4)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -284,9 +276,7 @@ class AnalyticsServiceTest {
             ))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(1)
+        setupMocks(processed, responses, completedCount = 1)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -298,9 +288,9 @@ class AnalyticsServiceTest {
         // Response: A1=rank2, A2=rank1, A3=rank3
         assertEquals(
             listOf(
-                RankingSummaryItem("A1", 2.0, 1),
-                RankingSummaryItem("A2", 1.0, 1),
-                RankingSummaryItem("A3", 3.0, 1)
+                RankingSummaryItem("A1", 2.0, 1, firstPlaceCount = 0, lastPlaceCount = 0),
+                RankingSummaryItem("A2", 1.0, 1, firstPlaceCount = 1, lastPlaceCount = 0),
+                RankingSummaryItem("A3", 3.0, 1, firstPlaceCount = 0, lastPlaceCount = 1)
             ),
             question.rankingSummary
         )
@@ -324,9 +314,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "some-file-data"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(1)
+        setupMocks(processed, responses, completedCount = 1)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -347,9 +335,7 @@ class AnalyticsServiceTest {
 
         val processed = buildProcessedSurvey(emptyList(), componentIndices)
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns emptyList()
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(0)
+        setupMocks(processed)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -370,9 +356,7 @@ class AnalyticsServiceTest {
         val processed = buildProcessedSurvey(schema, componentIndices)
         val responses = listOf(buildResponse(mapOf("Q1.value" to "test")))
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(1)
+        setupMocks(processed, responses, completedCount = 1)
 
         val result = analyticsService.getAnalytics(surveyId)
 
@@ -403,9 +387,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "A3"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(5)
+        setupMocks(processed, responses, completedCount = 5)
 
         val result = analyticsService.getAnalytics(surveyId)
         val question = result.questions[0]
@@ -438,9 +420,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to listOf("A3")))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(3)
+        setupMocks(processed, responses, completedCount = 3)
 
         val result = analyticsService.getAnalytics(surveyId)
         val question = result.questions[0]
@@ -474,9 +454,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 6))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(6)
+        setupMocks(processed, responses, completedCount = 6)
 
         val result = analyticsService.getAnalytics(surveyId)
         val question = result.questions[0]
@@ -510,9 +488,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 10))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val nps = analyticsService.getAnalytics(surveyId).questions[0].npsSummary!!
         assertEquals(0, nps.detractors)
@@ -539,9 +515,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 6))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val nps = analyticsService.getAnalytics(surveyId).questions[0].npsSummary!!
         assertEquals(2, nps.detractors)
@@ -569,9 +543,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to 30))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(3)
+        setupMocks(processed, responses, completedCount = 3)
 
         val summary = analyticsService.getAnalytics(surveyId).questions[0].numberSummary!!
         assertEquals(10.0, summary.min, 0.01)
@@ -596,9 +568,7 @@ class AnalyticsServiceTest {
         val labels = mapOf("Q1" to "Age")
         val processed = buildProcessedSurvey(schema, componentIndices, surveyJson, labels)
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns emptyList()
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(0)
+        setupMocks(processed)
 
         val question = analyticsService.getAnalytics(surveyId).questions[0]
         assertNull(question.numberSummary)
@@ -629,9 +599,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1A1.value" to 1, "Q1A2.value" to 3, "Q1A3.value" to 2))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val ranking = analyticsService.getAnalytics(surveyId).questions[0].rankingSummary!!
         // A1: ranks [2, 1] → avg 1.5
@@ -664,9 +632,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1A1.value" to "Ac1", "Q1A2.value" to "Ac1"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(2)
+        setupMocks(processed, responses, completedCount = 2)
 
         val question = analyticsService.getAnalytics(surveyId).questions[0]
         assertNull(question.responses)
@@ -732,9 +698,7 @@ class AnalyticsServiceTest {
             buildResponse(mapOf("Q1.value" to "A1", "Q2.value" to "hello"))
         )
 
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(1)
+        setupMocks(processed, responses, completedCount = 1)
 
         val result = analyticsService.getAnalytics(surveyId)
         val scqQuestion = result.questions.find { it.type == "SCQ" }!!
@@ -754,9 +718,7 @@ class AnalyticsServiceTest {
     @Test
     fun `getAnalytics respects maxResponses parameter via limit`() {
         val processed = buildProcessedSurvey(emptyList(), emptyList())
-        every { designService.getProcessedSurvey(surveyId, false) } returns processed
-        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns emptyList()
-        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(0)
+        setupMocks(processed)
 
         analyticsService.getAnalytics(surveyId, 100)
 
@@ -766,6 +728,18 @@ class AnalyticsServiceTest {
     }
 
     // --- Helper methods ---
+
+    private fun setupMocks(
+        processed: ProcessedSurvey,
+        responses: List<String> = emptyList(),
+        completedCount: Int = 0,
+        incompleteCount: Int = 0,
+        previewCount: Int = 0
+    ) {
+        every { designService.getProcessedSurvey(surveyId, false) } returns processed
+        every { responseRepository.findCompletedValuesBySurveyId(surveyId, any()) } returns responses
+        every { responseRepository.analyticsResponseCounts(surveyId) } returns mockCounts(completedCount, incompleteCount, previewCount)
+    }
 
     private fun buildProcessedSurvey(
         schema: List<ResponseField>,
