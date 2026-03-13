@@ -68,9 +68,8 @@ class AnalyticsService(
             .filter { it.columnName == ColumnName.VALUE }
             .associateBy { it.componentCode }
 
-        // Extract question types and content paths from survey design
-        val questionTypes = extractQuestionTypes(validationOutput.survey)
-        val contentPaths = extractContentPaths(validationOutput.survey)
+        // Extract question types and content paths in a single tree traversal
+        val (questionTypes, contentPaths) = extractQuestionMetadata(validationOutput.survey)
 
         // Fetch completed responses
         val responses = responseRepository.findCompletedBySurveyId(surveyId, maxResponses)
@@ -115,24 +114,18 @@ class AnalyticsService(
         }
     }
 
-    private fun extractQuestionTypes(survey: ObjectNode): Map<String, String> {
+    private fun extractQuestionMetadata(survey: ObjectNode): Pair<Map<String, String>, Map<String, List<String>>> {
         val types = mutableMapOf<String, String>()
-        traverseSurveyTree(survey) { node, code, _ ->
+        val contentPaths = mutableMapOf<String, List<String>>()
+        traverseSurveyTree(survey) { node, code, parentQuestionCode ->
             if (code != null && code.isQuestionCode()) {
                 node.get("type")?.asText()?.let { types[code] = it.uppercase() }
             }
-        }
-        return types
-    }
-
-    private fun extractContentPaths(survey: ObjectNode): Map<String, List<String>> {
-        val result = mutableMapOf<String, List<String>>()
-        traverseSurveyTree(survey) { node, code, parentQuestionCode ->
             if (code != null && code.startsWith("A") && parentQuestionCode != null) {
-                resolveContentPaths(node)?.let { result[parentQuestionCode + code] = it }
+                resolveContentPaths(node)?.let { contentPaths[parentQuestionCode + code] = it }
             }
         }
-        return result
+        return types to contentPaths
     }
 
     private fun extractLabels(survey: ObjectNode, lang: String): Map<String, String> {
