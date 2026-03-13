@@ -479,8 +479,16 @@ class AnalyticsService(
             val mid = count / 2
             val q1Arr = sorted.subList(0, mid)
             val q3Arr = if (count % 2 != 0) sorted.subList(mid + 1, count) else sorted.subList(mid, count)
-            val q1 = q1Arr[q1Arr.size / 2]
-            val q3 = q3Arr[q3Arr.size / 2]
+            val q1 = if (q1Arr.size % 2 == 0) {
+                (q1Arr[q1Arr.size / 2 - 1] + q1Arr[q1Arr.size / 2]) / 2.0
+            } else {
+                q1Arr[q1Arr.size / 2]
+            }
+            val q3 = if (q3Arr.size % 2 == 0) {
+                (q3Arr[q3Arr.size / 2 - 1] + q3Arr[q3Arr.size / 2]) / 2.0
+            } else {
+                q3Arr[q3Arr.size / 2]
+            }
             val iqr = q3 - q1
             val lowerBound = q1 - 1.5 * iqr
             val upperBound = q3 + 1.5 * iqr

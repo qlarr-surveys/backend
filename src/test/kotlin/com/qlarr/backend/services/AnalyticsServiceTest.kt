@@ -576,6 +576,42 @@ class AnalyticsServiceTest {
     }
 
     @Test
+    fun `getAnalytics detects outliers using IQR method`() {
+        val schema = listOf(
+            buildResponseField("Q1", ColumnName.VALUE, ReturnType.Int, "Q1.value")
+        )
+        val componentIndices = listOf(
+            buildComponentIndex("Survey", listOf("G1")),
+            buildComponentIndex("G1", listOf("Q1")),
+            buildComponentIndex("Q1", emptyList())
+        )
+        val surveyJson = buildSurveyJson("Q1", "NUMBER", mapOf("Q1" to "Score"))
+        val labels = mapOf("Q1" to "Score")
+        val processed = buildProcessedSurvey(schema, componentIndices, surveyJson, labels)
+        // Dataset: [1, 2, 3, 4, 5, 6, 7, 100]
+        // Q1 half = [1,2,3,4] → Q1 = (2+3)/2 = 2.5
+        // Q3 half = [5,6,7,100] → Q3 = (6+7)/2 = 6.5
+        // IQR = 4.0, lower = 2.5-6.0 = -3.5, upper = 6.5+6.0 = 12.5
+        // Outlier: 100
+        val responses = listOf(
+            buildResponse(mapOf("Q1.value" to 1)),
+            buildResponse(mapOf("Q1.value" to 2)),
+            buildResponse(mapOf("Q1.value" to 3)),
+            buildResponse(mapOf("Q1.value" to 4)),
+            buildResponse(mapOf("Q1.value" to 5)),
+            buildResponse(mapOf("Q1.value" to 6)),
+            buildResponse(mapOf("Q1.value" to 7)),
+            buildResponse(mapOf("Q1.value" to 100))
+        )
+
+        setupMocks(processed, responses, completedCount = 8)
+
+        val summary = analyticsService.getAnalytics(surveyId).questions[0].numberSummary!!
+        assertEquals(listOf(100.0), summary.outlierValues)
+        assertEquals(1, summary.outliersCount)
+    }
+
+    @Test
     fun `getAnalytics aggregates ranking with multiple responses`() {
         val schema = listOf(
             buildResponseField("Q1A1", ColumnName.VALUE, ReturnType.Int, "Q1A1.value"),
