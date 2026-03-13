@@ -84,9 +84,13 @@ class AnalyticsService(
 
         val questions = questionCodes.mapNotNull { buildAnalyticsQuestion(it, ctx) }
 
+        val counts = responseRepository.analyticsResponseCounts(surveyId)
+
         return AnalyticsDto(
             surveyTitle = survey.name,
-            totalResponses = responseRepository.completedSurveyCount(surveyId),
+            totalResponses = counts.completedCount + counts.incompleteCount + counts.previewCount,
+            incompleteResponses = counts.incompleteCount,
+            previewResponses = counts.previewCount,
             questions = questions
         )
     }

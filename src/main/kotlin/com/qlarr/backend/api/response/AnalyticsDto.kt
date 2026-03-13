@@ -3,6 +3,8 @@ package com.qlarr.backend.api.response
 data class AnalyticsDto(
     val surveyTitle: String,
     val totalResponses: Int,
+    val incompleteResponses: Int,
+    val previewResponses: Int,
     val questions: List<AnalyticsQuestion>
 )
 
