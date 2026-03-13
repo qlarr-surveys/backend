@@ -2,10 +2,7 @@ package com.qlarr.backend.services
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.qlarr.backend.api.response.AnalyticsDto
-import com.qlarr.backend.api.response.AnalyticsImage
-import com.qlarr.backend.api.response.AnalyticsOption
-import com.qlarr.backend.api.response.AnalyticsQuestion
+import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.persistence.repositories.ResponseRepository
@@ -37,6 +34,8 @@ class AnalyticsService(
         private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
         private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
+        private val NPS_TYPE = "NPS"
+        private val NUMBER_TYPE = "NUMBER"
         private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
         const val DEFAULT_MAX_RESPONSES = 5000
 
@@ -271,28 +270,42 @@ class AnalyticsService(
             answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
         } else null
 
-        return AnalyticsQuestion(
+        val images = answerCodes.mapNotNull { answerCode ->
+            ctx.contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
+                AnalyticsImage(
+                    id = answerCode,
+                    label = ctx.labels[answerCode],
+                    url = buildResourceUrl(ctx.surveyId, resourceFile)
+                )
+            }
+        }.ifEmpty { null }
+
+        val fields = if (questionType in MULTI_FIELD_TYPES) {
+            answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
+        } else null
+
+        val base = AnalyticsQuestion(
             id = questionCode,
             type = questionType,
             title = title,
-            description = null,
+            answeredCount = responseValues.size,
             options = options,
             rows = rows,
             columns = columns,
-            images = answerCodes.mapNotNull { answerCode ->
-                ctx.contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
-                    AnalyticsImage(
-                        id = answerCode,
-                        label = ctx.labels[answerCode],
-                        url = buildResourceUrl(ctx.surveyId, resourceFile)
-                    )
-                }
-            }.ifEmpty { null },
-            fields = if (questionType in MULTI_FIELD_TYPES) {
-                answerCodes.map { AnalyticsOption(code = it.removePrefix(questionCode), label = ctx.labels[it] ?: it.removePrefix(questionCode)) }
-            } else null,
-            responses = responseValues
+            images = images,
+            fields = fields
         )
+
+        return when {
+            questionType == NPS_TYPE -> base.copy(npsSummary = aggregateNps(responseValues))
+            questionType == NUMBER_TYPE -> base.copy(numberSummary = aggregateNumber(responseValues))
+            questionType in SINGLE_CHOICE_TYPES -> base.copy(frequencyCounts = aggregateFrequencyCounts(responseValues, options!!, isSingleChoice = true))
+            questionType in MULTI_CHOICE_TYPES -> base.copy(frequencyCounts = aggregateFrequencyCounts(responseValues, options!!, isSingleChoice = false))
+            questionType in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, options!!))
+            questionType in MATRIX_TYPES -> base.copy(matrixSummary = aggregateMatrix(responseValues, rows!!, columns!!, questionType))
+            questionType in PRESENCE_ONLY_TYPES -> base.copy(presenceCount = PresenceCount(presentCount = responseValues.size, totalResponses = ctx.responses.size))
+            else -> base.copy(responses = responseValues)
+        }
     }
 
     private fun buildResourceUrl(surveyId: UUID, fileName: String): String {
@@ -380,6 +393,166 @@ class AnalyticsService(
                 answerCode.removePrefix(questionCode) to value
             }.toMap()
             fieldMap.ifEmpty { null }
+        }
+    }
+
+    // --- Aggregation methods ---
+
+    private fun aggregateFrequencyCounts(
+        responses: List<Any?>,
+        options: List<AnalyticsOption>,
+        isSingleChoice: Boolean
+    ): List<FrequencyCount> {
+        val counts = options.associate { it.code to 0 }.toMutableMap()
+        if (isSingleChoice) {
+            responses.forEach { value ->
+                val code = value?.toString() ?: return@forEach
+                counts[code] = (counts[code] ?: 0) + 1
+            }
+        } else {
+            responses.forEach { value ->
+                val selections = value as? List<*> ?: return@forEach
+                selections.forEach { code ->
+                    val key = code?.toString() ?: return@forEach
+                    counts[key] = (counts[key] ?: 0) + 1
+                }
+            }
+        }
+        return options.map { FrequencyCount(code = it.code, count = counts[it.code] ?: 0) }
+    }
+
+    private fun aggregateNps(responses: List<Any?>): NpsSummary {
+        val numbers = responses.mapNotNull { (it as? Number)?.toInt() }
+        val detractors = numbers.count { it in 0..6 }
+        val passives = numbers.count { it in 7..8 }
+        val promoters = numbers.count { it in 9..10 }
+        val total = numbers.size
+        val score = if (total > 0) (promoters - detractors).toDouble() / total * 100 else 0.0
+        val distribution = IntArray(11)
+        numbers.forEach { if (it in 0..10) distribution[it]++ }
+        return NpsSummary(
+            detractors = detractors,
+            passives = passives,
+            promoters = promoters,
+            score = score,
+            answeredCount = total,
+            distribution = distribution.toList()
+        )
+    }
+
+    private fun aggregateNumber(responses: List<Any?>): NumberSummary? {
+        val numbers = responses.mapNotNull { (it as? Number)?.toDouble() }
+        if (numbers.isEmpty()) return null
+        val sorted = numbers.sorted()
+        val count = sorted.size
+        val mean = numbers.average()
+        val median = if (count % 2 == 0) {
+            (sorted[count / 2 - 1] + sorted[count / 2]) / 2.0
+        } else {
+            sorted[count / 2]
+        }
+
+        // Standard deviation
+        val variance = numbers.map { (it - mean) * (it - mean) }.average()
+        val stdDev = kotlin.math.sqrt(variance)
+
+        // Frequency table
+        val freqMap = mutableMapOf<Double, Int>()
+        numbers.forEach { freqMap[it] = (freqMap[it] ?: 0) + 1 }
+        val frequencyTable = freqMap.entries
+            .sortedByDescending { it.value }
+            .map { NumberFrequencyItem(value = it.key, count = it.value) }
+
+        // Outlier detection (IQR method)
+        val outlierValues = if (count >= 4) {
+            val mid = count / 2
+            val q1Arr = sorted.subList(0, mid)
+            val q3Arr = if (count % 2 != 0) sorted.subList(mid + 1, count) else sorted.subList(mid, count)
+            val q1 = q1Arr[q1Arr.size / 2]
+            val q3 = q3Arr[q3Arr.size / 2]
+            val iqr = q3 - q1
+            val lowerBound = q1 - 1.5 * iqr
+            val upperBound = q3 + 1.5 * iqr
+            numbers.filter { it < lowerBound || it > upperBound }
+        } else {
+            emptyList()
+        }
+
+        return NumberSummary(
+            min = sorted.first(),
+            max = sorted.last(),
+            mean = Math.round(mean * 100.0) / 100.0,
+            median = Math.round(median * 100.0) / 100.0,
+            sum = Math.round(numbers.sum() * 100.0) / 100.0,
+            count = count,
+            stdDev = Math.round(stdDev * 100.0) / 100.0,
+            frequencyTable = frequencyTable,
+            outlierValues = outlierValues,
+            outliersCount = outlierValues.size
+        )
+    }
+
+    private fun aggregateRanking(
+        responses: List<Any?>,
+        options: List<AnalyticsOption>
+    ): List<RankingSummaryItem> {
+        val rankLists = options.associate { it.code to mutableListOf<Int>() }
+        val firstPlaceCounts = options.associate { it.code to 0 }.toMutableMap()
+        val lastPlaceCounts = options.associate { it.code to 0 }.toMutableMap()
+        responses.forEach { value ->
+            val ranked = value as? List<*> ?: return@forEach
+            ranked.forEachIndexed { index, code ->
+                val key = code?.toString() ?: return@forEachIndexed
+                rankLists[key]?.add(index + 1)
+                if (index == 0) firstPlaceCounts[key] = (firstPlaceCounts[key] ?: 0) + 1
+                if (index == ranked.size - 1) lastPlaceCounts[key] = (lastPlaceCounts[key] ?: 0) + 1
+            }
+        }
+        return options.map { option ->
+            val ranks = rankLists[option.code] ?: emptyList()
+            RankingSummaryItem(
+                code = option.code,
+                averageRank = if (ranks.isNotEmpty()) Math.round(ranks.average() * 100.0) / 100.0 else 0.0,
+                responseCount = ranks.size,
+                firstPlaceCount = firstPlaceCounts[option.code] ?: 0,
+                lastPlaceCount = lastPlaceCounts[option.code] ?: 0
+            )
+        }
+    }
+
+    private fun aggregateMatrix(
+        responses: List<Any?>,
+        rows: List<AnalyticsOption>,
+        columns: List<AnalyticsOption>,
+        questionType: String
+    ): List<MatrixSummaryItem> {
+        val counts = mutableMapOf<Pair<String, String>, Int>()
+        rows.forEach { row ->
+            columns.forEach { col ->
+                counts[row.code to col.code] = 0
+            }
+        }
+        val isMultiChoice = questionType in setOf("MCQ_ARRAY", "MCQ_ICON_ARRAY")
+        responses.forEach { value ->
+            val rowMap = value as? Map<*, *> ?: return@forEach
+            rowMap.forEach { (rowCode, colValue) ->
+                val rCode = rowCode?.toString() ?: return@forEach
+                if (isMultiChoice) {
+                    val selections = colValue as? List<*> ?: return@forEach
+                    selections.forEach { col ->
+                        val cCode = col?.toString() ?: return@forEach
+                        val key = rCode to cCode
+                        counts[key] = (counts[key] ?: 0) + 1
+                    }
+                } else {
+                    val cCode = colValue?.toString() ?: return@forEach
+                    val key = rCode to cCode
+                    counts[key] = (counts[key] ?: 0) + 1
+                }
+            }
+        }
+        return counts.map { (pair, count) ->
+            MatrixSummaryItem(rowCode = pair.first, columnCode = pair.second, count = count)
         }
     }
 }
