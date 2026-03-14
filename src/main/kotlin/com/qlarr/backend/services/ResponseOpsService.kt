@@ -10,6 +10,7 @@ import com.qlarr.backend.common.UserUtils
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.exceptions.*
 import com.qlarr.backend.expressionmanager.SurveyProcessor
+import com.qlarr.backend.helpers.FileDownload
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
@@ -54,9 +55,7 @@ class ResponseOpsService(
         }
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
         val fileName = UUID.randomUUID().toString()
-        val mimeType = file.contentType
-            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
-            ?: "application/octet-stream"
+        val mimeType = file.resolveMimeType()
         checkMaxFileSize(file.size, mimeType)
 
         helper.upload(surveyId, SurveyFolder.Responses(responseId.toString()), file, mimeType, fileName)
@@ -80,9 +79,7 @@ class ResponseOpsService(
         if (survey.status != Status.ACTIVE) {
             throw SurveyIsNotActiveException()
         }
-        val mimeType = file.contentType
-            ?: file.originalFilename?.let { Files.probeContentType(File(it).toPath()) }
-            ?: "application/octet-stream"
+        val mimeType = file.resolveMimeType()
 
         checkMaxFileSize(file.size, mimeType)
 
@@ -179,12 +176,7 @@ class ResponseOpsService(
         filename: UUID
     ): ResponseEntity<InputStreamResource> {
         val file = helper.download(surveyId, SurveyFolder.Responses(responseId.toString()), filename.toString())
-        return ResponseEntity.ok()
-            .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-            .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
-            .header(CONTENT_LENGTH, file.objectMetadata["Content-Length"]!!)
-            .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-            .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
+        return buildFileResponse(file)
             .body(InputStreamResource(file.inputStream))
     }
 
@@ -205,21 +197,23 @@ class ResponseOpsService(
                     questionValue["stored_filename"] as String
                 )
             val customFileName = "${response.surveyResponseIndex}-$questionId-${questionValue["filename"]}"
-            return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
-                .header(CONTENT_LENGTH, file.objectMetadata["Content-Length"]!!)
+            return buildFileResponse(file)
                 .header(
                     "Content-Disposition",
                     "inline; filename=\"$customFileName\""
                 )
-                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .eTag(file.objectMetadata["eTag"]) // lastModified is also ava
                 .body(InputStreamResource(file.inputStream))
         } else {
             throw InvalidQuestionId()
         }
     }
+
+    private fun buildFileResponse(file: FileDownload): ResponseEntity.BodyBuilder =
+        ResponseEntity.ok()
+            .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+            .header(CONTENT_TYPE, file.objectMetadata["Content-Type"]!!)
+            .header(CONTENT_LENGTH, file.objectMetadata["Content-Length"]!!)
+            .eTag(file.objectMetadata["eTag"])
 
     fun deleteResponse(surveyId: UUID, responseId: UUID) {
         val response = responseRepository.findByIdOrNull(responseId) ?: throw ResponseNotFoundException()
@@ -230,3 +224,8 @@ class ResponseOpsService(
     }
 
 }
+
+private fun MultipartFile.resolveMimeType(): String =
+    contentType
+        ?: originalFilename?.let { Files.probeContentType(File(it).toPath()) }
+        ?: "application/octet-stream"

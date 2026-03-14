@@ -1,5 +1,6 @@
 package com.qlarr.backend.persistence.repositories
 
+import com.qlarr.backend.persistence.entities.AnalyticsResponseCount
 import com.qlarr.backend.persistence.entities.ResponseCount
 import com.qlarr.backend.persistence.entities.ResponseSummaryInterface
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
@@ -30,6 +31,14 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
                 " WHERE survey_id = :surveyId and submit_date IS NOT NULL AND preview = false", nativeQuery = true
     )
     fun completedSurveyCount(surveyId: UUID): Int
+
+    @Query(
+        "SELECT " +
+                "COUNT(CASE WHEN submit_date IS NOT NULL AND preview = false THEN 1 END) as completedCount, " +
+                "COUNT(CASE WHEN submit_date IS NULL AND preview = false THEN 1 END) as incompleteCount " +
+                "FROM responses WHERE survey_id = :surveyId", nativeQuery = true
+    )
+    fun analyticsResponseCounts(surveyId: UUID): AnalyticsResponseCount
 
     fun deleteBySurveyId(surveyId: UUID)
 
@@ -151,5 +160,15 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
     )
     fun summary(surveyId: UUID, pageable: Pageable): Page<ResponseSummaryInterface>
 
+    @Query(
+        "SELECT CAST(r.values AS TEXT) FROM responses r " +
+                "WHERE r.survey_id = :surveyId " +
+                "AND r.submit_date IS NOT NULL " +
+                "AND r.preview = false " +
+                "ORDER BY r.survey_response_index ASC " +
+                "LIMIT :limit",
+        nativeQuery = true
+    )
+    fun findCompletedValuesBySurveyId(surveyId: UUID, limit: Int): List<String>
 
 }

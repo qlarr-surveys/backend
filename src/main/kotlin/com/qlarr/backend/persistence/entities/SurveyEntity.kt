@@ -89,6 +89,11 @@ interface ResponseCount {
     val userResponseCount: Long
 }
 
+interface AnalyticsResponseCount {
+    val completedCount: Int
+    val incompleteCount: Int
+}
+
 data class SurveyNavigationData(
     val navigationMode: NavigationMode = NavigationMode.GROUP_BY_GROUP,
     val allowPrevious: Boolean = true,

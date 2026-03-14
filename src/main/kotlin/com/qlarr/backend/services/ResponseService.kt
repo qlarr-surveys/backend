@@ -403,7 +403,7 @@ class ResponseService(
 
         return responseMapper.toDto(
             surveyorName = response.surveyor?.let {
-                "${responseWithSurveyorName.firstName} ${responseWithSurveyorName.firstName}"
+                "${responseWithSurveyorName.firstName} ${responseWithSurveyorName.lastName}"
             },
             disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
             entity = response,
