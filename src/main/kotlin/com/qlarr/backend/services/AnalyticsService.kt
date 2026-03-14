@@ -2,11 +2,11 @@ package com.qlarr.backend.services
 
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.persistence.repositories.ResponseRepository
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
@@ -34,8 +34,8 @@ class AnalyticsService(
         private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
         private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
-        private val NPS_TYPE = "NPS"
-        private val NUMBER_TYPE = "NUMBER"
+        private const val NPS_TYPE = "NPS"
+        private const val NUMBER_TYPE = "NUMBER"
         private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
         private val ROW_REGEX = Regex("^A\\d+$")
         private val COLUMN_REGEX = Regex("^Ac\\d+$")
@@ -44,6 +44,7 @@ class AnalyticsService(
         private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")
         private fun String.fileNameWithoutExtension(): String =
             substringAfterLast("/").substringBeforeLast(".")
+
         private fun Double.roundTo2(): Double = Math.round(this * 100.0) / 100.0
     }
 
@@ -52,7 +53,7 @@ class AnalyticsService(
         val schemaMap: Map<String, ResponseField>,
         val componentIndexList: List<ComponentIndex>,
         val questionTypes: Map<String, String>,
-        val contentPaths: Map<String, List<String>>,
+        val resources: Map<String, String>,
         val surveyId: UUID,
         val responses: List<Map<String, Any>>
     )
@@ -62,13 +63,7 @@ class AnalyticsService(
         val survey = processed.survey
         val validationOutput = processed.validationJsonOutput
 
-        // Get labels and component hierarchy
-        val defaultLang = validationOutput.defaultSurveyLang().code
-        val jarLabels = validationOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
-        val supplementaryLabels = extractLabels(validationOutput.survey, defaultLang)
-            .filterValues { it.isNotEmpty() }
-            .stripHtmlTags()
-        val labels = supplementaryLabels + jarLabels
+        val labels = validationOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
         val schemaMap = validationOutput.schema
             .filter { it.columnName == ColumnName.VALUE }
             .associateBy { it.componentCode }
@@ -80,7 +75,15 @@ class AnalyticsService(
         val responses = responseRepository.findCompletedValuesBySurveyId(surveyId, maxResponses)
             .map { objectMapper.readValue(it, jacksonTypeRef<Map<String, Any>>()) }
 
-        val ctx = AnalyticsContext(labels, schemaMap, validationOutput.componentIndexList, questionTypes, contentPaths, surveyId, responses)
+        val ctx = AnalyticsContext(
+            labels,
+            schemaMap,
+            validationOutput.componentIndexList,
+            questionTypes,
+            contentPaths,
+            surveyId,
+            responses
+        )
 
         // Build analytics questions
         val questionCodes = ctx.componentIndexList
@@ -120,9 +123,9 @@ class AnalyticsService(
         }
     }
 
-    private fun extractQuestionMetadata(survey: ObjectNode): Pair<Map<String, String>, Map<String, List<String>>> {
+    private fun extractQuestionMetadata(survey: ObjectNode): Pair<Map<String, String>, Map<String, String>> {
         val types = mutableMapOf<String, String>()
-        val contentPaths = mutableMapOf<String, List<String>>()
+        val contentPaths = mutableMapOf<String, String>()
         traverseSurveyTree(survey) { node, code, parentQuestionCode ->
             if (code != null && code.isQuestionCode()) {
                 node.get("type")?.asText()?.let { types[code] = it.uppercase() }
@@ -134,75 +137,10 @@ class AnalyticsService(
         return types to contentPaths
     }
 
-    private fun extractLabels(survey: ObjectNode, lang: String): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-        traverseSurveyTree(survey) { node, code, parentQuestionCode ->
-            if (code == null) return@traverseSurveyTree
-            val fullCode = when {
-                code.isQuestionCode() -> code
-                code.startsWith("A") && parentQuestionCode != null -> parentQuestionCode + code
-                else -> code
-            }
-            resolveNodeLabel(node, lang)?.let { result[fullCode] = it }
-        }
-        return result
-    }
 
-    // --- Node-level extraction helpers ---
-
-    private fun resolveResourceFile(resourcesNode: ObjectNode?): String? =
-        resourcesNode?.get("icon")?.asText() ?: resourcesNode?.get("image")?.asText()
-
-    private fun findFormatContentPath(instructionList: ArrayNode?): com.fasterxml.jackson.databind.JsonNode? =
-        instructionList?.firstOrNull { inst ->
-            inst.get("code")?.asText()?.startsWith("format_") == true
-                    && (inst.get("contentPath") as? ArrayNode)?.size()?.let { it > 0 } == true
-        }
-
-    private fun resolveNodeLabel(node: ObjectNode, lang: String): String? {
-        // Try content.{lang}.label
-        val content = node.get("content") as? ObjectNode
-        val langContent = content?.get(lang) as? ObjectNode
-        val label = langContent?.get("label")?.asText()?.takeIf { it.isNotBlank() }
-        if (label != null) return label
-
-        val instructionList = node.get("instructionList") as? ArrayNode
-
-        // Fallback: instructionList "format_label" instruction
-        val formatLabelInst = instructionList?.firstOrNull { inst ->
-            inst.get("code")?.asText() == "format_label"
-                    && inst.get("lang")?.asText() == lang
-        }
-        val fromFormatLabel = formatLabelInst?.get("text")?.asText()?.takeIf { it.isNotBlank() }
-            ?: formatLabelInst?.get("contentPath")?.let { cpNode ->
-                (cpNode as? ArrayNode)?.firstOrNull()?.asText()?.takeIf { it.isNotBlank() }?.let { path ->
-                    path.fileNameWithoutExtension()
-                }
-            }
-        if (fromFormatLabel != null) return fromFormatLabel
-
-        // Fallback: any format_* instruction with contentPath
-        val fromFormatAny = findFormatContentPath(instructionList)?.let { inst ->
-            (inst.get("contentPath") as? ArrayNode)?.firstOrNull()?.asText()
-                ?.takeIf { it.isNotBlank() }?.let { path ->
-                    path.fileNameWithoutExtension()
-                }
-        }
-        if (fromFormatAny != null) return fromFormatAny
-
-        // Fallback: resources node icon/image filename
-        val resourceFile = resolveResourceFile(node.get("resources") as? ObjectNode)
-        return resourceFile?.takeIf { it.isNotBlank() }?.let {
-            it.fileNameWithoutExtension()
-        }
-    }
-
-    private fun resolveContentPaths(node: ObjectNode): List<String>? {
-        // Check resources node first
-        resolveResourceFile(node.get("resources") as? ObjectNode)?.let { return listOf(it) }
-        // Fallback: instructionList format_* with contentPath
-        return findFormatContentPath(node.get("instructionList") as? ArrayNode)?.let { inst ->
-            (inst.get("contentPath") as ArrayNode).map { it.asText() }
+    private fun resolveContentPaths(node: ObjectNode): String? {
+        return (node.get("resources") as? ObjectNode)?.let { resourcesNode->
+            resourcesNode.get("icon")?.asText() ?: resourcesNode.get("image")?.asText()
         }
     }
 
@@ -269,7 +207,7 @@ class AnalyticsService(
         } else null
 
         val images = answerCodes.mapNotNull { answerCode ->
-            ctx.contentPaths[answerCode]?.firstOrNull()?.let { resourceFile ->
+            ctx.resources[answerCode]?.let { resourceFile ->
                 AnalyticsImage(
                     id = answerCode,
                     label = ctx.labels[answerCode],
@@ -297,11 +235,39 @@ class AnalyticsService(
         return when {
             questionType == NPS_TYPE -> base.copy(npsSummary = aggregateNps(responseValues))
             questionType == NUMBER_TYPE -> base.copy(numberSummary = aggregateNumber(responseValues))
-            questionType in SINGLE_CHOICE_TYPES -> base.copy(frequencyCounts = aggregateFrequencyCounts(responseValues, options!!, isSingleChoice = true))
-            questionType in MULTI_CHOICE_TYPES -> base.copy(frequencyCounts = aggregateFrequencyCounts(responseValues, options!!, isSingleChoice = false))
+            questionType in SINGLE_CHOICE_TYPES -> base.copy(
+                frequencyCounts = aggregateFrequencyCounts(
+                    responseValues,
+                    options!!,
+                    isSingleChoice = true
+                )
+            )
+
+            questionType in MULTI_CHOICE_TYPES -> base.copy(
+                frequencyCounts = aggregateFrequencyCounts(
+                    responseValues,
+                    options!!,
+                    isSingleChoice = false
+                )
+            )
+
             questionType in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, options!!))
-            questionType in MATRIX_TYPES -> base.copy(matrixSummary = aggregateMatrix(responseValues, rows!!, columns!!, questionType))
-            questionType in PRESENCE_ONLY_TYPES -> base.copy(presenceCount = PresenceCount(presentCount = responseValues.size, totalResponses = ctx.responses.size))
+            questionType in MATRIX_TYPES -> base.copy(
+                matrixSummary = aggregateMatrix(
+                    responseValues,
+                    rows!!,
+                    columns!!,
+                    questionType
+                )
+            )
+
+            questionType in PRESENCE_ONLY_TYPES -> base.copy(
+                presenceCount = PresenceCount(
+                    presentCount = responseValues.size,
+                    totalResponses = ctx.responses.size
+                )
+            )
+
             else -> base.copy(responses = responseValues)
         }
     }
@@ -345,6 +311,7 @@ class AnalyticsService(
                         list.map { it.toString() }
                     }
                 }
+
                 type in PRESENCE_ONLY_TYPES -> true
                 else -> value
             }
