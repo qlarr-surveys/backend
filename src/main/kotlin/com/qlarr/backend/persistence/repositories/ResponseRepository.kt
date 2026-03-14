@@ -35,8 +35,7 @@ interface ResponseRepository : JpaRepository<SurveyResponseEntity, UUID> {
     @Query(
         "SELECT " +
                 "COUNT(CASE WHEN submit_date IS NOT NULL AND preview = false THEN 1 END) as completedCount, " +
-                "COUNT(CASE WHEN submit_date IS NULL AND preview = false THEN 1 END) as incompleteCount, " +
-                "COUNT(CASE WHEN preview = true THEN 1 END) as previewCount " +
+                "COUNT(CASE WHEN submit_date IS NULL AND preview = false THEN 1 END) as incompleteCount " +
                 "FROM responses WHERE survey_id = :surveyId", nativeQuery = true
     )
     fun analyticsResponseCounts(surveyId: UUID): AnalyticsResponseCount

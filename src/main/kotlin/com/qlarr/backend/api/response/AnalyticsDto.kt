@@ -3,10 +3,8 @@ package com.qlarr.backend.api.response
 import com.fasterxml.jackson.annotation.JsonInclude
 
 data class AnalyticsDto(
-    val surveyTitle: String,
     val totalResponses: Int,
     val incompleteResponses: Int,
-    val previewResponses: Int,
     val questions: List<AnalyticsQuestion>
 )
 
@@ -38,7 +36,6 @@ data class AnalyticsQuestion(
     val type: String,
     val title: String,
     val answeredCount: Int = 0,
-    val description: String? = null,
     val options: List<AnalyticsOption>? = null,
     val rows: List<AnalyticsOption>? = null,
     val columns: List<AnalyticsOption>? = null,

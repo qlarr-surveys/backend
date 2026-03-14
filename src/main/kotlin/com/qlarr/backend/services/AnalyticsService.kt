@@ -1,16 +1,16 @@
 package com.qlarr.backend.services
 
-import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.backend.persistence.repositories.ResponseRepository
+import com.qlarr.surveyengine.ext.isAnswerCode
+import com.qlarr.surveyengine.ext.isQuestionCode
 import com.qlarr.surveyengine.model.ComponentIndex
 import com.qlarr.surveyengine.model.exposed.ColumnName
 import com.qlarr.surveyengine.model.exposed.ResponseField
-import com.qlarr.surveyengine.model.exposed.ReturnType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.*
@@ -27,23 +27,20 @@ class AnalyticsService(
             "SCQ", "MCQ", "RANKING", "IMAGE_RANKING", "AUTOCOMPLETE",
             "ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ", "NPS"
         )
-        private val MATRIX_TYPES = setOf("SCQ_ARRAY", "MCQ_ARRAY", "SCQ_ICON_ARRAY", "MCQ_ICON_ARRAY")
+        private const val MULTIPLE_TEXT = "MULTIPLE_TEXT"
+        private const val MCQ_ARRAY = "MCQ_ARRAY"
+        private val MATRIX_TYPES = setOf("SCQ_ARRAY", MCQ_ARRAY, "SCQ_ICON_ARRAY", "MCQ_ICON_ARRAY")
         private val RANKING_TYPES = setOf("RANKING", "IMAGE_RANKING")
         private val ICON_IMAGE_CHOICE_TYPES = setOf("ICON_SCQ", "ICON_MCQ", "IMAGE_SCQ", "IMAGE_MCQ")
-        private val MULTI_FIELD_TYPES = setOf("MULTIPLE_TEXT")
         private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
-        private val PRESENCE_ONLY_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE")
+        private val FILE_UPLOAD_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE", "VIDEO_CAPTURE")
         private const val NPS_TYPE = "NPS"
         private const val NUMBER_TYPE = "NUMBER"
+        private const val ANSWER_ROW_TYPE = "ROW"
+        private const val ANSWER_COL_TYPE = "COLUMN"
         private val CHILD_KEYS = listOf("children", "groups", "questions", "answers")
-        private val ROW_REGEX = Regex("^A\\d+$")
-        private val COLUMN_REGEX = Regex("^Ac\\d+$")
         const val DEFAULT_MAX_RESPONSES = 5000
-
-        private fun String.isQuestionCode(): Boolean = startsWith("Q") && !contains("A")
-        private fun String.fileNameWithoutExtension(): String =
-            substringAfterLast("/").substringBeforeLast(".")
 
         private fun Double.roundTo2(): Double = Math.round(this * 100.0) / 100.0
     }
@@ -53,14 +50,14 @@ class AnalyticsService(
         val schemaMap: Map<String, ResponseField>,
         val componentIndexList: List<ComponentIndex>,
         val questionTypes: Map<String, String>,
+        val answerTypes: Map<String, String>,
         val resources: Map<String, String>,
         val surveyId: UUID,
         val responses: List<Map<String, Any>>
     )
 
-    fun getAnalytics(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsDto {
+    private fun buildContext(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsContext {
         val processed = designService.getProcessedSurvey(surveyId, published = false)
-        val survey = processed.survey
         val validationOutput = processed.validationJsonOutput
 
         val labels = validationOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
@@ -69,22 +66,26 @@ class AnalyticsService(
             .associateBy { it.componentCode }
 
         // Extract question types and content paths in a single tree traversal
-        val (questionTypes, contentPaths) = extractQuestionMetadata(validationOutput.survey)
+        val (questionTypes, answerTypes, contentPaths) = extractQuestionMetadata(validationOutput.survey)
 
         // Fetch completed response values only (skip events, nav_index, etc.)
         val responses = responseRepository.findCompletedValuesBySurveyId(surveyId, maxResponses)
             .map { objectMapper.readValue(it, jacksonTypeRef<Map<String, Any>>()) }
 
-        val ctx = AnalyticsContext(
+        return AnalyticsContext(
             labels,
             schemaMap,
             validationOutput.componentIndexList,
             questionTypes,
+            answerTypes,
             contentPaths,
             surveyId,
             responses
         )
+    }
 
+    fun getAnalytics(surveyId: UUID, maxResponses: Int = DEFAULT_MAX_RESPONSES): AnalyticsDto {
+        val ctx = buildContext(surveyId, maxResponses)
         // Build analytics questions
         val questionCodes = ctx.componentIndexList
             .map { it.code }
@@ -95,10 +96,8 @@ class AnalyticsService(
         val counts = responseRepository.analyticsResponseCounts(surveyId)
 
         return AnalyticsDto(
-            surveyTitle = survey.name,
-            totalResponses = counts.completedCount + counts.incompleteCount + counts.previewCount,
+            totalResponses = counts.completedCount + counts.incompleteCount,
             incompleteResponses = counts.incompleteCount,
-            previewResponses = counts.previewCount,
             questions = questions
         )
     }
@@ -123,23 +122,25 @@ class AnalyticsService(
         }
     }
 
-    private fun extractQuestionMetadata(survey: ObjectNode): Pair<Map<String, String>, Map<String, String>> {
-        val types = mutableMapOf<String, String>()
+    private fun extractQuestionMetadata(survey: ObjectNode): Triple<Map<String, String>, Map<String, String>, Map<String, String>> {
+        val qTypes = mutableMapOf<String, String>()
+        val aTypes = mutableMapOf<String, String>()
         val contentPaths = mutableMapOf<String, String>()
         traverseSurveyTree(survey) { node, code, parentQuestionCode ->
             if (code != null && code.isQuestionCode()) {
-                node.get("type")?.asText()?.let { types[code] = it.uppercase() }
+                node.get("type")?.asText()?.let { qTypes[code] = it.uppercase() }
             }
-            if (code != null && code.startsWith("A") && parentQuestionCode != null) {
+            if (code != null && code.isAnswerCode() && parentQuestionCode != null) {
                 resolveContentPaths(node)?.let { contentPaths[parentQuestionCode + code] = it }
+                node.get("type")?.asText()?.let { aTypes[parentQuestionCode + code] = it.uppercase() }
             }
         }
-        return types to contentPaths
+        return Triple(qTypes, aTypes, contentPaths)
     }
 
 
     private fun resolveContentPaths(node: ObjectNode): String? {
-        return (node.get("resources") as? ObjectNode)?.let { resourcesNode->
+        return (node.get("resources") as? ObjectNode)?.let { resourcesNode ->
             resourcesNode.get("icon")?.asText() ?: resourcesNode.get("image")?.asText()
         }
     }
@@ -152,26 +153,9 @@ class AnalyticsService(
         else -> false
     }
 
-    private fun inferTypeFromReturnType(dataType: ReturnType): String {
-        return when (dataType) {
-            is ReturnType.Enum -> "SCQ"
-            is ReturnType.List -> "MCQ"
-            ReturnType.Int -> "NUMBER"
-            ReturnType.String -> "TEXT"
-            ReturnType.Date -> "DATE"
-            ReturnType.Map -> "SCQ_ARRAY"
-            ReturnType.Boolean -> "SCQ"
-            ReturnType.Double -> "NUMBER"
-            ReturnType.File -> "FILE_UPLOAD"
-        }
-    }
-
-    // --- Analytics question building ---
-
     private fun buildAnalyticsQuestion(questionCode: String, ctx: AnalyticsContext): AnalyticsQuestion? {
         val responseField = ctx.schemaMap[questionCode]
         val questionType = ctx.questionTypes[questionCode]
-            ?: responseField?.let { inferTypeFromReturnType(it.dataType) }
             ?: return null
         val title = ctx.labels[questionCode] ?: questionCode
 
@@ -192,16 +176,16 @@ class AnalyticsService(
             extractResponses(questionType, responseField.toValueKey(), questionCode, ctx)
         } else if (isMatrix) {
             extractMatrixMultiFieldResponses(ctx, answerCodes, questionCode)
-        } else {
+        } else  {
             extractMultiFieldResponses(ctx, answerCodes, questionCode)
         }
 
         val rows = if (isMatrix) {
-            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { it.matches(ROW_REGEX) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { ctx.answerTypes[it] == ANSWER_ROW_TYPE }
         } else null
 
         val columns = if (isMatrix) {
-            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { it.matches(COLUMN_REGEX) }
+            toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { ctx.answerTypes[it] == ANSWER_COL_TYPE }
         } else if (questionType in ICON_IMAGE_CHOICE_TYPES) {
             toAnalyticsOptions(answerCodes, questionCode, ctx.labels)
         } else null
@@ -216,7 +200,7 @@ class AnalyticsService(
             }
         }.ifEmpty { null }
 
-        val fields = if (questionType in MULTI_FIELD_TYPES) {
+        val fields = if (questionType == MULTIPLE_TEXT) {
             toAnalyticsOptions(answerCodes, questionCode, ctx.labels)
         } else null
 
@@ -232,10 +216,10 @@ class AnalyticsService(
             fields = fields
         )
 
-        return when {
-            questionType == NPS_TYPE -> base.copy(npsSummary = aggregateNps(responseValues))
-            questionType == NUMBER_TYPE -> base.copy(numberSummary = aggregateNumber(responseValues))
-            questionType in SINGLE_CHOICE_TYPES -> base.copy(
+        return when (questionType) {
+            NPS_TYPE -> base.copy(npsSummary = aggregateNps(responseValues))
+            NUMBER_TYPE -> base.copy(numberSummary = aggregateNumber(responseValues))
+            in SINGLE_CHOICE_TYPES -> base.copy(
                 frequencyCounts = aggregateFrequencyCounts(
                     responseValues,
                     options!!,
@@ -243,7 +227,7 @@ class AnalyticsService(
                 )
             )
 
-            questionType in MULTI_CHOICE_TYPES -> base.copy(
+            in MULTI_CHOICE_TYPES -> base.copy(
                 frequencyCounts = aggregateFrequencyCounts(
                     responseValues,
                     options!!,
@@ -251,8 +235,8 @@ class AnalyticsService(
                 )
             )
 
-            questionType in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, options!!))
-            questionType in MATRIX_TYPES -> base.copy(
+            in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, options!!))
+            in MATRIX_TYPES -> base.copy(
                 matrixSummary = aggregateMatrix(
                     responseValues,
                     rows!!,
@@ -261,7 +245,7 @@ class AnalyticsService(
                 )
             )
 
-            questionType in PRESENCE_ONLY_TYPES -> base.copy(
+            in FILE_UPLOAD_TYPES -> base.copy(
                 presenceCount = PresenceCount(
                     presentCount = responseValues.size,
                     totalResponses = ctx.responses.size
@@ -282,7 +266,7 @@ class AnalyticsService(
         labels: Map<String, String>,
         filter: ((String) -> Boolean)? = null
     ): List<AnalyticsOption> {
-        val codes = if (filter != null) answerCodes.filter { filter(it.removePrefix(questionCode)) } else answerCodes
+        val codes = if (filter != null) answerCodes.filter { filter(it) } else answerCodes
         return codes.map { fullCode ->
             val stripped = fullCode.removePrefix(questionCode)
             AnalyticsOption(code = stripped, label = labels[fullCode] ?: stripped)
@@ -300,9 +284,9 @@ class AnalyticsService(
         return ctx.responses.mapNotNull { response ->
             val value = response[valueKey] ?: return@mapNotNull null
             if (isEmptyValue(value)) return@mapNotNull null
-            when {
-                type in SINGLE_CHOICE_TYPES -> value.toString()
-                type in MULTI_CHOICE_TYPES -> {
+            when (type) {
+                in SINGLE_CHOICE_TYPES -> value.toString()
+                in MULTI_CHOICE_TYPES -> {
                     val list = value as? List<*>
                     if (list == null) {
                         logger.warn("Expected List for MCQ question {}, got {}", questionCode, value::class.simpleName)
@@ -312,7 +296,7 @@ class AnalyticsService(
                     }
                 }
 
-                type in PRESENCE_ONLY_TYPES -> true
+                in FILE_UPLOAD_TYPES -> true
                 else -> value
             }
         }
@@ -324,7 +308,7 @@ class AnalyticsService(
         questionCode: String
     ): List<Any?> {
         val rowCodes = answerCodes.filter {
-            it.removePrefix(questionCode).matches(ROW_REGEX)
+            ctx.answerTypes[it] == ANSWER_ROW_TYPE
         }
         return ctx.responses.mapNotNull { response ->
             val fieldMap = rowCodes.mapNotNull mapField@{ answerCode ->
@@ -518,7 +502,7 @@ class AnalyticsService(
                 counts[row.code to col.code] = 0
             }
         }
-        val isMultiChoice = questionType in setOf("MCQ_ARRAY", "MCQ_ICON_ARRAY")
+        val isMultiChoice = questionType == MCQ_ARRAY
         responses.forEach { value ->
             val rowMap = value as? Map<*, *> ?: return@forEach
             rowMap.forEach { (rowCode, colValue) ->
