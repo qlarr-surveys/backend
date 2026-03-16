@@ -98,6 +98,7 @@ class AnalyticsService(
         return AnalyticsDto(
             totalResponses = counts.completedCount + counts.incompleteCount,
             incompleteResponses = counts.incompleteCount,
+            previewResponses = counts.previewCount,
             questions = questions
         )
     }

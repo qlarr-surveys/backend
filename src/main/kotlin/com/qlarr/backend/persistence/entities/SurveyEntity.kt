@@ -92,6 +92,7 @@ interface ResponseCount {
 interface AnalyticsResponseCount {
     val completedCount: Int
     val incompleteCount: Int
+    val previewCount: Int
 }
 
 data class SurveyNavigationData(

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class AnalyticsDto(
     val totalResponses: Int,
     val incompleteResponses: Int,
+    val previewResponses: Int,
     val questions: List<AnalyticsQuestion>
 )
 
