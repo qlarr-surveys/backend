@@ -35,6 +35,7 @@ class AnalyticsService(
         private val SINGLE_CHOICE_TYPES = setOf("SCQ", "AUTOCOMPLETE", "IMAGE_SCQ", "ICON_SCQ")
         private val MULTI_CHOICE_TYPES = setOf("MCQ", "IMAGE_MCQ", "ICON_MCQ")
         private val FILE_UPLOAD_TYPES = setOf("SIGNATURE", "PHOTO_CAPTURE", "VIDEO_CAPTURE")
+        private const val AUTOCOMPLETE_TYPE = "AUTOCOMPLETE"
         private const val NPS_TYPE = "NPS"
         private const val NUMBER_TYPE = "NUMBER"
         private const val ANSWER_ROW_TYPE = "ROW"
@@ -180,6 +181,13 @@ class AnalyticsService(
             extractMultiFieldResponses(ctx, answerCodes, questionCode)
         }
 
+        // AUTOCOMPLETE has no child answer components; derive options from actual response values
+        val effectiveOptions = if (questionType == AUTOCOMPLETE_TYPE && options?.isEmpty() == true) {
+            deriveOptionsFromResponses(responseValues)
+        } else {
+            options
+        }
+
         val rows = if (isMatrix) {
             toAnalyticsOptions(answerCodes, questionCode, ctx.labels) { ctx.answerTypes[it] == ANSWER_ROW_TYPE }
         } else null
@@ -209,7 +217,7 @@ class AnalyticsService(
             type = questionType,
             title = title,
             answeredCount = responseValues.size,
-            options = options,
+            options = effectiveOptions,
             rows = rows,
             columns = columns,
             images = images,
@@ -222,7 +230,7 @@ class AnalyticsService(
             in SINGLE_CHOICE_TYPES -> base.copy(
                 frequencyCounts = aggregateFrequencyCounts(
                     responseValues,
-                    options!!,
+                    effectiveOptions!!,
                     isSingleChoice = true
                 )
             )
@@ -230,12 +238,12 @@ class AnalyticsService(
             in MULTI_CHOICE_TYPES -> base.copy(
                 frequencyCounts = aggregateFrequencyCounts(
                     responseValues,
-                    options!!,
+                    effectiveOptions!!,
                     isSingleChoice = false
                 )
             )
 
-            in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, options!!))
+            in RANKING_TYPES -> base.copy(rankingSummary = aggregateRanking(responseValues, effectiveOptions!!))
             in MATRIX_TYPES -> base.copy(
                 matrixSummary = aggregateMatrix(
                     responseValues,
@@ -271,6 +279,15 @@ class AnalyticsService(
             val stripped = fullCode.removePrefix(questionCode)
             AnalyticsOption(code = stripped, label = labels[fullCode] ?: stripped)
         }
+    }
+
+    private fun deriveOptionsFromResponses(responseValues: List<Any?>): List<AnalyticsOption> {
+        return responseValues
+            .mapNotNull { it?.toString() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+            .map { AnalyticsOption(code = it, label = it) }
     }
 
     // --- Response extraction ---
