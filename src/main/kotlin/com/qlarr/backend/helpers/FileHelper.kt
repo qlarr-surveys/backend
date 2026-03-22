@@ -2,7 +2,6 @@ package com.qlarr.backend.helpers
 
 import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.survey.FileInfo
-import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
@@ -75,14 +74,23 @@ interface FileHelper {
 
     fun exportSurvey(surveyId: UUID, designFileName: String, surveyDataJson: String): ByteArray
 
-    fun importSurvey(
-        inputStream: InputStream,
-        onSurveyData: (String) -> SurveyDTO,
-        onDesign: () -> Unit
-    )
+    fun extractImportZip(inputStream: InputStream): ImportedSurveyZip
+
+    fun uploadImportedSurvey(surveyId: UUID, designFile: File, resources: List<Pair<String, File>>)
 
     fun deleteUnusedResponseFiles(surveyId: UUID, responseId: UUID, values: Map<String, Any>, events: List<ResponseEvent>)
 
 }
 
 class FileDownload(val objectMetadata: Map<String, String>, val inputStream: InputStream)
+
+data class ImportedSurveyZip(
+    val surveyJson: String?,
+    val designFile: File?,
+    val resources: List<Pair<String, File>>
+) {
+    fun cleanup() {
+        designFile?.delete()
+        resources.forEach { it.second.delete() }
+    }
+}

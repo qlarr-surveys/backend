@@ -223,30 +223,21 @@ class SurveyService(
     }
 
     fun importSurvey(inputStream: InputStream): SurveyDTO {
-        var surveyDTO: SurveyDTO? = null
-        var designSaved = false
-        var exportSurvey: ExportedSimpleSurvey? = null
+        val imported = fileSystemHelper.extractImportZip(inputStream)
+        try {
+            if (imported.surveyJson == null) throw SurveyDefNotAvailableException()
+            if (imported.designFile == null) throw DesignNotAvailableException()
 
-        fileSystemHelper.importSurvey(inputStream, onSurveyData = {
-            exportSurvey = objectMapper.readValue(it, ExportedSimpleSurvey::class.java)
-            surveyDTO = saveSurveyData(exportSurvey!!.survey)
-            surveyDTO!!
-        }, onDesign = {
-            designSaved = true
-        })
+            val exportSurvey = objectMapper.readValue(imported.surveyJson, ExportedSimpleSurvey::class.java)
+            val surveyDTO = saveSurveyData(exportSurvey.survey)
 
-        if (!designSaved) {
-            throw DesignNotAvailableException()
+            fileSystemHelper.uploadImportedSurvey(surveyDTO.id, imported.designFile, imported.resources)
+            saveAutoComplete(surveyDTO.id, exportSurvey.autoCompleteResources)
+
+            return surveyDTO
+        } finally {
+            imported.cleanup()
         }
-        if (surveyDTO == null) {
-            throw SurveyDefNotAvailableException()
-        }
-
-        if (exportSurvey != null) {
-            saveAutoComplete(surveyDTO!!.id, exportSurvey!!.autoCompleteResources)
-        }
-
-        return surveyDTO!!
     }
 
     fun saveAutoComplete(surveyId: UUID, autoCompleteResources: List<ExportedAutoCompleteResource>) {
