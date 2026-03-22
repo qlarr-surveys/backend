@@ -222,6 +222,7 @@ class SurveyService(
         return surveyData
     }
 
+    @Transactional
     fun importSurvey(inputStream: InputStream): SurveyDTO {
         val imported = fileSystemHelper.extractImportZip(inputStream)
         try {
@@ -231,8 +232,13 @@ class SurveyService(
             val exportSurvey = objectMapper.readValue(imported.surveyJson, ExportedSimpleSurvey::class.java)
             val surveyDTO = saveSurveyData(exportSurvey.survey)
 
-            fileSystemHelper.uploadImportedSurvey(surveyDTO.id, imported.designFile, imported.resources)
-            saveAutoComplete(surveyDTO.id, exportSurvey.autoCompleteResources)
+            try {
+                fileSystemHelper.uploadImportedSurvey(surveyDTO.id, imported.designFile, imported.resources)
+                saveAutoComplete(surveyDTO.id, exportSurvey.autoCompleteResources)
+            } catch (e: Exception) {
+                try { fileSystemHelper.deleteSurveyFiles(surveyDTO.id) } catch (_: Exception) {}
+                throw e
+            }
 
             return surveyDTO
         } finally {
