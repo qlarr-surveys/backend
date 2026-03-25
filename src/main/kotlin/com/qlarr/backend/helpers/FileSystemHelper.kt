@@ -2,14 +2,10 @@ package com.qlarr.backend.helpers
 
 import com.qlarr.backend.api.response.ResponseEvent
 import com.qlarr.backend.api.survey.FileInfo
-import com.qlarr.backend.api.survey.SurveyDTO
 import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.exceptions.ResourceNotFoundException
 import com.qlarr.backend.properties.FileSystemProperties
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.springframework.stereotype.Component
@@ -342,95 +338,66 @@ class FileSystemHelper(
         return byteArrayOutputStream.toByteArray()
     }
 
-    override fun importSurvey(
-        inputStream: InputStream,
-        onSurveyData: (String) -> SurveyDTO,
-        onDesign: () -> Unit
-    ) {
+    override fun extractImportZip(inputStream: InputStream): ImportedSurveyZip {
         val zipInputStream = ZipInputStream(inputStream)
-        val tempFiles = mutableListOf<File>()
-        val uploadTasks = mutableListOf<() -> Unit>()
-
-
-        val newId = UUID.randomUUID()
-        var newSurveyId: UUID? = null
+        var surveyJson: String? = null
+        var designFile: File? = null
+        val resources = mutableListOf<Pair<String, File>>()
 
         try {
             zipInputStream.use {
-                var zipEntry: ZipEntry? = it.nextEntry
+                var zipEntry = it.nextEntry
                 while (zipEntry != null) {
-                    println(
-                        "name: ${zipEntry.name}, fileName: ${extractFileName(zipEntry.name)}, parentFolderName: ${
-                            extractParentFolderName(
-                                zipEntry.name
-                            )
-                        }"
-                    )
                     if (!zipEntry.isDirectory) {
                         val fileName = extractFileName(zipEntry.name)
-                        if (fileName == "survey.json") {
-                            val surveyDataString = zipInputStream.bufferedReader().readText()
-                            newSurveyId = onSurveyData(surveyDataString).id
-                        } else if (extractParentFolderName(zipEntry.name).equals("resources")) {
-                            val tempFile = kotlin.io.path.createTempFile("upload_", "_$fileName").toFile()
-                            tempFiles.add(tempFile)
-                            tempFile.outputStream().use { output ->
-                                zipInputStream.copyTo(output)
+                        when {
+                            fileName == "survey.json" -> {
+                                surveyJson = zipInputStream.bufferedReader().readText()
                             }
-                            uploadTasks.add {
-                                tempFile.inputStream().use { fileInput ->
-                                    unzipFileToFileSystem(newId, SurveyFolder.Resources, fileInput, fileName, fileName)
-                                }
+                            fileName == "design.json" -> {
+                                val tempFile = kotlin.io.path.createTempFile("upload_", "_design.json").toFile()
+                                tempFile.outputStream().use { output -> zipInputStream.copyTo(output) }
+                                designFile = tempFile
                             }
-                        } else if (fileName == "design.json") {
-                            val tempFile = kotlin.io.path.createTempFile("upload_", "_design.json").toFile()
-                            tempFiles.add(tempFile)
-                            tempFile.outputStream().use { output ->
-                                zipInputStream.copyTo(output)
+                            extractParentFolderName(zipEntry.name) == "resources" -> {
+                                val tempFile = kotlin.io.path.createTempFile("upload_", "_$fileName").toFile()
+                                tempFile.outputStream().use { output -> zipInputStream.copyTo(output) }
+                                resources.add(fileName to tempFile)
                             }
-                            uploadTasks.add {
-                                tempFile.inputStream().use { fileInput ->
-                                    unzipFileToFileSystem(
-                                        newId,
-                                        SurveyFolder.Design,
-                                        fileInput,
-                                        getMimeType(fileName),
-                                        "1"
-                                    )
-                                }
-                            }
-                            onDesign()
                         }
                     }
                     zipEntry = it.nextEntry
                 }
             }
-            runBlocking {
-                uploadTasks.map { task ->
-                    async(Dispatchers.IO) {
-                        task()
+        } catch (e: Exception) {
+            designFile?.delete()
+            resources.forEach { it.second.delete() }
+            throw e
+        }
+        return ImportedSurveyZip(surveyJson, designFile, resources)
+    }
+
+    override fun uploadImportedSurvey(surveyId: UUID, designFile: File, resources: List<Pair<String, File>>) {
+        runBlocking {
+            val tasks = mutableListOf<Deferred<Unit>>()
+            tasks.add(async(Dispatchers.IO) {
+                designFile.inputStream().use {
+                    uploadUnzippedFile(surveyId, SurveyFolder.Design, it, "application/json", "1")
+                }
+            })
+            resources.forEach { (fileName, file) ->
+                tasks.add(async(Dispatchers.IO) {
+                    file.inputStream().use {
+                        uploadUnzippedFile(surveyId, SurveyFolder.Resources, it, getMimeType(fileName), fileName)
                     }
-                }.awaitAll()
+                })
             }
-            changeSurveyDirectory(newId.toString(), newSurveyId.toString())
-        } finally {
-            tempFiles.forEach { it.delete() }
+            tasks.awaitAll()
         }
     }
 
     private fun getMimeType(fileName: String): String {
         return URLConnection.guessContentTypeFromName(fileName) ?: "application/octet-stream"
-    }
-
-    private fun unzipFileToFileSystem(
-        surveyId: UUID,
-        surveyFolder: SurveyFolder,
-        zipInputStream: InputStream,
-        currentFileName: String,
-        newFileName: String
-    ) {
-        val mimeType = getMimeType(currentFileName)
-        uploadUnzippedFile(surveyId, surveyFolder, zipInputStream, mimeType, newFileName)
     }
 
     private fun extractFileName(path: String): String = path.split("/").let { it[it.size - 1] }
@@ -474,19 +441,6 @@ class FileSystemHelper(
             tmpDir.mkdirs()
         }
         return tmpPath
-    }
-
-
-    fun changeSurveyDirectory(from: String, to: String): Boolean {
-        val oldDir = File("${fileSystemProperties.rootFolder}/$from")
-        val newDir = File("${fileSystemProperties.rootFolder}/$to")
-
-        // Ensure the old directory exists and is a directory
-        if (oldDir.exists() && oldDir.isDirectory) {
-            // Rename the directory (move to new path)
-            return oldDir.renameTo(newDir)
-        }
-        return false
     }
 
     companion object {
