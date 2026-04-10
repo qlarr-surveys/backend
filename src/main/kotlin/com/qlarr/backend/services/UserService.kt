@@ -179,7 +179,7 @@ class UserService(
     fun create(createRequest: CreateRequest): UserDTO {
         val email = createRequest.email()
         abortIfDuplicateEmail(email)
-        if (!createRequest.email.isValidEmail()) {
+        if (!email.isValidEmail()) {
             throw InvalidEmail()
         }
         if (!createRequest.firstName.isValidName()) {

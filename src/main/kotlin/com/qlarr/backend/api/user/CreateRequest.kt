@@ -4,7 +4,7 @@ package com.qlarr.backend.api.user
 data class CreateRequest(
         val firstName: String,
         val lastName: String,
-        val email: String,
+        private val email: String,
         val roles: Set<Roles>,
 ) {
     fun email() = email.trim().lowercase()
