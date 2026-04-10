@@ -89,7 +89,7 @@ class ResponseOpsService(
 
     private fun checkMaxFileSize(size: Long, mimeType: String) {
         val maxSize = when {
-            mimeType.startsWith("video/") -> 20 * 1024 * 1024
+            mimeType.startsWith("video/") -> 30 * 1024 * 1024
             mimeType.startsWith("image/") -> 10 * 1024 * 1024
             else -> 10 * 1024 * 1024
         }
