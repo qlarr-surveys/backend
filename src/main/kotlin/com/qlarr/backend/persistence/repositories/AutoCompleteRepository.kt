@@ -23,7 +23,7 @@ interface AutoCompleteRepository : JpaRepository<AutoCompleteEntity, AutoComplet
         WHERE
             ac.survey_id = :surveyId
             AND ac.filename = :filename
-            AND elem.value #>> '{}' ILIKE :searchTerm || '%'
+            AND elem.value #>> '{}' ILIKE '%' || :searchTerm || '%'
         ORDER BY
             match_value
         LIMIT :limit
