@@ -2,7 +2,6 @@ package com.qlarr.backend.api.surveyengine
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.contains
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.qlarr.backend.configurations.objectMapper
 import com.qlarr.surveyengine.context.assemble.NotSkippedInstructionManifesto
@@ -15,6 +14,7 @@ import com.qlarr.surveyengine.model.exposed.ResponseField
 data class ValidationJsonOutput(
     val survey: ObjectNode = JsonNodeFactory.instance.objectNode(),
     val schema: List<ResponseField> = listOf(),
+    val replacements: Map<String, String> = mapOf(),
     val impactMap: StringImpactMap = mapOf(),
     val componentIndexList: List<ComponentIndex> = listOf(),
     val skipMap: Map<String, List<NotSkippedInstructionManifesto>> = mapOf(),
