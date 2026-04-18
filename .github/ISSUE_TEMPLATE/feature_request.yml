@@ -1,0 +1,51 @@
+---
+name: Feature request
+about: Suggest a new feature or improvement
+title: '[Feature] '
+labels: 'enhancement'
+assignees: ''
+
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature category
+      options:
+        - New API endpoint
+        - Performance optimization
+        - Security improvement
+        - Data validation
+        - Database migration
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use case
+      description: Describe the problem this feature would solve
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should this feature work?
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on existing APIs
+      description: How might this affect existing endpoints or functionality?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you've considered?
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements / Acceptance criteria
+      description: What needs to be true for this to be complete?

@@ -1,0 +1,82 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: '[Bug] '
+labels: 'bug'
+assignees: ''
+
+body:
+  - type: dropdown
+    id: endpoint
+    attributes:
+      label: Endpoint affected
+      description: Which API area is this bug related to?
+      options:
+        - User authentication
+        - Survey design
+        - Survey execution
+        - Responses
+        - Dashboard
+        - Offline sync
+        - File uploads
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: method
+    attributes:
+      label: HTTP Method(s)
+      options:
+        - label: GET
+        - label: POST
+        - label: PUT
+        - label: DELETE
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include request details or curl command
+      placeholder: '1. Make request to endpoint&#10;2. Observe response...'
+    validations:
+      required: true
+  - type: input
+    id: expected-status
+    attributes:
+      label: Expected HTTP status
+      description: e.g., 200, 201, 400
+      placeholder: 200
+  - type: input
+    id: actual-status
+    attributes:
+      label: Actual HTTP status
+      description: e.g., 500, 400
+      placeholder: ''
+  - type: textarea
+    id: request
+    attributes:
+      label: Request payload (if applicable)
+      description: JSON body sent in request
+      placeholder: '{"key": "value"}'
+  - type: textarea
+    id: response
+    attributes:
+      label: Response body
+      description: Full error response or unexpected response
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs / Error trace
+      description: Relevant stack traces or log entries
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local development
+        - Staging
+        - Production
+  - type: input
+    id: version
+    attributes:
+      label: Backend version / commit
+      description: If known, which version or commit introduced the issue
