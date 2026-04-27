@@ -27,7 +27,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 import java.io.StringWriter
 import java.time.Duration.between
 import java.time.ZoneId
@@ -263,6 +262,15 @@ class ResponseService(
         }
     }
 
+    private data class FileToDownload(
+        val responseId: UUID,
+        val surveyResponseIndex: Int,
+        val questionId: String,
+        val storedFilename: String,
+        val originalFilename: String,
+        val size: Long
+    )
+
     fun bulkDownloadResponses(
         surveyId: UUID,
         complete: Boolean?,
@@ -274,52 +282,72 @@ class ResponseService(
             return ResponseEntity.noContent().build()
         }
 
-        val maxSizeBytes = 200 * 1024 * 1024L // 100MB
+        // Collect all files to download with their metadata
+        val filesToDownload = mutableListOf<FileToDownload>()
+        var totalSizeBytes = 0L
 
-        val streamingBody = StreamingResponseBody { outputStream ->
-            val sizeLimitedStream = SizeLimitedOutputStream(outputStream, maxSizeBytes)
+        responses.forEach { responseWithSurveyor ->
+            val response = responseWithSurveyor.response
+            response.values.forEach { (questionId, value) ->
+                if (value is Map<*, *> && value.containsKey("stored_filename")) {
+                    val storedFilename = value["stored_filename"] as? String
+                    val originalFilename = value["filename"] as? String
+                    val size = (value["size"] as? Number)?.toLong()
 
-            try {
-                ZipOutputStream(sizeLimitedStream).use { zip ->
-                    responses.forEach { responseWithSurveyor ->
-                        val response = responseWithSurveyor.response
-
-                        response.values.forEach { (questionId, value) ->
-                            if (value is Map<*, *> && value.containsKey("stored_filename")) {
-                                val storedFilename = value["stored_filename"] as String
-                                val originalFilename = value["filename"] as String
-
-                                try {
-                                    val fileDownload = fileHelper.download(
-                                        surveyId,
-                                        com.qlarr.backend.common.SurveyFolder.Responses(response.id.toString()),
-                                        storedFilename
-                                    )
-
-                                    val zipEntryName =
-                                        "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
-
-                                    val entry = ZipEntry(zipEntryName)
-                                    zip.putNextEntry(entry)
-
-                                    fileDownload.inputStream.use { inputStream ->
-                                        inputStream.copyTo(zip)
-                                    }
-
-                                    zip.closeEntry()
-                                } catch (e: Exception) {
-                                    logger.error(
-                                        "Error downloading file $storedFilename for response ${response.id}",
-                                        e
-                                    )
-                                }
-                            }
-                        }
+                    if (storedFilename != null && originalFilename != null && size != null) {
+                        filesToDownload.add(
+                            FileToDownload(
+                                responseId = response.id,
+                                surveyResponseIndex = response.surveyResponseIndex!!,
+                                questionId = questionId,
+                                storedFilename = storedFilename,
+                                originalFilename = originalFilename,
+                                size = size
+                            )
+                        )
+                        totalSizeBytes += size
                     }
                 }
-            } catch (e: SizeLimitExceededException) {
-                logger.error("Bulk download exceeded 100MB limit for survey $surveyId (from: $from, to: $to)", e)
-                throw e
+            }
+        }
+
+        if (filesToDownload.isEmpty()) {
+            return ResponseEntity.noContent().build()
+        }
+
+        // Check size limit BEFORE streaming starts
+        val maxSizeBytes = 200 * 1024 * 1024L // 200MB
+        if (totalSizeBytes > maxSizeBytes) {
+            throw SizeLimitExceededException(
+                "Total download size (${totalSizeBytes / 1024 / 1024}MB) exceeds limit of ${maxSizeBytes / 1024 / 1024}MB. " +
+                        "Please reduce the range or contact support for larger exports."
+            )
+        }
+
+        val streamingBody = StreamingResponseBody { outputStream ->
+            ZipOutputStream(outputStream).use { zip ->
+                filesToDownload.forEach { fileInfo ->
+                    try {
+                        fileHelper.download(
+                            surveyId,
+                            com.qlarr.backend.common.SurveyFolder.Responses(fileInfo.responseId.toString()),
+                            fileInfo.storedFilename
+                        ).inputStream.use { inputStream ->
+                            val zipEntryName = "${fileInfo.surveyResponseIndex}-${fileInfo.questionId}-${fileInfo.originalFilename}"
+                            val entry = ZipEntry(zipEntryName)
+                            zip.putNextEntry(entry)
+
+                            inputStream.copyTo(zip)
+
+                            zip.closeEntry()
+                        }
+                    } catch (e: Exception) {
+                        logger.error(
+                            "Error downloading file ${fileInfo.storedFilename} for response ${fileInfo.responseId}",
+                            e
+                        )
+                    }
+                }
             }
         }
 
@@ -448,36 +476,5 @@ private fun List<ResponseEvent>.timeMillis(responseEvent: ResponseEvent): Long {
 
     val previousEvent = this[index - 1]
     return between(previousEvent.time, responseEvent.time).toMillis()
-}
-
-private class SizeLimitedOutputStream(
-    private val delegate: OutputStream,
-    private val maxBytes: Long
-) : OutputStream() {
-    private var bytesWritten = 0L
-
-    override fun write(b: Int) {
-        checkLimit(1)
-        delegate.write(b)
-        bytesWritten++
-    }
-
-    override fun write(b: ByteArray, off: Int, len: Int) {
-        checkLimit(len.toLong())
-        delegate.write(b, off, len)
-        bytesWritten += len
-    }
-
-    private fun checkLimit(additionalBytes: Long) {
-        if (bytesWritten + additionalBytes > maxBytes) {
-            throw SizeLimitExceededException(
-                "Download size exceeds limit of ${maxBytes / 1024 / 1024}MB. " +
-                        "Please reduce the range or contact support for larger exports."
-            )
-        }
-    }
-
-    override fun flush() = delegate.flush()
-    override fun close() = delegate.close()
 }
 
