@@ -2,6 +2,7 @@ package com.qlarr.backend.services
 
 import com.qlarr.backend.api.response.*
 import com.qlarr.backend.common.stripHtmlTags
+import com.qlarr.backend.exceptions.SizeLimitExceededException
 import com.qlarr.backend.expressionmanager.SurveyProcessor
 import com.qlarr.backend.helpers.FileHelper
 import com.qlarr.backend.mappers.ResponseMapper
@@ -18,16 +19,15 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument
-import org.springframework.core.io.InputStreamResource
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpHeaders.CONTENT_LENGTH
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import java.io.ByteArrayInputStream
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.io.StringWriter
 import java.time.Duration.between
 import java.time.ZoneId
@@ -45,6 +45,8 @@ class ResponseService(
     private val responseMapper: ResponseMapper,
     private val fileHelper: FileHelper,
 ) {
+
+    private val logger = LoggerFactory.getLogger(ResponseService::class.java)
     private fun getResponsesFromTo(
         surveyId: UUID,
         complete: Boolean?,
@@ -266,55 +268,65 @@ class ResponseService(
         complete: Boolean?,
         from: Int,
         to: Int
-    ): ResponseEntity<InputStreamResource> {
+    ): ResponseEntity<StreamingResponseBody> {
         val responses = getResponsesFromTo(surveyId, complete, from, to)
         if (responses.isEmpty()) {
             return ResponseEntity.noContent().build()
         }
 
-        val zipBytes = ByteArrayOutputStream().use { zipStream ->
-            ZipOutputStream(zipStream).use { zip ->
+        val maxSizeBytes = 200 * 1024 * 1024L // 100MB
 
-                responses.forEach { responseWithSurveyor ->
-                    val response = responseWithSurveyor.response
+        val streamingBody = StreamingResponseBody { outputStream ->
+            val sizeLimitedStream = SizeLimitedOutputStream(outputStream, maxSizeBytes)
 
-                    response.values.forEach { (questionId, value) ->
-                        if (value is Map<*, *> && value.containsKey("stored_filename")) {
-                            val storedFilename = value["stored_filename"] as String
-                            val originalFilename = value["filename"] as String
+            try {
+                ZipOutputStream(sizeLimitedStream).use { zip ->
+                    responses.forEach { responseWithSurveyor ->
+                        val response = responseWithSurveyor.response
 
-                            try {
-                                val fileDownload = fileHelper.download(
-                                    surveyId,
-                                    com.qlarr.backend.common.SurveyFolder.Responses(response.id.toString()),
-                                    storedFilename
-                                )
+                        response.values.forEach { (questionId, value) ->
+                            if (value is Map<*, *> && value.containsKey("stored_filename")) {
+                                val storedFilename = value["stored_filename"] as String
+                                val originalFilename = value["filename"] as String
 
-                                val zipEntryName = "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
+                                try {
+                                    val fileDownload = fileHelper.download(
+                                        surveyId,
+                                        com.qlarr.backend.common.SurveyFolder.Responses(response.id.toString()),
+                                        storedFilename
+                                    )
 
-                                val entry = ZipEntry(zipEntryName)
-                                zip.putNextEntry(entry)
+                                    val zipEntryName =
+                                        "${response.surveyResponseIndex}-${questionId}-${originalFilename}"
 
-                                fileDownload.inputStream.use { inputStream ->
-                                    inputStream.copyTo(zip)
+                                    val entry = ZipEntry(zipEntryName)
+                                    zip.putNextEntry(entry)
+
+                                    fileDownload.inputStream.use { inputStream ->
+                                        inputStream.copyTo(zip)
+                                    }
+
+                                    zip.closeEntry()
+                                } catch (e: Exception) {
+                                    logger.error(
+                                        "Error downloading file $storedFilename for response ${response.id}",
+                                        e
+                                    )
                                 }
-
-                                zip.closeEntry()
-                            } catch (e: Exception) {
-                                println("Error downloading file $storedFilename for response ${response.id}: ${e.message}")
                             }
                         }
                     }
                 }
+            } catch (e: SizeLimitExceededException) {
+                logger.error("Bulk download exceeded 100MB limit for survey $surveyId (from: $from, to: $to)", e)
+                throw e
             }
-            zipStream.toByteArray()
         }
 
         return ResponseEntity.ok()
             .header(CONTENT_TYPE, "application/zip")
             .header("Content-Disposition", "attachment; filename=\"$surveyId-responses-files.zip\"")
-            .header(CONTENT_LENGTH, zipBytes.size.toString())
-            .body(InputStreamResource(ByteArrayInputStream(zipBytes)))
+            .body(streamingBody)
     }
 
     fun getSummary(
@@ -437,3 +449,35 @@ private fun List<ResponseEvent>.timeMillis(responseEvent: ResponseEvent): Long {
     val previousEvent = this[index - 1]
     return between(previousEvent.time, responseEvent.time).toMillis()
 }
+
+private class SizeLimitedOutputStream(
+    private val delegate: OutputStream,
+    private val maxBytes: Long
+) : OutputStream() {
+    private var bytesWritten = 0L
+
+    override fun write(b: Int) {
+        checkLimit(1)
+        delegate.write(b)
+        bytesWritten++
+    }
+
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        checkLimit(len.toLong())
+        delegate.write(b, off, len)
+        bytesWritten += len
+    }
+
+    private fun checkLimit(additionalBytes: Long) {
+        if (bytesWritten + additionalBytes > maxBytes) {
+            throw SizeLimitExceededException(
+                "Download size exceeds limit of ${maxBytes / 1024 / 1024}MB. " +
+                        "Please reduce the range or contact support for larger exports."
+            )
+        }
+    }
+
+    override fun flush() = delegate.flush()
+    override fun close() = delegate.close()
+}
+

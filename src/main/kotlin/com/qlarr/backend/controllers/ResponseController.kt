@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.time.ZoneId
 import java.util.*
 
@@ -101,7 +102,7 @@ class ResponseController(
         @PathVariable("from") from: Int,
         @PathVariable("to") to: Int,
         @RequestParam complete: Boolean?,
-    ): ResponseEntity<InputStreamResource> {
+    ): ResponseEntity<StreamingResponseBody> {
         return responseService.bulkDownloadResponses(surveyId, complete, from, to)
     }
 

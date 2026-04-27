@@ -23,8 +23,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: JwtException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -45,27 +45,38 @@ class ControllerExceptionHandler {
     @ExceptionHandler(DeleteOwnUserException::class)
     fun handleException(exception: DeleteOwnUserException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
-        return ResponseEntity(ErrorMessage("Cannot Delete Own User Account", exception.javaClass.simpleName), HttpStatus.BAD_REQUEST)
+        return ResponseEntity(
+            ErrorMessage("Cannot Delete Own User Account", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
+        )
     }
 
     @ExceptionHandler(EmptyRolesException::class)
     fun handleException(exception: EmptyRolesException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
-        return ResponseEntity(ErrorMessage("Cannot Set a user with empty roles", exception.javaClass.simpleName), HttpStatus.BAD_REQUEST)
+        return ResponseEntity(
+            ErrorMessage("Cannot Set a user with empty roles", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
+        )
     }
 
     @ExceptionHandler(EditOwnUserException::class)
     fun handleException(exception: EditOwnUserException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
-        return ResponseEntity(ErrorMessage("Cannot Edit own user from here, do it from profile", exception.javaClass.simpleName), HttpStatus.BAD_REQUEST)
+        return ResponseEntity(
+            ErrorMessage(
+                "Cannot Edit own user from here, do it from profile",
+                exception.javaClass.simpleName
+            ), HttpStatus.BAD_REQUEST
+        )
     }
 
     @ExceptionHandler
     fun handleException(exception: PermissionNotFoundException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Permission not found", exception.javaClass.simpleName),
-                HttpStatus.NOT_FOUND
+            ErrorMessage("Permission not found", exception.javaClass.simpleName),
+            HttpStatus.NOT_FOUND
         )
     }
 
@@ -73,8 +84,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: PermissionAlreadyExists): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Permission already Exists", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Permission already Exists", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -82,8 +93,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongEmailOrPasswordException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -91,10 +102,10 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidInputException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid input " + exception.problemDescription,
-                        exception.javaClass.simpleName
-                ), HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Invalid input " + exception.problemDescription,
+                exception.javaClass.simpleName
+            ), HttpStatus.BAD_REQUEST
         )
     }
 
@@ -102,11 +113,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: MethodArgumentTypeMismatchException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid input with field:${exception.name}... ${exception.cause?.message}",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Invalid input with field:${exception.name}... ${exception.cause?.message}",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -114,8 +125,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: MissingServletRequestPartException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -123,8 +134,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: MissingServletRequestParameterException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(exception.message, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(exception.message, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -132,8 +143,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: HttpRequestMethodNotSupportedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(exception.message ?: "", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -147,8 +158,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: DuplicateEmailException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Invalid input, duplicate email", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Invalid input, duplicate email", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -156,8 +167,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidFirstName): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Invalid first name", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Invalid first name", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -165,8 +176,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidEmail): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Invalid Email", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Invalid Email", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -174,8 +185,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidLastName): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Invalid last name", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Invalid last name", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -183,8 +194,8 @@ class ControllerExceptionHandler {
     fun duplicateSurvey(exception: DuplicateSurveyException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Invalid input, duplicate survey", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Invalid input, duplicate survey", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -192,11 +203,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidSurveyDates): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid input, survey end date must always be before start date",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Invalid input, survey end date must always be before start date",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -204,11 +215,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: IncompleteResponse): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Incomplete Response, Responses must be at End to be synced",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Incomplete Response, Responses must be at End to be synced",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -216,11 +227,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidResponse): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid Response, Responses must be at End to be synced",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Invalid Response, Responses must be at End to be synced",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -228,11 +239,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidSurveyName): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid Survey Name",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Invalid Survey Name",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -240,11 +251,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyNotStartedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "This survey has not started yet, it starts on ${exception.startDate}",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.NOT_FOUND
+            ErrorMessage(
+                "This survey has not started yet, it starts on ${exception.startDate}",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.NOT_FOUND
         )
     }
 
@@ -252,11 +263,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyExpiredException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Invalid input, survey end date must always be before start date",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.NOT_FOUND
+            ErrorMessage(
+                "Invalid input, survey end date must always be before start date",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.NOT_FOUND
         )
     }
 
@@ -264,11 +275,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyQuotaExceeded): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Survey Quota Exceeded",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.NOT_FOUND
+            ErrorMessage(
+                "Survey Quota Exceeded",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.NOT_FOUND
         )
     }
 
@@ -281,8 +292,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyIsActiveException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Survey has active status", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Survey has active status", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -290,8 +301,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyIsClosedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Should not modify a closed Survey", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Should not modify a closed Survey", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -299,8 +310,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyIsNotActiveException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This survey should be active", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("This survey should be active", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -308,8 +319,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: PreviousNotAllowed): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This Navigation Direction is not allowed", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("This Navigation Direction is not allowed", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -317,8 +328,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: JumpNotAllowed): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This survey should be active", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("This survey should be active", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -326,8 +337,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ResumeNotAllowed): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This survey should be active", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("This survey should be active", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -335,8 +346,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: AuthorizationException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("unauthorized", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("unauthorized", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -344,8 +355,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongCredentialsException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -353,8 +364,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SignupNotAllowed): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("Wrong email or password", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -362,8 +373,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyDesignWithErrorException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Survey Design with Error", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Survey Design with Error", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -371,8 +382,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: DesignException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Major issue, contact design", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Major issue, contact design", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -380,8 +391,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidDesignException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Major issue, contact design", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Major issue, contact design", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -389,8 +400,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: DesignNotAvailableException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Design file is missing", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Design file is missing", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -398,8 +409,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: SurveyDefNotAvailableException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Survey Definition file is missing", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Survey Definition file is missing", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -407,8 +418,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ComponentDeletedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Component was deleted: ${exception.deletedCode}", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Component was deleted: ${exception.deletedCode}", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -417,8 +428,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: CodeChangeAfterPublishException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Component code: ${exception.deletedCode} was changed after release", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Component code: ${exception.deletedCode} was changed after release",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -426,11 +440,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: DesignOutOfSyncException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "can only update from latest subVersion: ${exception.subVersion}",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "can only update from latest subVersion: ${exception.subVersion}",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -438,8 +452,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: FromCodeNotAvailableException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(null, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(null, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -447,8 +461,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: AutoCompleteMalformedInputException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(null, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(null, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -456,8 +470,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: DuplicateToCodeException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(null, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(null, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -465,8 +479,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: InvalidCodeChangeException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(null, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(null, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -474,8 +488,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: IdenticalFromToCodesException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(null, exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(null, exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -483,11 +497,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongConfirmationTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "This confirmation token is either wrong or has been already used",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage(
+                "This confirmation token is either wrong or has been already used",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -495,11 +509,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongResetTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "This confirmation token is either wrong or has been already used",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage(
+                "This confirmation token is either wrong or has been already used",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -507,11 +521,11 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongEmailChangePinException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "This ",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage(
+                "This ",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -519,8 +533,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ExpiredConfirmationTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This confirmation token has expired", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("This confirmation token has expired", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -528,8 +542,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ExpiredResetTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This reset token has expired", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("This reset token has expired", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -537,8 +551,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: UsedConfirmationTokenException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("This confirmation token has been already used", exception.javaClass.simpleName),
-                HttpStatus.UNAUTHORIZED
+            ErrorMessage("This confirmation token has been already used", exception.javaClass.simpleName),
+            HttpStatus.UNAUTHORIZED
         )
     }
 
@@ -546,8 +560,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ResponseNotFoundException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Response not found", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Response not found", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -555,8 +569,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: ResponseAlreadySyncedException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Response already synced", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Response already synced", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -565,8 +579,8 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongColumnException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Wrong column name: ${exception.columnName}", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Wrong column name: ${exception.columnName}", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -574,8 +588,17 @@ class ControllerExceptionHandler {
     fun handleException(exception: UnrecognizedZoneException): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Unrecognized zone: ${exception.zone}", exception.javaClass.simpleName),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage("Unrecognized zone: ${exception.zone}", exception.javaClass.simpleName),
+            HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
+    fun handleException(exception: SizeLimitExceededException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+            ErrorMessage("Bulk Download size is too big!!!", exception.javaClass.simpleName),
+            HttpStatus.PAYLOAD_TOO_LARGE
         )
     }
 
@@ -583,12 +606,12 @@ class ControllerExceptionHandler {
     fun handleException(exception: WrongValueType): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage(
-                        "Wrong value type for ${exception.columnName}" +
-                                ", expected ${exception.expectedClassName} found ${exception.actualClassName}",
-                        exception.javaClass.simpleName
-                ),
-                HttpStatus.BAD_REQUEST
+            ErrorMessage(
+                "Wrong value type for ${exception.columnName}" +
+                        ", expected ${exception.expectedClassName} found ${exception.actualClassName}",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
         )
     }
 
@@ -609,8 +632,8 @@ class DefaultExceptionHandler {
     fun handleException(exception: Exception): ResponseEntity<ErrorMessage> {
         exception.printStackTrace()
         return ResponseEntity(
-                ErrorMessage("Unexpected error", exception.javaClass.simpleName),
-                HttpStatus.INTERNAL_SERVER_ERROR
+            ErrorMessage("Unexpected error", exception.javaClass.simpleName),
+            HttpStatus.INTERNAL_SERVER_ERROR
         )
     }
 }

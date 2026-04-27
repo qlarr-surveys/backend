@@ -16,3 +16,9 @@ class FileTooBigException(
 ) : RuntimeException(
     "File too large: ${actualSize / 1024 / 1024} MB. Maximum allowed for $mimeType is ${maxSize / 1024 / 1024} MB."
 )
+
+
+/**
+ * Exception thrown when a bulk download exceeds the configured size limit.
+ */
+class SizeLimitExceededException(message: String) : RuntimeException(message)
