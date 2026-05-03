@@ -49,7 +49,7 @@ body:
     attributes:
       label: Actual HTTP status
       description: e.g., 500, 400
-      placeholder: ''
+      placeholder: '503'
   - type: textarea
     id: request
     attributes:
