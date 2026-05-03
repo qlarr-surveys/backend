@@ -1,8 +1,6 @@
 package com.qlarr.backend.mappers
 
-import com.qlarr.backend.api.response.ResponseDto
-import com.qlarr.backend.api.response.ResponseValue
-import com.qlarr.backend.api.response.ResponseEvent
+import com.qlarr.backend.api.response.*
 import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import org.springframework.stereotype.Component
 
@@ -28,6 +26,27 @@ class ResponseMapper {
             lang = entity.lang,
             disqualified = disqualified,
             values = values,
+            version = entity.version,
+            events = events,
+            ipAddress = entity.ipAddress,
+        )
+    fun toEventDto(
+        surveyorName:String?,
+        disqualified: Boolean,
+        entity: SurveyResponseEntity,
+        values: List<ResponseValue> = emptyList(),
+        events: List<ResponseEventDto>
+    ) =
+        ResponseWithEventsDto(
+            id = entity.id,
+            index = entity.surveyResponseIndex,
+            startDate = entity.startDate,
+            surveyorID = entity.surveyor?.toString(),
+            surveyorName = surveyorName,
+            preview = entity.preview,
+            submitDate = entity.submitDate,
+            lang = entity.lang,
+            disqualified = disqualified,
             version = entity.version,
             events = events,
             ipAddress = entity.ipAddress,

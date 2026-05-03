@@ -30,16 +30,6 @@ sealed class ResponseEvent(
     @Transient
     open val componentCode: String?,
 ) {
-    fun toDto(timeMillis:Long) = ResponseEventDto(
-        name = when(this){
-            is Value -> "Value"
-            is Navigation -> direction.name
-            else-> throw IllegalStateException()
-        },
-        time = time,
-        timeMillis = timeMillis
-    )
-
     data class Value(
         val code: String,
         @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)

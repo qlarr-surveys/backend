@@ -35,18 +35,43 @@ data class ResponseDto(
 
     val ipAddress: String?,
 )
+data class ResponseWithEventsDto(
+    val id: UUID,
+
+    val index: Int?,
+
+    @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
+    val startDate: LocalDateTime,
+
+    @JsonFormat(pattern = DATE_TIME_UTC_FORMAT)
+    val submitDate: LocalDateTime? = null,
+
+    val lang: String,
+
+    val preview: Boolean,
+
+    val disqualified: Boolean,
+
+    val surveyorName: String?,
+
+    val surveyorID: String?,
+
+    val version: Int,
+
+    val events: List<ResponseEventDto>,
+
+    val ipAddress: String?,
+)
 
 data class ResponseValue(
     val key: String,
     val code: String,
     val value: Any? = null,
-    val events: List<ResponseEventDto> = emptyList()
 )
 
 data class ResponseEventDto(
-    val time: LocalDateTime,
-    val name: String,
-    val timeMillis: Long
+    val event: ResponseEvent,
+    val responseValue: ResponseValue?
 )
 
 

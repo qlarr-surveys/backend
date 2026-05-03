@@ -1,10 +1,6 @@
 package com.qlarr.backend.controllers
 
-import com.qlarr.backend.api.response.AnalyticsDto
-import com.qlarr.backend.api.response.ResponseDto
-import com.qlarr.backend.api.response.ResponseFormat
-import com.qlarr.backend.api.response.ResponseStatus
-import com.qlarr.backend.api.response.ResponsesSummaryDto
+import com.qlarr.backend.api.response.*
 import com.qlarr.backend.exceptions.UnrecognizedZoneException
 import com.qlarr.backend.services.AnalyticsService
 import com.qlarr.backend.services.ResponseService
@@ -32,6 +28,16 @@ class ResponseController(
         @PathVariable responseId: UUID,
     ): ResponseEntity<ResponseDto> {
         val result = responseService.getResponse(
+            responseId,
+        )
+        return ResponseEntity(result, HttpStatus.OK)
+    }
+    @PreAuthorize("hasAnyAuthority({'super_admin','survey_admin','analyst'})")
+    @GetMapping("/response_with_event/{responseId}")
+    fun getResponseWithEvent(
+        @PathVariable responseId: UUID,
+    ): ResponseEntity<ResponseWithEventsDto> {
+        val result = responseService.getResponseWithEvents(
             responseId,
         )
         return ResponseEntity(result, HttpStatus.OK)

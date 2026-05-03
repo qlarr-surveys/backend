@@ -1,6 +1,7 @@
 package com.qlarr.backend.services
 
 import com.qlarr.backend.api.response.*
+import com.qlarr.backend.common.SurveyFolder
 import com.qlarr.backend.common.stripHtmlTags
 import com.qlarr.backend.exceptions.SizeLimitExceededException
 import com.qlarr.backend.expressionmanager.SurveyProcessor
@@ -12,7 +13,6 @@ import com.qlarr.backend.persistence.entities.SurveyResponseEntity
 import com.qlarr.backend.persistence.repositories.ResponseRepository
 import com.qlarr.surveyengine.ext.splitToComponentCodes
 import com.qlarr.surveyengine.model.ReservedCode
-import com.qlarr.surveyengine.model.exposed.NavigationDirection
 import com.qlarr.surveyengine.model.exposed.ReturnType
 import com.qlarr.surveyengine.model.sortChildren
 import org.apache.commons.csv.CSVFormat
@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
 import java.io.ByteArrayOutputStream
 import java.io.StringWriter
-import java.time.Duration.between
 import java.time.ZoneId
 import java.util.*
 import java.util.zip.ZipEntry
@@ -330,10 +329,11 @@ class ResponseService(
                     try {
                         fileHelper.download(
                             surveyId,
-                            com.qlarr.backend.common.SurveyFolder.Responses(fileInfo.responseId.toString()),
+                            SurveyFolder.Responses(fileInfo.responseId.toString()),
                             fileInfo.storedFilename
                         ).inputStream.use { inputStream ->
-                            val zipEntryName = "${fileInfo.surveyResponseIndex}-${fileInfo.questionId}-${fileInfo.originalFilename}"
+                            val zipEntryName =
+                                "${fileInfo.surveyResponseIndex}-${fileInfo.questionId}-${fileInfo.originalFilename}"
                             val entry = ZipEntry(zipEntryName)
                             zip.putNextEntry(entry)
 
@@ -433,12 +433,7 @@ class ResponseService(
                         val value = response.values["$code.value"]!!
                         maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
                     } else null,
-                    events = response.events.filter {
-                        it.componentCode == code
-                    }.map {
-                        it.toDto(response.events.timeMillis(it))
-                    })
-
+                )
             }
 
         return responseMapper.toDto(
@@ -449,8 +444,92 @@ class ResponseService(
             entity = response,
             values = values,
             events = response.events.filter {
-                it !is ResponseEvent.Value &&
-                        (it !is ResponseEvent.Navigation || it.direction == NavigationDirection.Start || it.to == "End")
+                it !is ResponseEvent.Value && it !is ResponseEvent.Navigation
+            }
+        )
+    }
+
+    fun getResponseWithEvents(responseId: UUID): ResponseWithEventsDto {
+        val responseWithSurveyorName = responseRepository.responseWithSurveyorName(responseId) ?: throw Exception()
+        val response = responseWithSurveyorName.response
+        val processed = designService.getLatestProcessedSurvey(response.surveyId)
+        val indexList = processed.validationJsonOutput.buildCodeIndex()
+        val componentIndexList = processed.validationJsonOutput.componentIndexList
+            .toMutableList()
+            .sortChildren(response.values)
+        val labels = processed.validationJsonOutput.labels().filterValues { it.isNotEmpty() }.stripHtmlTags()
+        val maskedValues = SurveyProcessor.maskedValues(
+            values = response.values
+        )
+        val componentEvents = response.events.filter {
+            it.componentCode != null
+        }
+
+        val eventCodes = componentEvents.mapNotNull {
+            it.componentCode
+        }
+        val valueCodes = response.values
+            .filterKeys { it.split(".").last() == "value" }
+            .map {
+                it.key.split(".").first()
+            }
+        val values: List<ResponseValue> = componentIndexList
+            .map { it.code }
+            .filter {
+                valueCodes.contains(it) || eventCodes.contains(it)
+            }.map { code ->
+                val componentCodes = code.splitToComponentCodes()
+                val key = if (componentCodes.size > 1) {
+                    val questionCode = componentCodes[0]
+                    "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[code]
+                        ?: code)
+                } else {
+                    "(${indexList[code]}) ${labels[code] ?: ""}"
+                }
+                ResponseValue(
+                    key = key,
+                    code = code,
+                    value = if (response.values.containsKey("$code.value")) {
+                        val value = response.values["$code.value"]!!
+                        maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
+                    } else null)
+
+            }
+
+        return responseMapper.toEventDto(
+            surveyorName = response.surveyor?.let {
+                "${responseWithSurveyorName.firstName} ${responseWithSurveyorName.lastName}"
+            },
+            disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
+            entity = response,
+            values = values,
+            events = response.events.map { event->
+                if (event is ResponseEvent.Value) {
+                    val code = event.code
+                    val componentCodes = code.splitToComponentCodes()
+                    val key = if (componentCodes.size > 1) {
+                        val questionCode = componentCodes[0]
+                        "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[code]
+                            ?: code)
+                    } else {
+                        "(${indexList[code]}) ${labels[code] ?: ""}"
+                    }
+                    ResponseEventDto(
+                        event,
+                        responseValue = ResponseValue(
+                            key = key,
+                            code = code,
+                            value = if (response.values.containsKey("$code.value")) {
+                                val value = response.values["$code.value"]!!
+                                maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
+                            } else null)
+                    )
+                } else {
+                    ResponseEventDto(
+                        event,
+                        responseValue = null
+                    )
+                }
             }
         )
     }
@@ -468,13 +547,5 @@ interface ResponseWithSurveyorName {
     val response: SurveyResponseEntity
     val firstName: String?
     val lastName: String?
-}
-
-private fun List<ResponseEvent>.timeMillis(responseEvent: ResponseEvent): Long {
-    val index = indexOf(responseEvent)
-    if (index <= 0) return 0
-
-    val previousEvent = this[index - 1]
-    return between(previousEvent.time, responseEvent.time).toMillis()
 }
 
