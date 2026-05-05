@@ -65,7 +65,7 @@ class RunSurveyService(
                         from = "",
                         to = result.navigationJsonOutput.navigationIndex.stringIndex(),
                         direction = NavigationDirection.Start,
-                        time = nowUtc()
+                        time = startRequest.clientUTCTime ?: nowUtc()
                     )
                 )
             } else {
@@ -124,7 +124,7 @@ class RunSurveyService(
                             from = response.navigationIndex.stringIndex(),
                             to = result.navigationJsonOutput.navigationIndex.stringIndex(),
                             direction = navigateRequest.navigationDirection,
-                            time = nowUtc()
+                            time = navigateRequest.clientUTCTime ?: nowUtc()
                         )
                     )
                 }
