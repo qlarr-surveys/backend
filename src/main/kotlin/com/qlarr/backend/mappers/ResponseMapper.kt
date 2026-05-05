@@ -30,27 +30,6 @@ class ResponseMapper {
             events = events,
             ipAddress = entity.ipAddress,
         )
-    fun toEventDto(
-        surveyorName:String?,
-        disqualified: Boolean,
-        entity: SurveyResponseEntity,
-        values: List<ResponseValue> = emptyList(),
-        events: List<ResponseEventDto>
-    ) =
-        ResponseWithEventsDto(
-            id = entity.id,
-            index = entity.surveyResponseIndex,
-            startDate = entity.startDate,
-            surveyorID = entity.surveyor?.toString(),
-            surveyorName = surveyorName,
-            preview = entity.preview,
-            submitDate = entity.submitDate,
-            lang = entity.lang,
-            disqualified = disqualified,
-            version = entity.version,
-            events = events,
-            ipAddress = entity.ipAddress,
-        )
 }
 
 fun List<Map<String, Any>>.valueNames(): List<String> = mutableListOf<String>().apply {

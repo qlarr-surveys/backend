@@ -449,7 +449,7 @@ class ResponseService(
         )
     }
 
-    fun getResponseWithEvents(responseId: UUID): ResponseWithEventsDto {
+    fun getResponseWithEvents(responseId: UUID): List<ResponseEventDto> {
         val responseWithSurveyorName = responseRepository.responseWithSurveyorName(responseId) ?: throw Exception()
         val response = responseWithSurveyorName.response
         val processed = designService.getLatestProcessedSurvey(response.surveyId)
@@ -496,42 +496,34 @@ class ResponseService(
 
             }
 
-        return responseMapper.toEventDto(
-            surveyorName = response.surveyor?.let {
-                "${responseWithSurveyorName.firstName} ${responseWithSurveyorName.lastName}"
-            },
-            disqualified = response.values["Survey.disqualified"] as? Boolean ?: false,
-            entity = response,
-            values = values,
-            events = response.events.map { event->
-                if (event is ResponseEvent.Value) {
-                    val code = event.code
-                    val componentCodes = code.splitToComponentCodes()
-                    val key = if (componentCodes.size > 1) {
-                        val questionCode = componentCodes[0]
-                        "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[code]
-                            ?: code)
-                    } else {
-                        "(${indexList[code]}) ${labels[code] ?: ""}"
-                    }
-                    ResponseEventDto(
-                        event,
-                        responseValue = ResponseValue(
-                            key = key,
-                            code = code,
-                            value = if (response.values.containsKey("$code.value")) {
-                                val value = response.values["$code.value"]!!
-                                maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
-                            } else null)
-                    )
+        return response.events.map { event ->
+            if (event is ResponseEvent.Value) {
+                val code = event.code
+                val componentCodes = code.splitToComponentCodes()
+                val key = if (componentCodes.size > 1) {
+                    val questionCode = componentCodes[0]
+                    "(${indexList[questionCode]}) ${labels[questionCode] ?: ""}" + " - " + (labels[code]
+                        ?: code)
                 } else {
-                    ResponseEventDto(
-                        event,
-                        responseValue = null
-                    )
+                    "(${indexList[code]}) ${labels[code] ?: ""}"
                 }
+                ResponseEventDto(
+                    event,
+                    responseValue = ResponseValue(
+                        key = key,
+                        code = code,
+                        value = if (response.values.containsKey("$code.value")) {
+                            val value = response.values["$code.value"]!!
+                            maskedValues["$code.masked_value"]?.let { "$it ($value)" } ?: value
+                        } else null)
+                )
+            } else {
+                ResponseEventDto(
+                    event,
+                    responseValue = null
+                )
             }
-        )
+        }
     }
 
     companion object {

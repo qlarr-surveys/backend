@@ -36,7 +36,7 @@ class ResponseController(
     @GetMapping("/response_with_event/{responseId}")
     fun getResponseWithEvent(
         @PathVariable responseId: UUID,
-    ): ResponseEntity<ResponseWithEventsDto> {
+    ): ResponseEntity<List<ResponseEventDto>> {
         val result = responseService.getResponseWithEvents(
             responseId,
         )
