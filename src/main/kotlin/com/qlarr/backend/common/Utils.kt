@@ -1,10 +1,12 @@
 package com.qlarr.backend.common
 
+import com.qlarr.backend.exceptions.ClientTimeSkewException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 
@@ -16,6 +18,17 @@ class UserUtils {
 }
 
 fun nowUtc(): LocalDateTime = LocalDateTime.now(ZoneOffset.UTC)
+
+fun validateClientTimeSkew(clientUTCTime: LocalDateTime?) {
+    if (clientUTCTime == null) return
+
+    val serverTime = nowUtc()
+    val diffInSeconds = ChronoUnit.SECONDS.between(clientUTCTime, serverTime).let { kotlin.math.abs(it) }
+
+    if (diffInSeconds > 60) {
+        throw ClientTimeSkewException(clientUTCTime, serverTime)
+    }
+}
 
 fun stripTags(string: String?): String? {
     return string?.replace(Regex("<[^>]*>?"), "")

@@ -5,6 +5,7 @@ import com.qlarr.backend.api.runsurvey.NavigateRequest
 import com.qlarr.backend.api.runsurvey.RunSurveyDto
 import com.qlarr.backend.api.runsurvey.StartRequest
 import com.qlarr.backend.common.nowUtc
+import com.qlarr.backend.common.validateClientTimeSkew
 import com.qlarr.backend.exceptions.ResponseNotFoundException
 import com.qlarr.backend.exceptions.SurveyIsNotActiveException
 import com.qlarr.backend.helpers.FileHelper
@@ -38,6 +39,7 @@ class RunSurveyService(
         surveyMode: SurveyMode,
         clientIp: String
     ): RunSurveyDto {
+        validateClientTimeSkew(startRequest.clientUTCTime)
         val processedSurvey = designService.getProcessedSurvey(surveyId, !preview)
 
         val result = navigationService.navigate(
@@ -93,6 +95,7 @@ class RunSurveyService(
         preview: Boolean,
         surveyMode: SurveyMode
     ): RunSurveyDto {
+        validateClientTimeSkew(navigateRequest.clientUTCTime)
         val processedSurvey = designService.getProcessedSurvey(surveyId, !preview)
         val response = responseRepository.findByIdOrNull(navigateRequest.responseId)
             ?: throw ResponseNotFoundException()

@@ -284,6 +284,18 @@ class ControllerExceptionHandler {
     }
 
     @ExceptionHandler
+    fun handleException(exception: ClientTimeSkewException): ResponseEntity<ErrorMessage> {
+        exception.printStackTrace()
+        return ResponseEntity(
+            ErrorMessage(
+                "Client time differs from server time by more than 60 seconds. Client: ${exception.clientTime}, Server: ${exception.serverTime}",
+                exception.javaClass.simpleName
+            ),
+            HttpStatus.BAD_REQUEST
+        )
+    }
+
+    @ExceptionHandler
     fun handleException(exception: SurveyNotFoundException): ResponseEntity<ErrorMessage> {
         return ResponseEntity(ErrorMessage("Survey not found", exception.javaClass.simpleName), HttpStatus.NOT_FOUND)
     }
