@@ -75,6 +75,11 @@ class SurveyMapper(
                 surveyResponseCount.latestVersion,
                 surveyStatus = surveyResponseCount.survey.status
             ),
+            navigationData = surveyResponseCount.survey.navigationData,
+            saveIp = surveyResponseCount.survey.saveIp,
+            saveTimings = surveyResponseCount.survey.saveTimings,
+            backgroundAudio = surveyResponseCount.survey.backgroundAudio,
+            recordGps = surveyResponseCount.survey.recordGps,
         )
     }
 

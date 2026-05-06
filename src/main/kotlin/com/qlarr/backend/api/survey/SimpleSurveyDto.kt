@@ -27,6 +27,10 @@ data class SimpleSurveyDto(
     val completeResponseCount: Int,
     val latestVersion: VersionDto,
     val navigationData: SurveyNavigationData = SurveyNavigationData(),
+    val saveIp: Boolean = true,
+    val saveTimings: Boolean = true,
+    val backgroundAudio: Boolean = true,
+    val recordGps: Boolean = true,
 )
 
 data class ExportedSimpleSurvey(
