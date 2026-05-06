@@ -318,10 +318,10 @@ class SurveyService(
                     image = simpleSurveyDto.image,
                     description = simpleSurveyDto.description,
                     navigationData = simpleSurveyDto.navigationData,
-                    saveIp = true,
-                    saveTimings = true,
-                    backgroundAudio = true,
-                    recordGps = true
+                    saveIp = simpleSurveyDto.saveIp,
+                    saveTimings = simpleSurveyDto.saveTimings,
+                    backgroundAudio = simpleSurveyDto.backgroundAudio,
+                    recordGps = simpleSurveyDto.recordGps
                 )
             )
         } catch (exception: DataIntegrityViolationException) {
