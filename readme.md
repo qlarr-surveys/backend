@@ -1,11 +1,26 @@
 # Qlarr Backend
 
+[Discord 💬](https://discord.gg/9mbRh6SpGj) | [Demo 🖥️](https://console.qlarr.com/) | [Docs 📄](https://qlarr-surveys.github.io/docs/) | [Deploy Locally in 30 Sec! 🚀](https://qlarr-surveys.github.io/docs/guides/deployment/local)
+
 **Qlarr Surveys** is a framework to create and run customizable, scientific & offline-first **[surveys as code](https://github.com/qlarr-surveys/survey-engine)** on all platforms. Surveys are defined using JSON to represent UI-agnostic survey components and [JavaScript](https://github.com/qlarr-surveys/survey-engine-script) instructions to represent complex survey logic.
 
 This is the backend application for Qlarr, built using **Spring Boot 3.0.2** and **Kotlin 2.0.20** to:
 - Expose the main use cases of Qlarr surveys: creating and executing surveys for web applications
 - Support caching surveys for offline use and syncing responses from offline surveys
 - Provide survey management and administrative functionalities like login, user management, cloning surveys, etc.
+
+## Key Features
+
+- 📄 **Survey As Code** — Write survey structure in JSON, and survey logic in JavaScript
+- 📴 **Offline-First Design** — Collect data anywhere without internet connectivity
+- ⍰ **Conditional Logic & Skip Logic** — Advanced branching based on user responses
+- ✅ **Input Validation** — Ensure data quality with built-in validation checks
+- 🎲 **Randomization & Sampling** — Randomize questions and options with weighted priorities
+- 🌐 **Multilingual Surveys** — Support for multiple languages
+- 🔗 **Piping** — Reference and display values from previous answers
+- ⬅️➡️ **Flexible Navigation** — All questions, page-by-page, or question-by-question
+- 🎨 **Conditional Formatting** — Dynamic styling based on responses
+- ⏱️📊 **Time Limits & Scoring** (WIP) — Perfect for quizzes and timed assessments
 
 ## Tech Stack
 

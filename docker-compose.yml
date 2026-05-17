@@ -61,14 +61,14 @@ services:
       - DB_USER=qlarr
       - FILE_SYSTEM_ROOT_FOLDER=/var/qlarr/resources
       - DB_PASSWORD=password
-      - MAIL_HOST=
-      - MAIL_SMTP_SSL=
-      - MAIL_SMTP_STARTTLS=
-      - MAIL_PORT=
+      - MAIL_HOST=localhost
+      - MAIL_SMTP_SSL=false
+      - MAIL_SMTP_STARTTLS=false
+      - MAIL_PORT=1025
       - MAIL_PASSWORD=
-      - MAIL_USERNAME=
-      - FRONTEND_URL=http://localhost
-      - JWT_SECRET=
+      - MAIL_USERNAME=username
+      - FRONTEND_URL=http://localhost:3000
+      - JWT_SECRET=lGYGGQSGHvq1lIw6Y3Ipy06H8SpSgHcARdPztZAS7Ug=
   ai-generator:
     build:
       context: ../ai-generator
