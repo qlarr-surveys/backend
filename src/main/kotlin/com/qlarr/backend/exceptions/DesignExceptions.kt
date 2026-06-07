@@ -10,7 +10,6 @@ class FromCodeNotAvailableException: Throwable()
 class DuplicateToCodeException: Throwable()
 class InvalidCodeChangeException: Throwable()
 class IdenticalFromToCodesException: Throwable()
-class CodeChangeAfterPublishException(val deletedCode: List<String>) : Throwable()
 
 
 class AutoCompleteMalformedInputException: Throwable()

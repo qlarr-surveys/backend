@@ -64,7 +64,7 @@ object SurveyProcessor {
             throw FromCodeNotAvailableException()
         } else if (source.componentIndexList.any { it.code == to }) {
             throw DuplicateToCodeException()
-        } else if (wrongType(from, to)) {
+        } else if (wrongType(from, to) || to == "Qthis" || to == "Gthis") {
             throw InvalidCodeChangeException()
         }
         val useCase = ChangeCodeUseCaseWrapper.create(surveyDesign)

@@ -91,25 +91,10 @@ class DesignService(
             throw SurveyIsClosedException()
         }
         val latestVersion = versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
-        val latestPublishedVersion = versionRepository.findLatestPublishedVersion(surveyId)
         val versionToSave = if (latestVersion.published) latestVersion.version + 1 else latestVersion.version
         val subversionToSave = if (latestVersion.published) 1 else latestVersion.subVersion + 1
         val savedDesign = getProcessedSurveyString(surveyId, false)
         val validationJsonOutput = SurveyProcessor.changeCode(savedDesign, from, to)
-        if (latestPublishedVersion != null) {
-            val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublishedVersion.version.toString())
-            val oldCodes =
-                objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
-                    .componentIndexList
-                    .map { it.code }
-                    .filter { !it.startsWith("G") }
-            val newCodes = validationJsonOutput.componentIndexList
-                .map { it.code }
-                .filter { !it.startsWith("G") }
-            if (!newCodes.containsAll(oldCodes)) {
-                throw CodeChangeAfterPublishException(oldCodes.filter { !newCodes.contains(it) })
-            }
-        }
         helper.upload(
             surveyId,
             SurveyFolder.Design,
