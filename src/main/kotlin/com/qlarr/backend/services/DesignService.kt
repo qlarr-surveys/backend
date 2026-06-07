@@ -48,7 +48,6 @@ class DesignService(
             throw SurveyIsClosedException()
         }
         val latestVersion = versionRepository.findLatestVersion(surveyId) ?: throw DesignException()
-        val latestPublishedVersion = versionRepository.findLatestPublishedVersion(surveyId)
         if (version != latestVersion.version) {
             throw DesignOutOfSyncException(latestVersion.subVersion)
         }
@@ -60,20 +59,6 @@ class DesignService(
         } else {
             val savedDesign = getProcessedSurvey(surveyId, false).validationJsonOutput.survey
             SurveyProcessor.process(design, savedDesign)
-        }
-        if (latestPublishedVersion != null) {
-            val oldJson = helper.getText(surveyId, SurveyFolder.Design, latestPublishedVersion.version.toString())
-            val oldCodes =
-                objectMapper.readValue(oldJson, ValidationJsonOutput::class.java)
-                    .componentIndexList
-                    .map { it.code }
-                    .filter { !it.startsWith("G") }
-            val newCodes = validationJsonOutput.componentIndexList
-                .map { it.code }
-                .filter { !it.startsWith("G") }
-            if (!newCodes.containsAll(oldCodes)) {
-                throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
-            }
         }
         helper.upload(
             surveyId,
@@ -242,11 +227,6 @@ class DesignService(
             val oldComponentIndex =
                 objectMapper.readValue(oldJson, ValidationJsonOutput::class.java).componentIndexList
             val newComponentIndex = newValidationJsonOutput.componentIndexList
-            val newCodes = newComponentIndex.map { it.code }
-            val oldCodes = oldComponentIndex.map { it.code }
-            if (!newCodes.containsAll(oldCodes)) {
-                throw ComponentDeletedException(oldCodes.filter { !newCodes.contains(it) })
-            }
             // no material changes... replace the current published version and increment subversion
             surveyRepository.save(survey.copy(lastModified = nowUtc()))
             if (oldComponentIndex == newComponentIndex) {

@@ -426,15 +426,6 @@ class ControllerExceptionHandler {
         )
     }
 
-    @ExceptionHandler
-    fun handleException(exception: ComponentDeletedException): ResponseEntity<ErrorMessage> {
-        exception.printStackTrace()
-        return ResponseEntity(
-            ErrorMessage("Component was deleted: ${exception.deletedCode}", exception.javaClass.simpleName),
-            HttpStatus.BAD_REQUEST
-        )
-    }
-
 
     @ExceptionHandler
     fun handleException(exception: CodeChangeAfterPublishException): ResponseEntity<ErrorMessage> {
