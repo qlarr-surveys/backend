@@ -31,7 +31,7 @@ class NavigationService(
         processedSurvey: ProcessedSurvey,
         navigationDirection: NavigationDirection,
         navigationMode: NavigationMode? = null,
-        values: Map<String, Any> = mapOf(),
+        values: Map<String, Any?> = mapOf(),
         preview: Boolean,
         surveyMode: SurveyMode
     ): NavigationResult {
@@ -58,7 +58,7 @@ class NavigationService(
         } ?: processedSurvey.validationJsonOutput.availableLangByCode(navigationLang)
 
         val navigationJsonOutput = SurveyProcessor.navigate(
-            values = objectMapper.writeValueAsString(mutableMapOf<String, Any>().apply {
+            values = objectMapper.writeValueAsString(mutableMapOf<String, Any?>().apply {
                 response?.values?.let { putAll(it) }
                 putAll(values)
             }),
