@@ -7,19 +7,21 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 
-fun Map<String, Any>.validateSchema(responsesSchema: List<ResponseField>) {
+fun Map<String, Any?>.validateSchema(responsesSchema: List<ResponseField>) {
     val dependents = responsesSchema.map { it.toValueKey() }
-    val valuesMap = filterKeys { key->
+    val valuesMap = filterKeys { key ->
         dependents.contains(key)
     }
     valuesMap.forEach { entry ->
         val responseField = responsesSchema.first { it.toValueKey() == entry.key }
-        if (!validateType(entry.value, responseField.dataType)) {
-            throw WrongValueType(
-                columnName = entry.key,
-                expectedClassName = expectedType(responseField.dataType),
-                actualClassName = entry.value.javaClass.name
-            )
+        entry.value?.let { value ->
+            if (!validateType(value, responseField.dataType)) {
+                throw WrongValueType(
+                    columnName = entry.key,
+                    expectedClassName = expectedType(responseField.dataType),
+                    actualClassName = value.javaClass.name
+                )
+            }
         }
     }
 }
@@ -34,7 +36,7 @@ fun validateType(value: Any, dataType: ReturnType): Boolean {
         ReturnType.Int -> value is Int
         is ReturnType.List -> value is JSONArray || value is List<*>
         ReturnType.File,
-        ReturnType.Map -> value is Map<*,*>
+        ReturnType.Map -> value is Map<*, *>
     }
 }
 
