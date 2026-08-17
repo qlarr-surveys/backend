@@ -2,12 +2,19 @@
 
 [Discord 💬](https://discord.gg/9mbRh6SpGj) | [Demo 🖥️](https://console.qlarr.com/) | [Docs 📄](https://qlarr-surveys.github.io/docs/) | [Deploy Locally in 30 Sec! 🚀](https://qlarr-surveys.github.io/docs/guides/deployment/local)
 
+> [!NOTE]
+> **This backend is no longer under active development.** It is being replaced by a NestJS implementation that lives in the [`qlarr` mono repo](https://github.com/qlarr-surveys/qlarr) (formerly the "frontend" repo, now home to the full stack).
+>
+> This repository is kept around because it's a neat proof of concept for **integrating a Kotlin Multiplatform (KMP) module — the [Qlarr survey engine](https://github.com/qlarr-surveys/survey-engine) — into a JVM project**. If you're exploring how to consume a KMP library from a Spring Boot / Kotlin backend, this codebase is a working, end-to-end example. It is not deprecated, but it is in maintenance-only mode.
+
 **Qlarr Surveys** is a framework to create and run customizable, scientific & offline-first **[surveys as code](https://github.com/qlarr-surveys/survey-engine)** on all platforms. Surveys are defined using JSON to represent UI-agnostic survey components and [JavaScript](https://github.com/qlarr-surveys/survey-engine-script) instructions to represent complex survey logic.
 
 This is the backend application for Qlarr, built using **Spring Boot 3.0.2** and **Kotlin 2.0.20** to:
 - Expose the main use cases of Qlarr surveys: creating and executing surveys for web applications
 - Support caching surveys for offline use and syncing responses from offline surveys
 - Provide survey management and administrative functionalities like login, user management, cloning surveys, etc.
+
+A core reason this project exists is that it's a working example of **consuming a Kotlin Multiplatform (KMP) module from a plain JVM / Spring Boot backend**. The same [Qlarr survey engine](https://github.com/qlarr-surveys/survey-engine) that runs on Android, iOS, and the web is pulled in here as a JVM dependency and used directly from Kotlin — no reimplementation, no service boundary — so survey validation, navigation, and logic evaluation share one source of truth across every platform.
 
 ## Key Features
 
